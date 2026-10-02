@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko" data-deck="test-panels">
+<head>
+<meta charset="utf-8">
+<title>panels</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="p1" data-sec="가" data-title="첫"><h2>첫</h2></section>
+<section class="slide" id="p2" data-sec="나" data-title="둘"><h2>둘</h2></section>
+<section class="slide" id="p3"><h2>제목만 있음</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const key = (k) => document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+const $ = (s) => document.querySelector(s);
+
+test('목차는 슬라이드마다 버튼, 제목은 data-title 또는 첫 제목', () => {
+  const btns = document.querySelectorAll('.ch-toc button');
+  eq(btns.length, 3);
+  assert(btns[2].textContent.includes('제목만 있음'), 'fallback title');
+  assert(btns[0].classList.contains('is-current'), 'current marked');
+});
+test('T로 목차를 열고 버튼으로 이동하면 닫힌다', () => {
+  key('t');
+  assert($('.ch-toc').classList.contains('is-open'), 'open');
+  document.querySelectorAll('.ch-toc button')[1].click();
+  eq(ClassHTML._internal.Nav.state.slide, 1);
+  assert(!$('.ch-toc').classList.contains('is-open'), 'closed');
+  assert(document.querySelectorAll('.ch-toc button')[1].classList.contains('is-current'), 'current moved');
+});
+test('B·W로 화면 가리기, 같은 키로 해제', () => {
+  key('b'); eq($('.ch-shade').dataset.mode, 'black');
+  key('w'); eq($('.ch-shade').dataset.mode, 'white');
+  key('w'); eq($('.ch-shade').dataset.mode, '');
+});
+test('?는 도움말, Esc는 모두 닫기', () => {
+  key('?'); assert($('.ch-help').classList.contains('is-open'), 'help open');
+  key('b'); key('Escape');
+  assert(!$('.ch-help').classList.contains('is-open'), 'help closed');
+  eq($('.ch-shade').dataset.mode, '');
+});
+test('가린 화면을 누르면 해제', () => {
+  key('b'); $('.ch-shade').click();
+  eq($('.ch-shade').dataset.mode, '');
+});
+</script>
+</body>
+</html>

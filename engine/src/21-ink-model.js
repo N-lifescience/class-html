@@ -58,7 +58,7 @@ const InkModel = {
     } else if (entry.op === 'erase') {
       for (let k = entry.removed.length - 1; k >= 0; k--) page.splice(entry.removed[k].i, 0, entry.removed[k].s);
     } else if (entry.op === 'clear') {
-      page.push(...entry.strokes);
+      for (const s of entry.strokes) page.push(s);   // 펼치기(...)는 획이 아주 많으면 RangeError
     }
     return true;
   },
@@ -71,7 +71,7 @@ const InkModel = {
 
   deleteBoard(doc) {
     if (doc.boards.length <= 1) {
-      doc.boards[0].strokes.length = 0;
+      doc.boards[0].strokes = [];   // 새 배열: 지운 칠판의 되돌리기 기록이 따라오지 않는다
       doc.board = 0;
       return 0;
     }
@@ -82,7 +82,7 @@ const InkModel = {
 
   sanitizeStroke(s) {
     if (!s || (s.t !== 'pen' && s.t !== 'hl')) return null;
-    if (typeof s.c !== 'string' || !/^#[0-9a-fA-F]{3,8}$/.test(s.c)) return null;
+    if (typeof s.c !== 'string' || !/^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(s.c)) return null;
     if (typeof s.w !== 'number' || !(s.w > 0 && s.w <= 80)) return null;
     if (!Array.isArray(s.p) || s.p.length < 2 || s.p.length % 2 || s.p.length > 40000) return null;
     if (!s.p.every((v) => typeof v === 'number' && Number.isFinite(v))) return null;
@@ -90,10 +90,10 @@ const InkModel = {
   },
 
   sanitizeDoc(d) {
-    if (!d || typeof d !== 'object') return null;
+    if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
     const clean = (arr) => (Array.isArray(arr) ? arr.map(InkModel.sanitizeStroke).filter(Boolean) : []);
     const doc = InkModel.emptyDoc();
-    if (d.slides && typeof d.slides === 'object') {
+    if (d.slides && typeof d.slides === 'object' && !Array.isArray(d.slides)) {
       for (const [k, v] of Object.entries(d.slides)) {
         if (BAD_KEYS.includes(k) || k.length > 200) continue;
         const strokes = clean(v);
@@ -118,7 +118,7 @@ const InkModel = {
   parseBackup(text) {
     let data;
     try { data = JSON.parse(text); } catch (err) { return { ok: false, error: '파일을 읽을 수 없어요 (JSON 형식이 아님)' }; }
-    if (!data || data.app !== 'class-html' || data.kind !== 'ink-backup' || !data.classes || typeof data.classes !== 'object') {
+    if (!data || data.app !== 'class-html' || data.kind !== 'ink-backup' || !data.classes || typeof data.classes !== 'object' || Array.isArray(data.classes)) {
       return { ok: false, error: 'class-html 판서 백업 파일이 아니에요' };
     }
     const classes = {};
@@ -127,6 +127,6 @@ const InkModel = {
       const doc = InkModel.sanitizeDoc(d);
       if (doc) classes[name] = doc;
     }
-    return { ok: true, deck: String(data.deck || ''), classes };
+    return { ok: true, deck: typeof data.deck === 'string' ? data.deck : '', classes };
   },
 };

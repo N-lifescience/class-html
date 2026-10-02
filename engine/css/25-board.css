@@ -1,0 +1,18 @@
+.ch-board { position: absolute; inset: 0; z-index: 20; background: #fff; }
+.ch-board[hidden] { display: none; }
+.ch-board[data-bg="grid"] { background-color: #fff; background-image: linear-gradient(#E3E7EC 1px, transparent 1px), linear-gradient(90deg, #E3E7EC 1px, transparent 1px); background-size: 40px 40px; }
+.ch-board[data-bg="lines"] { background: #fff repeating-linear-gradient(transparent 0 55px, #C9D6E3 55px 56px); }
+.ch-board[data-bg="green"] { background: #1F3B2D radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, .06), transparent 60%); }
+.ch-board[data-bg="coord"] { background-color: #fff; background-image: linear-gradient(#5B6678, #5B6678), linear-gradient(#5B6678, #5B6678), linear-gradient(#E3E7EC 1px, transparent 1px), linear-gradient(90deg, #E3E7EC 1px, transparent 1px); background-size: 100% 2px, 2px 100%, 40px 40px, 40px 40px; background-position: 0 50%, 50% 0, 0 0, 0 0; background-repeat: no-repeat, no-repeat, repeat, repeat; }
+.ch-board-label { position: absolute; right: 24px; top: 20px; padding: 6px 12px; border-radius: 99px; background: rgba(22, 24, 29, .75); color: #fff; font: 600 14px/1 var(--ch-font); }
+body.ch-board-on .slide.is-active { visibility: hidden; }
+body:not(.ch-board-on) .ch-board-only { display: none !important; }
+.ch-bg-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; width: 360px; max-width: calc(92vw - 28px); }
+.ch-bg { all: unset; box-sizing: border-box; display: grid; justify-items: center; gap: 6px; cursor: pointer; font-size: 12px; text-align: center; }
+.ch-bg:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+.ch-bg i { box-sizing: border-box; width: 100%; height: 40px; border-radius: 8px; border: 2px solid transparent; background: #fff; }
+.ch-bg[data-bg="grid"] i { background-color: #fff; background-image: linear-gradient(#C8CED6 1px, transparent 1px), linear-gradient(90deg, #C8CED6 1px, transparent 1px); background-size: 8px 8px; }
+.ch-bg[data-bg="lines"] i { background: #fff repeating-linear-gradient(transparent 0 9px, #C9D6E3 9px 10px); }
+.ch-bg[data-bg="green"] i { background: #1F3B2D; }
+.ch-bg[data-bg="coord"] i { background-color: #fff; background-image: linear-gradient(#5B6678, #5B6678), linear-gradient(#5B6678, #5B6678); background-size: 100% 2px, 2px 100%; background-position: 0 50%, 50% 0; background-repeat: no-repeat; }
+.ch-bg[aria-pressed="true"] i { border-color: var(--accent); }

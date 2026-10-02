@@ -1,0 +1,11 @@
+.ch-motion-off .ch-deck *, .ch-motion-off .ch-deck *::before, .ch-motion-off .ch-deck *::after { animation: none !important; transition: none !important; }
+.ch-pop-settings { width: 340px; max-width: calc(100vw - 48px); }
+.ch-switch { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: center; padding: 10px 4px; cursor: pointer; }
+.ch-switch input { appearance: none; -webkit-appearance: none; position: relative; width: 48px; height: 28px; margin: 0; border-radius: 99px; background: #4A4F59; cursor: pointer; transition: background .2s; }
+.ch-switch input::after { content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .2s var(--ch-ease-out); }
+.ch-switch input:checked { background: var(--accent); }
+.ch-switch input:checked::after { transform: translateX(20px); }
+.ch-switch input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ch-switch b { display: block; font-size: 15px; }
+.ch-switch small { display: block; margin-top: 2px; font-size: 12px; color: var(--ch-ui-mute); }
+.slide .w { white-space: nowrap; }

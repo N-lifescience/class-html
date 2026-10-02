@@ -58,7 +58,7 @@ const Ink = {
     }, true);
     on('resize', () => this.resize());
     on('show', (slide) => { if (!Nav.override) this.setPage({ kind: 'slide', key: slide.dataset.key }); });
-    on('session', () => this.redraw());
+    on('session', () => { this.cancelGesture(); this.redraw(); });
     this.resize();
     this.setPage({ kind: 'slide', key: Stage.slides[Nav.state.slide].dataset.key });
   },
@@ -76,9 +76,29 @@ const Ink = {
   get page() { return this.ref && Session.doc ? InkModel.page(Session.doc, this.ref) : null; },
 
   setPage(ref) {
+    this.cancelGesture();
     this.ref = ref;
-    this.gesture = null;
     this.redraw();
+  },
+
+  cancelGesture() {
+    const g = this.gesture;
+    this.gesture = null;
+    // 지우개는 입력 도중 원래 배열을 바꾼다. 중간에 장·반을 바꾸면 되돌려 취소한다.
+    if (g) {
+      for (let i = g.removed.length - 1; i >= 0; i--) {
+        const removed = g.removed[i];
+        g.page.splice(removed.i, 0, removed.s);
+      }
+      // 입력 중 지연 저장이 실행됐어도 취소하여 복구한 문서를 다시 저장한다.
+      if (g.removed.length && Session.doc === g.doc) Session.changed();
+      try { Stage.deck.releasePointerCapture(g.id); } catch (err) { /* 합성 이벤트 */ }
+    }
+    this.suppressClick = false;
+    if (this.laserRAF) cancelAnimationFrame(this.laserRAF);
+    this.laserRAF = 0;
+    this.laser = [];
+    this.ctx.laser.clearRect(0, 0, STAGE_W, STAGE_H);
   },
 
   redraw() {
@@ -131,7 +151,7 @@ const Ink = {
     const target = e.target && e.target.closest ? e.target : null;
     if (target && target.closest(ALWAYS_LIVE)) return;   // 슬라이더·입력칸은 늘 조작
     const [x, y] = Stage.toStage(e.clientX, e.clientY);
-    this.gesture = { id: e.pointerId, tool, x0: x, y0: y, started: false, stroke: null, removed: [] };
+    this.gesture = { id: e.pointerId, tool, x0: x, y0: y, started: false, stroke: null, removed: [], page: this.page, doc: Session.doc };
     if (!(target && target.closest(TAPPABLE))) this.begin(e); // 누를 수 있는 요소 위면 끌 때까지 기다린다
   },
 
@@ -183,7 +203,7 @@ const Ink = {
       const [x0, y0] = g.last || [x, y];
       const n = Math.max(1, Math.ceil(Math.hypot(x - x0, y - y0) / (ERASER_R / 2)));
       const before = g.removed.length;
-      for (let i = 1; i <= n; i++) g.removed.push(...InkModel.eraseAt(this.page, x0 + ((x - x0) * i) / n, y0 + ((y - y0) * i) / n, ERASER_R));
+      for (let i = 1; i <= n; i++) g.removed.push(...InkModel.eraseAt(g.page, x0 + ((x - x0) * i) / n, y0 + ((y - y0) * i) / n, ERASER_R));
       if (g.removed.length > before) this.redraw();
       g.last = [x, y];
       this.ring(x, y);
@@ -256,17 +276,21 @@ const Ink = {
   },
 
   undo() {
+    this.cancelGesture();
     const p = this.page;
-    if (!p || !InkModel.undo(Session.hist, p)) return false;
+    const changed = !!p && InkModel.undo(Session.hist, p);
     this.redraw();
+    if (!changed) return false;
     Session.changed();
     return true;
   },
 
   clear() {
+    this.cancelGesture();
     const p = this.page;
-    if (!p || !InkModel.clear(Session.hist, p)) return false;
+    const changed = !!p && InkModel.clear(Session.hist, p);
     this.redraw();
+    if (!changed) return false;
     Session.changed();
     return true;
   },

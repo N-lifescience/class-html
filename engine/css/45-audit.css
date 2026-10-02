@@ -1,0 +1,12 @@
+.ch-audit { left: 16px; top: 16px; width: min(520px, 92vw); max-height: calc(100vh - 120px); overflow-y: auto; padding: 20px 22px; border-radius: 16px; }
+.ch-audit ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ch-audit li > button, .ch-audit li > span { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 8px 10px; border-radius: 8px; background: var(--ch-ui-2); font-size: 14px; line-height: 1.4; }
+.ch-audit li > button { cursor: pointer; }
+.ch-audit li > button:focus-visible { outline: 2px solid var(--accent); }
+.ch-audit li.is-error > * { border-left: 4px solid #FF6B5B; }
+.ch-audit li.is-warn > * { border-left: 4px solid #F5B83D; }
+.ch-audit-info { margin: 12px 0 0; font-size: 13px; color: var(--ch-ui-mute); }
+.ch-auditing *, .ch-auditing *::before, .ch-auditing *::after { animation: none !important; transition: none !important; }
+.ch-auditing body.ch-board-on .slide.is-active { visibility: visible; }
+.ch-auditing .ch-deck > .ch-board, .ch-auditing .ch-ink { visibility: hidden; }
+.ch-audit-on [data-ai] { outline: 2px dashed #A855F7; outline-offset: 3px; }

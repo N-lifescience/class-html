@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko" data-deck="test-audit">
+<head>
+<meta charset="utf-8">
+<title>audit</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="ok1"><h2>정상</h2><p data-ai>AI가 쓴 문장</p></section>
+<section class="slide" id="bad1"><h2>넘침</h2><div id="tall" style="height:900px">아주 긴 상자</div></section>
+<section class="slide" id="bad2"><h2>작은 글씨</h2><p id="tiny" style="font-size:12px">너무 작다</p><p id="dup">하나</p><img data-ppt="3-1" alt="그림"><p data-ai class="step">AI 단계</p></section>
+<section class="slide" id="ok2"><h2 id="dup">중복 id</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const key = (k) => document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+
+test('점검 결과 형식과 정보', () => {
+  const r = ClassHTML.audit();
+  eq(r.ok, false);
+  eq(r.info.slides, 4);
+  eq(r.info.aiAdded, 2);
+});
+test('중복 id는 오류', () => {
+  assert(ClassHTML.audit().errors.some((e) => e.code === 'dup-id'), 'dup');
+});
+test('슬라이드보다 큰 내용은 오류', () => {
+  assert(ClassHTML.audit().errors.some((e) => e.slide === 1 && (e.code === 'slide-overflow' || e.code === 'out')), 'overflow');
+});
+test('18px보다 작은 글자는 오류', () => {
+  assert(ClassHTML.audit().errors.some((e) => e.slide === 2 && e.code === 'tiny-text'), 'tiny');
+});
+test('빈 그림 자리는 경고', () => {
+  assert(ClassHTML.audit().warnings.some((w) => w.code === 'empty-image' && w.slide === 2), 'empty image');
+});
+test('정상 슬라이드에는 오류가 없다', () => {
+  assert(!ClassHTML.audit().errors.some((e) => e.slide === 0), 'slide 0 clean');
+});
+test('점검 뒤에는 보던 장과 단계로 돌아온다', () => {
+  ClassHTML.go(2);
+  ClassHTML.audit();
+  eq(ClassHTML._internal.Nav.state, { slide: 2, shown: 0 });
+});
+test('D 키로 점검 창, AI 추가 표시는 점선, Esc로 닫기', () => {
+  key('d');
+  assert(document.querySelector('.ch-audit').classList.contains('is-open'), 'open');
+  assert(document.documentElement.classList.contains('ch-audit-on'), 'ai outline on');
+  assert(document.querySelectorAll('.ch-audit li').length >= 4, 'items');
+  key('Escape');
+  assert(!document.querySelector('.ch-audit').classList.contains('is-open'), 'closed');
+  assert(!document.documentElement.classList.contains('ch-audit-on'), 'ai outline off');
+});
+test('인쇄: 판서 포함이 켜지면 판서 그림과 칠판 쪽이 붙었다가 사라진다', () => {
+  const { Session, Settings } = ClassHTML._internal;
+  Settings.set('printInk', true);
+  Session.doc.slides.ok1 = [{ t: 'pen', c: '#D7263D', w: 6, p: [10, 10, 200, 200] }];
+  Session.doc.boards[0].strokes.push({ t: 'pen', c: '#1F2328', w: 6, p: [10, 10, 100, 100] });
+  window.dispatchEvent(new Event('beforeprint'));
+  eq(document.querySelectorAll('#ok1 .ch-print-ink').length, 1);
+  eq(document.querySelectorAll('.ch-print-board').length, 1);
+  window.dispatchEvent(new Event('afterprint'));
+  eq(document.querySelectorAll('.ch-print-ink, .ch-print-board').length, 0);
+});
+test('인쇄: 판서 포함이 꺼져 있으면 아무것도 붙이지 않는다', () => {
+  ClassHTML._internal.Settings.set('printInk', false);
+  window.dispatchEvent(new Event('beforeprint'));
+  eq(document.querySelectorAll('.ch-print-ink, .ch-print-board').length, 0);
+  window.dispatchEvent(new Event('afterprint'));
+});
+
+test('점검은 단계 DOM과 훅·칠판·판서 입력 상태를 보존한다', () => {
+  const { Board, Nav, Ink, on } = ClassHTML._internal;
+  ClassHTML.go(2);
+  ClassHTML.next();
+  const before = [...document.querySelectorAll('.step')].map((el) => el.className);
+  let shows = 0;
+  on('show', () => { shows += 1; });
+  Board.open();
+  Board.setBg('green');
+  const ref = JSON.stringify(Ink.ref);
+  ClassHTML.audit();
+  eq(Nav.state, { slide: 2, shown: 1 });
+  eq([...document.querySelectorAll('.step')].map((el) => el.className), before);
+  eq(shows, 0);
+  eq(Board.active, true);
+  eq(JSON.stringify(Ink.ref), ref);
+  assert(document.body.classList.contains('ch-dark-page'), 'dark board preserved');
+  Board.close();
+});
+
+test('허용한 넘침 안에서도 작은 글씨와 빈 그림을 검사한다', () => {
+  const section = document.getElementById('ok1');
+  const allowed = document.createElement('div');
+  allowed.dataset.allowOverflow = '';
+  allowed.style.cssText = 'position:absolute;left:1300px;width:200px';
+  const tiny = document.createElement('p');
+  tiny.style.fontSize = '12px';
+  tiny.textContent = '작은 글씨';
+  const img = document.createElement('img');
+  img.dataset.ppt = '9-1';
+  allowed.append(tiny, img);
+  section.append(allowed);
+  try {
+    const report = ClassHTML.audit();
+    assert(!report.errors.some((e) => e.slide === 0 && ['slide-overflow', 'out', 'clip'].includes(e.code)), 'allowed overflow');
+    assert(report.errors.some((e) => e.slide === 0 && e.code === 'tiny-text'), 'still checks text');
+    assert(report.warnings.some((e) => e.slide === 0 && e.code === 'empty-image'), 'still checks images');
+    assert(report.warnings.some((e) => e.slide === 0 && e.code === 'no-alt'), 'still checks alt');
+  } finally { allowed.remove(); }
+});
+
+test('본문 안 작은 인라인 글씨도 놓치지 않는다', () => {
+  const p = document.createElement('p');
+  const span = document.createElement('span');
+  p.textContent = '정상 크기 ';
+  span.textContent = '작은 덧붙임';
+  span.style.fontSize = '12px';
+  p.append(span);
+  document.getElementById('ok1').append(p);
+  try {
+    assert(ClassHTML.audit().errors.some((e) => e.slide === 0 && e.code === 'tiny-text'), 'small inline');
+  } finally { p.remove(); }
+});
+
+test('점검 도중 예외가 나도 표시 클래스는 복구한다', () => {
+  const { Audit } = ClassHTML._internal;
+  const before = [...document.querySelectorAll('.slide, .step')].map((el) => el.className);
+  const original = Audit.describe;
+  Audit.describe = () => { throw new Error('점검 중 예외'); };
+  let thrown = false;
+  try { Audit.run(); } catch (err) { thrown = true; }
+  finally { Audit.describe = original; }
+  eq(thrown, true);
+  eq([...document.querySelectorAll('.slide, .step')].map((el) => el.className), before);
+  assert(!document.documentElement.classList.contains('ch-auditing'), 'measurement class restored');
+});
+
+test('인쇄 반복 준비가 그림을 중복시키지 않고 형광펜과 펜을 분리한다', () => {
+  const { Print, Session, Settings } = ClassHTML._internal;
+  Settings.set('printInk', true);
+  Session.doc.slides.ok1.push({ t: 'hl', c: '#FFE45C', w: 24, p: [100, 100, 200, 100] });
+  Print.before();
+  Print.before();
+  eq(document.querySelectorAll('#ok1 .ch-print-hl').length, 1);
+  eq(document.querySelectorAll('#ok1 .ch-print-pen').length, 1);
+  eq(document.querySelectorAll('.ch-print-board').length, 1);
+  Print.after();
+  eq(document.querySelectorAll('.ch-print-ink, .ch-print-board').length, 0);
+});
+
+test('수식의 스크린리더용 숨긴 MathML은 잘림 오류로 보지 않는다', () => {
+  const formula = document.createElement('span');
+  formula.className = 'katex';
+  const hidden = document.createElement('span');
+  hidden.className = 'katex-mathml';
+  hidden.style.cssText = 'position:absolute;clip:rect(1px,1px,1px,1px);width:1px;height:1px;overflow:hidden';
+  const math = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'math');
+  const symbol = document.createElementNS('http://www.w3.org/1998/Math/MathML', 'mi');
+  symbol.textContent = 'x';
+  math.append(symbol);
+  hidden.append(math);
+  formula.append(hidden, document.createTextNode('x'));
+  document.getElementById('ok1').append(formula);
+  try {
+    assert(!ClassHTML.audit().errors.some((e) => e.slide === 0), 'valid formula');
+  } finally { formula.remove(); }
+});
+
+test('18px 꼬리표는 허용하고 19px 본문은 경고한다', () => {
+  const kicker = document.createElement('p');
+  kicker.className = 'kicker';
+  kicker.textContent = '소단원 꼬리표';
+  const body = document.createElement('p');
+  body.style.fontSize = '19px';
+  body.textContent = '작은 본문';
+  document.getElementById('ok1').append(kicker, body);
+  try {
+    const warnings = ClassHTML.audit().warnings.filter((item) => item.slide === 0 && item.code === 'small-text');
+    eq(warnings.length, 1);
+    assert(warnings[0].msg.includes('19px'), 'body warning');
+  } finally { kicker.remove(); body.remove(); }
+});
+</script>
+</body>
+</html>

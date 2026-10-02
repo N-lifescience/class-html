@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ko" data-deck="test-settings">
+<head>
+<meta charset="utf-8">
+<title>settings</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="k1">
+  <p id="kw">경로를 바꾸는 <mark>필요한 일</mark>이다</p>
+  <p id="inline">이<em>것</em>은 <em><b>필요</b></em><strong>한</strong> 일이다</p>
+  <p id="space">이 <mark>것</mark> 은 <em>필요</em> <strong>한</strong> 일이다</p>
+  <p id="break">앞<br>뒤</p>
+  <div id="blocks"><p>앞</p><p>뒤</p></div>
+  <button id="kwb" type="button">눌러 보기</button>
+  <div id="skip">
+    <pre>보존할 코드</pre><code>보존할 코드</code><textarea>보존할 입력</textarea>
+    <select><option>보존할 선택</option></select><span data-no-keep><b>그대로 유지</b></span>
+    <span class="katex">수식 보존</span><svg><text>SVG 보존</text></svg><math><mtext>수식 보존</mtext></math>
+  </div>
+  <p class="step">단계</p>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const btn = (name) => document.querySelector(`.ch-toolbar [data-name="${name}"]`);
+const sw = (k) => document.querySelector(`.ch-pop input[data-key="${k}"]`);
+const clean = (text) => text.replace(/\u2060/g, '');
+
+test('기본 설정은 모두 꺼져 있다', () => {
+  eq(I().Settings.values, { motionOff: false, printInk: false, palmErase: false });
+});
+test('⚙ 설정 버튼과 이름이 있는 스위치 세 개', () => {
+  btn('gear').click();
+  eq(document.querySelectorAll('.ch-pop .ch-switch').length, 3);
+  for (const input of document.querySelectorAll('.ch-pop input')) {
+    assert(input.closest('label').textContent.trim(), 'accessible label');
+    eq(input.checked, false);
+  }
+});
+test('움직임 끄기는 바로 적용되고 저장된다', async () => {
+  sw('motionOff').click();
+  assert(document.documentElement.classList.contains('ch-motion-off'), 'class on');
+  await wait(100);
+  eq((await I().Store.get('settings')).motionOff, true);
+});
+test('움직임 끄기면 단계·슬라이드 전환 시간이 0', () => {
+  const step = document.querySelector('.step');
+  assert(getComputedStyle(step).transitionDuration.split(',').every((t) => parseFloat(t) === 0), 'no transition');
+  eq(getComputedStyle(document.querySelector('.slide')).animationName, 'none');
+});
+test('손바닥 지우기 스위치는 판서층에 전달', async () => {
+  sw('palmErase').click();
+  eq(I().Ink.palmErase, true);
+  await wait(100);
+  eq((await I().Store.get('settings')).palmErase, true);
+});
+test('인쇄에 판서 포함 설정도 저장된다', async () => {
+  sw('printInk').click();
+  await wait(100);
+  eq((await I().Store.get('settings')).printInk, true);
+});
+test('설정 재초기화는 저장값을 적용하고 버튼을 중복 생성하지 않는다', async () => {
+  I().Settings.values = { motionOff: false, printInk: false, palmErase: false };
+  I().Settings.apply();
+  await I().Settings.init();
+  eq(I().Settings.values, { motionOff: true, printInk: true, palmErase: true });
+  eq(I().Ink.palmErase, true);
+  assert(document.documentElement.classList.contains('ch-motion-off'), 'restored');
+  eq(document.querySelectorAll('.ch-toolbar [data-name="gear"]').length, 1);
+});
+test('알 수 없는 설정 키는 저장되지 않는다', async () => {
+  const old = await I().Store.get('settings');
+  await I().Settings.set('unknown', true);
+  await I().Settings.set('__proto__', true);
+  eq(await I().Store.get('settings'), old);
+  eq(Object.keys(I().Settings.values), ['motionOff', 'printInk', 'palmErase']);
+});
+test('설정을 끄면 효과와 입력 UI가 함께 복원된다', async () => {
+  await I().Settings.set('motionOff', false);
+  await I().Settings.set('palmErase', false);
+  eq(document.documentElement.classList.contains('ch-motion-off'), false);
+  eq(I().Ink.palmErase, false);
+  eq(sw('motionOff').checked, false);
+  eq(sw('palmErase').checked, false);
+  assert(getComputedStyle(document.querySelector('.step')).transitionDuration.split(',').some((t) => parseFloat(t) > 0), 'transition restored');
+});
+test('손상된 저장값은 설정을 켜지 않으며 모르는 키는 무시한다', async () => {
+  await I().Settings.set('printInk', false);
+  await I().Store.set('settings', { motionOff: 'false', printInk: null, palmErase: 1, unknown: true });
+  await I().Settings.init();
+  eq(I().Settings.values, { motionOff: false, printInk: false, palmErase: false });
+  eq(I().Ink.palmErase, false);
+  eq(document.documentElement.classList.contains('ch-motion-off'), false);
+});
+test('어절 보정: 어절은 span.w, 요소 경계에는 WORD JOINER', () => {
+  const p = document.getElementById('kw');
+  assert(p.querySelectorAll('.w').length >= 4, 'wrapped');
+  assert(p.querySelector('mark').nextSibling.textContent.startsWith('\u2060'), 'word joiner after mark');
+  eq(clean(p.textContent), '경로를 바꾸는 필요한 일이다');
+  eq(getComputedStyle(p.querySelector('.w')).whiteSpace, 'nowrap');
+});
+test('연속 인라인 요소와 중첩된 경계도 어절을 잇는다', () => {
+  const p = document.getElementById('inline');
+  const em = p.querySelectorAll('em');
+  assert(em[1].textContent.endsWith('\u2060') || em[1].nextSibling.textContent.startsWith('\u2060'), 'adjacent inline boundary');
+  assert(p.firstChild.textContent.endsWith('\u2060'), 'boundary before inline');
+  eq(clean(p.textContent), '이것은 필요한 일이다');
+});
+test('공백·줄바꿈·블록 경계에는 WORD JOINER를 넣지 않는다', () => {
+  for (const id of ['space', 'break', 'blocks']) assert(!document.getElementById(id).textContent.includes('\u2060'), id);
+});
+test('버튼·입력·코드·수식·data-no-keep 내부는 감싸지 않는다', () => {
+  eq(document.getElementById('kwb').children.length, 0);
+  eq(document.getElementById('skip').querySelectorAll('.w').length, 0);
+  eq(document.querySelector('#skip textarea').value, '보존할 입력');
+});
+test('어절 보정을 다시 적용해도 DOM·텍스트·span 수가 변하지 않는다', () => {
+  const root = I().Stage.deck;
+  const before = root.cloneNode(true);
+  I().KeepWords.apply(root);
+  I().KeepWords.apply(root);
+  assert(root.isEqualNode(before), 'idempotent DOM');
+  eq(root.querySelectorAll('.w .w').length, 0);
+});
+test('어절 보정은 요소·이벤트·공백 텍스트를 보존한다', () => {
+  const p = document.createElement('p');
+  p.append('앞  ');
+  const a = document.createElement('a');
+  a.textContent = '연결';
+  let clicked = 0;
+  a.addEventListener('click', () => clicked++);
+  p.append(a, '\n\t끝');
+  I().KeepWords.apply(p);
+  eq(clean(p.textContent), '앞  연결\n\t끝');
+  assert(p.querySelector('a') === a, 'original element retained');
+  a.click();
+  eq(clicked, 1);
+});
+test('새로 추가한 텍스트만 어절 보정하고 기존 어절은 보존한다', () => {
+  const p = document.createElement('p');
+  p.textContent = '원래 어절';
+  I().KeepWords.apply(p);
+  const first = p.firstChild;
+  p.append(' 새 어절');
+  I().KeepWords.apply(p);
+  assert(p.firstChild === first, 'original wrapper retained');
+  eq(p.querySelectorAll('.w').length, 4);
+  eq(clean(p.textContent), '원래 어절 새 어절');
+});
+</script>
+</body>
+</html>

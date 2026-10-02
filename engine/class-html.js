@@ -785,7 +785,7 @@ const Ink = {
     }, true);
     on('resize', () => this.resize());
     on('show', (slide) => { if (!Nav.override) this.setPage({ kind: 'slide', key: slide.dataset.key }); });
-    on('session', () => this.redraw());
+    on('session', () => { this.cancelGesture(); this.redraw(); });
     this.resize();
     this.setPage({ kind: 'slide', key: Stage.slides[Nav.state.slide].dataset.key });
   },
@@ -803,9 +803,29 @@ const Ink = {
   get page() { return this.ref && Session.doc ? InkModel.page(Session.doc, this.ref) : null; },
 
   setPage(ref) {
+    this.cancelGesture();
     this.ref = ref;
-    this.gesture = null;
     this.redraw();
+  },
+
+  cancelGesture() {
+    const g = this.gesture;
+    this.gesture = null;
+    // 지우개는 입력 도중 원래 배열을 바꾼다. 중간에 장·반을 바꾸면 되돌려 취소한다.
+    if (g) {
+      for (let i = g.removed.length - 1; i >= 0; i--) {
+        const removed = g.removed[i];
+        g.page.splice(removed.i, 0, removed.s);
+      }
+      // 입력 중 지연 저장이 실행됐어도 취소하여 복구한 문서를 다시 저장한다.
+      if (g.removed.length && Session.doc === g.doc) Session.changed();
+      try { Stage.deck.releasePointerCapture(g.id); } catch (err) { /* 합성 이벤트 */ }
+    }
+    this.suppressClick = false;
+    if (this.laserRAF) cancelAnimationFrame(this.laserRAF);
+    this.laserRAF = 0;
+    this.laser = [];
+    this.ctx.laser.clearRect(0, 0, STAGE_W, STAGE_H);
   },
 
   redraw() {
@@ -858,7 +878,7 @@ const Ink = {
     const target = e.target && e.target.closest ? e.target : null;
     if (target && target.closest(ALWAYS_LIVE)) return;   // 슬라이더·입력칸은 늘 조작
     const [x, y] = Stage.toStage(e.clientX, e.clientY);
-    this.gesture = { id: e.pointerId, tool, x0: x, y0: y, started: false, stroke: null, removed: [] };
+    this.gesture = { id: e.pointerId, tool, x0: x, y0: y, started: false, stroke: null, removed: [], page: this.page, doc: Session.doc };
     if (!(target && target.closest(TAPPABLE))) this.begin(e); // 누를 수 있는 요소 위면 끌 때까지 기다린다
   },
 
@@ -910,7 +930,7 @@ const Ink = {
       const [x0, y0] = g.last || [x, y];
       const n = Math.max(1, Math.ceil(Math.hypot(x - x0, y - y0) / (ERASER_R / 2)));
       const before = g.removed.length;
-      for (let i = 1; i <= n; i++) g.removed.push(...InkModel.eraseAt(this.page, x0 + ((x - x0) * i) / n, y0 + ((y - y0) * i) / n, ERASER_R));
+      for (let i = 1; i <= n; i++) g.removed.push(...InkModel.eraseAt(g.page, x0 + ((x - x0) * i) / n, y0 + ((y - y0) * i) / n, ERASER_R));
       if (g.removed.length > before) this.redraw();
       g.last = [x, y];
       this.ring(x, y);
@@ -983,19 +1003,164 @@ const Ink = {
   },
 
   undo() {
+    this.cancelGesture();
     const p = this.page;
-    if (!p || !InkModel.undo(Session.hist, p)) return false;
+    const changed = !!p && InkModel.undo(Session.hist, p);
     this.redraw();
+    if (!changed) return false;
     Session.changed();
     return true;
   },
 
   clear() {
+    this.cancelGesture();
     const p = this.page;
-    if (!p || !InkModel.clear(Session.hist, p)) return false;
+    const changed = !!p && InkModel.clear(Session.hist, p);
     this.redraw();
+    if (!changed) return false;
     Session.changed();
     return true;
+  },
+};
+
+/* ---- 25-board.js ---- */
+// 칠판 모드: 슬라이드와 단계는 그대로 두고, 반별 칠판 쪽으로 판서·넘기기 대상을 바꾼다.
+const BOARD_LABELS = { white: '흰색', grid: '모눈', lines: '줄', green: '초록 칠판', coord: '좌표평면' };
+
+const Board = {
+  active: false,
+  el: null,
+  label: null,
+  toggleBtn: null,
+
+  init() {
+    this.label = h('div', { class: 'ch-board-label', role: 'status', 'aria-live': 'polite' });
+    this.el = h('div', { class: 'ch-board', 'data-bg': 'white', 'aria-label': '칠판', hidden: true }, this.label);
+    Stage.deck.append(this.el);
+    this.toggleBtn = Toolbar.btn('board', '칠판', () => this.toggle());
+    const add = Toolbar.btn('boardAdd', '칠판 추가', () => this.add());
+    const del = Toolbar.btn('boardDel', '칠판 삭제', () => this.remove());
+    const bg = Toolbar.btn('bg', '바탕', (e) => {
+      if (this.active) Toolbar.togglePop(e.currentTarget, () => this.bgPanel());
+    });
+    for (const b of [add, del, bg]) b.classList.add('ch-board-only');
+    Toolbar.slots.board.append(this.toggleBtn, add, del, bg);
+    on('session', () => {
+      Toolbar.closePop();
+      if (this.active) this.render();
+    });
+    on('key', (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || keyName(e) !== 'c') return;
+      e.preventDefault();
+      this.toggle();
+    });
+    this.setToggle();
+  },
+
+  get doc() { return Session.doc; },
+
+  toggle() { if (this.active) this.close(); else this.open(); },
+
+  open() {
+    if (this.active) return;
+    this.active = true;
+    Nav.override = this;
+    document.body.classList.add('ch-board-on');
+    this.render();
+    emit('board', true);
+  },
+
+  close() {
+    if (!this.active) return;
+    Toolbar.closePop();
+    this.active = false;
+    if (Nav.override === this) Nav.override = null;
+    document.body.classList.remove('ch-board-on');
+    this.el.hidden = true;
+    this.setDark(false);
+    this.setToggle();
+    Ink.setPage({ kind: 'slide', key: Stage.slides[Nav.state.slide].dataset.key });
+    emit('board', false);
+  },
+
+  render() {
+    if (!this.active) return;
+    Toolbar.closePop();
+    const doc = this.doc;
+    doc.board = clamp(doc.board, 0, doc.boards.length - 1);
+    const b = doc.boards[doc.board];
+    this.el.hidden = false;
+    this.el.dataset.bg = b.bg;
+    this.label.textContent = `칠판 ${doc.board + 1} / ${doc.boards.length}`;
+    this.setDark(b.bg === 'green');
+    this.setToggle();
+    // 새 반의 문서에서는 그 반의 번호를 쓰고, 미완성 획이 다른 쪽에 기록되지 않도록 취소한다.
+    Ink.setPage({ kind: 'board', index: doc.board });
+  },
+
+  setDark(dark) {
+    document.body.classList.toggle('ch-dark-page', dark);
+    if (dark && Tools.penColor === PEN_COLORS[0]) {
+      Tools.penColor = PEN_WHITE;
+      emit('tool', Tools.current);
+    } else if (!dark && Tools.penColor === PEN_WHITE) {
+      Tools.penColor = PEN_COLORS[0];
+      emit('tool', Tools.current);
+    }
+  },
+
+  next() {
+    if (!this.active || this.doc.board >= this.doc.boards.length - 1) return;
+    this.doc.board += 1;
+    this.render();
+    Session.changed();
+  },
+
+  prev() {
+    if (!this.active || this.doc.board <= 0) return;
+    this.doc.board -= 1;
+    this.render();
+    Session.changed();
+  },
+
+  add() {
+    if (!this.active) return;
+    InkModel.addBoard(this.doc, this.doc.boards[this.doc.board].bg);
+    this.render();
+    Session.changed();
+  },
+
+  remove() {
+    if (!this.active) return;
+    const b = this.doc.boards[this.doc.board];
+    if (b.strokes.length && !confirm('이 칠판을 지울까요? 판서도 함께 사라져요.')) return;
+    InkModel.deleteBoard(this.doc);
+    this.render();
+    Session.changed();
+  },
+
+  setBg(bg) {
+    if (!this.active || !BOARD_BGS.includes(bg)) return;
+    this.doc.boards[this.doc.board].bg = bg;
+    this.render();
+    Session.changed();
+  },
+
+  setToggle() {
+    const label = this.active ? '슬라이드' : '칠판';
+    this.toggleBtn.replaceChildren(icon(this.active ? 'slides' : 'board'), h('span', { text: label }));
+    this.toggleBtn.title = this.active ? '슬라이드로 돌아가기' : '칠판 열기';
+    this.toggleBtn.setAttribute('aria-label', this.toggleBtn.title);
+    this.toggleBtn.setAttribute('aria-pressed', String(this.active));
+  },
+
+  bgPanel() {
+    const cur = this.doc.boards[this.doc.board].bg;
+    return h('div', { class: 'ch-pop-bg' }, h('h3', { text: '칠판 바탕' }),
+      h('div', { class: 'ch-bg-list' }, ...BOARD_BGS.map((bg) => h('button', {
+        type: 'button', class: 'ch-bg', 'data-bg': bg, 'aria-pressed': String(bg === cur),
+        onclick: () => { this.setBg(bg); Toolbar.closePop(); },
+      }, h('i', { 'aria-hidden': 'true' }), h('span', { text: BOARD_LABELS[bg] })))));
   },
 };
 
@@ -1077,10 +1242,13 @@ const Toolbar = {
       onclick: () => this.setCollapsed(false),
     }, icon('tools'), h('span', { text: '도구' }));
     this.build();
+    this.el.addEventListener('keydown', (e) => this.buttonKeys(e));
+    this.handle.addEventListener('keydown', (e) => this.buttonKeys(e));
     document.body.append(this.el, this.handle);
     on('tool', () => this.sync());
     on('session', () => this.sync());
     on('key', (e) => this.onKey(e));
+    on('panels-close', () => this.closePop());
     document.addEventListener('pointerdown', (e) => {
       if (!this.pop || this.pop.contains(e.target)) return;
       if (this.popAnchor && this.popAnchor.contains(e.target)) return;
@@ -1098,6 +1266,11 @@ const Toolbar = {
   },
 
   menuItem(label, onclick) { return h('button', { type: 'button', class: 'ch-menu-item', text: label, onclick }); },
+
+  // 버튼의 기본 Enter·Space 클릭은 유지하고, 장 넘기기 단축키까지 전달하지 않는다.
+  buttonKeys(e) {
+    if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+  },
 
   build() {
     const S = this.slots;
@@ -1133,6 +1306,7 @@ const Toolbar = {
     if (this.pop && this.popAnchor === anchor) { this.closePop(); return; }
     this.closePop();
     this.pop = h('div', { class: 'ch-pop', role: 'dialog' }, makeContent());
+    this.pop.addEventListener('keydown', (e) => this.buttonKeys(e));
     this.popAnchor = anchor;
     document.body.append(this.pop);
     const a = anchor.getBoundingClientRect();
@@ -1270,6 +1444,327 @@ const Toolbar = {
   },
 };
 
+/* ---- 31-settings.js ---- */
+// ⚙ 설정: 이 PC의 저장소에 저장하고 수업 화면에 즉시 적용한다.
+const Settings = {
+  values: { motionOff: false, printInk: false, palmErase: false },
+  button: null,
+  ITEMS: [
+    ['motionOff', '움직임 끄기', '슬라이드 전환과 단계 효과를 끕니다'],
+    ['printInk', '인쇄에 판서 포함', '지금 반의 판서와 칠판을 함께 인쇄합니다'],
+    ['palmErase', '손바닥으로 지우기 (실험)', '넓게 닿는 터치를 지우개로 씁니다'],
+  ],
+
+  async init() {
+    const saved = await Store.get('settings');
+    if (saved && typeof saved === 'object') {
+      for (const key of Object.keys(this.values)) {
+        if (typeof saved[key] === 'boolean') this.values[key] = saved[key];
+      }
+    }
+    this.apply();
+    if (!this.button || !this.button.isConnected) {
+      this.button = Toolbar.btn('gear', '설정', (e) => Toolbar.togglePop(e.currentTarget, () => this.panel()));
+      Toolbar.slots.misc.append(this.button);
+    }
+  },
+
+  panel() {
+    return h('div', { class: 'ch-pop-settings' }, h('h3', { text: '설정' }),
+      ...this.ITEMS.map(([key, label, desc]) => h('label', { class: 'ch-switch' },
+        h('input', {
+          type: 'checkbox', 'data-key': key, checked: this.values[key],
+          onchange: (e) => this.set(key, e.target.checked),
+        }),
+        h('span', null, h('b', { text: label }), h('small', { text: desc })))));
+  },
+
+  set(key, value) {
+    if (!Object.prototype.hasOwnProperty.call(this.values, key)) return;
+    this.values[key] = !!value;
+    this.apply();
+    return Store.set('settings', { ...this.values });
+  },
+
+  apply() {
+    document.documentElement.classList.toggle('ch-motion-off', this.values.motionOff);
+    Ink.palmErase = this.values.palmErase;
+    for (const input of qsa('.ch-pop-settings input[data-key]')) input.checked = this.values[input.dataset.key];
+  },
+};
+
+/* ---- 40-keepwords.js ---- */
+// 어절을 nowrap span으로 감싸고 인라인 요소 사이에 WORD JOINER(U+2060)를 넣는다.
+// 원래 요소와 이벤트는 보존하며, .w 내부를 건너뛰어 다시 적용해도 중첩하지 않는다.
+const KeepWords = {
+  SKIP: 'svg, math, script, style, pre, code, textarea, select, button, canvas, .katex, .w, [data-no-keep]',
+
+  apply(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        const parent = node.parentElement;
+        if (!parent || parent.closest(KeepWords.SKIP)) return NodeFilter.FILTER_REJECT;
+        return /\S/.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      },
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach((node) => this.wrap(node));
+  },
+
+  inline(el) {
+    if (/^(BR|WBR)$/.test(el.tagName)) return false;
+    const display = getComputedStyle(el).display;
+    if (display) return /^(inline|inline-block|inline-flex|inline-grid|inline-table|contents|ruby.*)$/.test(display);
+    // 분리된 요소도 보정할 수 있도록 브라우저 기본 인라인 태그를 사용한다.
+    return /^(A|ABBR|B|BDI|BDO|CITE|CODE|DATA|DEL|DFN|EM|I|INS|KBD|LABEL|MARK|Q|RP|RT|RUBY|S|SAMP|SMALL|SPAN|STRONG|SUB|SUP|TIME|U|VAR)$/.test(el.tagName);
+  },
+
+  // 경계 쪽 첫 문자가 공백이면 끊고, 빈 요소·주석은 건너뛴다.
+  edge(node, before) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (!node.nodeValue) return null;
+      return before ? /\S$/.test(node.nodeValue) : /^\S/.test(node.nodeValue);
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return null;
+    if (!this.inline(node)) return false;
+    let child = before ? node.lastChild : node.firstChild;
+    while (child) {
+      const result = this.edge(child, before);
+      if (result !== null) return result;
+      child = before ? child.previousSibling : child.nextSibling;
+    }
+    return null;
+  },
+
+  joined(node, before) {
+    let current = node;
+    while (current) {
+      let sibling = before ? current.previousSibling : current.nextSibling;
+      while (sibling) {
+        const result = this.edge(sibling, before);
+        if (result !== null) return result;
+        sibling = before ? sibling.previousSibling : sibling.nextSibling;
+      }
+      const parent = current.parentElement;
+      if (!parent || !this.inline(parent)) return false;
+      current = parent;
+    }
+    return false;
+  },
+
+  wrap(node) {
+    let text = node.nodeValue;
+    if (/^\S/.test(text) && !text.startsWith('\u2060') && this.joined(node, true)) text = `\u2060${text}`;
+    if (/\S$/.test(text) && !text.endsWith('\u2060') && this.joined(node, false)) text = `${text}\u2060`;
+    const frag = document.createDocumentFragment();
+    for (const part of text.split(/(\s+)/)) {
+      if (!part) continue;
+      if (/^\s+$/.test(part)) frag.append(part);
+      else frag.append(h('span', { class: 'w', text: part }));
+    }
+    node.replaceWith(frag);
+  },
+};
+
+/* ---- 41-print.js ---- */
+// 모든 슬라이드의 단계를 펼쳐 인쇄한다. 판서는 현재 반의 문서에서 가져온다.
+const Print = {
+  added: [],
+
+  init() {
+    window.addEventListener('beforeprint', () => this.before());
+    window.addEventListener('afterprint', () => this.after());
+  },
+
+  inkImage(strokes) {
+    const canvas = document.createElement('canvas');
+    canvas.width = STAGE_W * 2;
+    canvas.height = STAGE_H * 2;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    for (const pass of ['hl', 'pen']) {
+      ctx.globalAlpha = pass === 'hl' ? 0.4 : 1;
+      for (const stroke of strokes) if (stroke.t === pass) Ink.drawStrokeOn(ctx, stroke);
+    }
+    return h('img', { class: 'ch-print-ink', alt: '', src: canvas.toDataURL('image/png') });
+  },
+
+  add(parent, el) {
+    parent.append(el);
+    this.added.push(el);
+  },
+
+  appendInk(parent, strokes) {
+    // 형광펜은 별도 그림으로 합성하여 인쇄에서도 본문 글자가 비치게 한다.
+    for (const pass of ['hl', 'pen']) {
+      const selected = strokes.filter((s) => s.t === pass);
+      if (!selected.length) continue;
+      const img = this.inkImage(selected);
+      img.classList.add(`ch-print-${pass}`);
+      this.add(parent, img);
+    }
+  },
+
+  before() {
+    this.after();
+    if (!Settings.values.printInk || !Session.doc) return;
+    for (const slide of Stage.slides) {
+      const strokes = Session.doc.slides[slide.dataset.key];
+      if (Array.isArray(strokes) && strokes.length) this.appendInk(slide, strokes);
+    }
+    Session.doc.boards.forEach((board, i) => {
+      if (!board.strokes.length) return;
+      const page = h('section', {
+        class: 'slide ch-print-board', 'data-page': `칠판 ${i + 1}`, 'data-bg': board.bg,
+      }, h('div', { class: 'ch-board', 'data-bg': board.bg }));
+      this.add(Stage.deck, page);
+      this.appendInk(page, board.strokes);
+    });
+  },
+
+  after() {
+    for (const el of this.added) el.remove();
+    this.added = [];
+  },
+};
+
+/* ---- 42-audit.js ---- */
+// D 또는 ?audit로 열며, ClassHTML.audit()은 화면 상태를 보존하고 보고서만 반환한다.
+const Audit = {
+  panel: null,
+
+  init() {
+    this.panel = h('div', { class: 'ch-panel ch-audit', role: 'dialog', 'aria-label': '자동 점검' });
+    this.panel.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+    });
+    document.body.append(this.panel);
+    on('key', (e) => {
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.repeat && keyName(e) === 'd') this.toggle();
+    });
+    on('panels-close', () => this.close());
+    if (new URLSearchParams(location.search).has('audit')) this.toggle();
+  },
+
+  describe(el) {
+    const cls = typeof el.className === 'string' && el.className.trim()
+      ? `.${el.className.trim().split(/\s+/).join('.')}` : '';
+    const text = (el.textContent || '').replace(/\u2060/g, '').trim().slice(0, 14);
+    return `<${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${cls}>${text ? ` 「${text}」` : ''}`;
+  },
+
+  run() {
+    const errors = [];
+    const warnings = [];
+    const err = (slide, code, msg) => errors.push({ level: 'error', slide, code, msg });
+    const warn = (slide, code, msg) => warnings.push({ level: 'warn', slide, code, msg });
+    const ids = new Map();
+    for (const el of qsa('[id]')) ids.set(el.id, (ids.get(el.id) || 0) + 1);
+    for (const [id, count] of ids) if (count > 1) err(null, 'dup-id', `id "${id}"가 ${count}번 쓰였어요`);
+
+    // Nav.set()으로 점검하면 수업의 onShow/onHide 훅과 판서 입력도 바뀐다.
+    // DOM의 표시 상태만 잠깐 바꾸고, 예외가 나도 원래 클래스 상태를 복구한다.
+    const snapshots = Stage.slides.map((slide) => ({
+      slide, active: slide.classList.contains('is-active'),
+      steps: qsa('.step', slide).map((el) => ({ el, shown: el.classList.contains('is-shown') })),
+    }));
+    const root = document.documentElement;
+    const wasAuditing = root.classList.contains('ch-auditing');
+    root.classList.add('ch-auditing');
+    try {
+      Stage.slides.forEach((slide, i) => {
+        Stage.slides.forEach((other) => other.classList.toggle('is-active', other === slide));
+        qsa('.step', slide).forEach((el) => el.classList.add('is-shown'));
+        const box = slide.getBoundingClientRect();
+        const scale = box.width / STAGE_W;
+        const reported = [];
+        const textBlocks = new Map();
+        // 허용 영역은 요소 검사에서도 제외한다. 전체 scroll 값에는 그 영역도 포함된다.
+        if (!slide.closest('[data-allow-overflow]') && !slide.querySelector('[data-allow-overflow]')
+          && (slide.scrollHeight > slide.clientHeight + 1 || slide.scrollWidth > slide.clientWidth + 1)) {
+          err(i, 'slide-overflow', '내용이 슬라이드보다 커요 (장을 나누세요)');
+        }
+        for (const el of qsa('*', slide)) {
+          const allowOverflow = !!el.closest('[data-allow-overflow]');
+          // KaTeX의 스크린리더용 MathML 복제는 의도적으로 1px 안에 숨긴다.
+          if (el.closest('.katex-mathml')) continue;
+          if (el.closest('svg') && el.tagName.toLowerCase() !== 'svg') continue;
+          // 크기가 0인 빈 그림 자리도 경고한다.
+          if (el.matches('img[data-ppt]') && !el.getAttribute('src')) warn(i, 'empty-image', `빈 그림 자리: 원본 PPT ${el.dataset.ppt}`);
+          if (el.matches('img:not([alt])')) warn(i, 'no-alt', `${this.describe(el)}에 alt 설명이 없어요`);
+          if (el.matches('.katex-error')) err(i, 'math-error', `수식 오류: ${this.describe(el)}`);
+          if (el.matches('.katex') && el.getClientRects().length > 1) err(i, 'math-wrap', `수식이 두 줄로 갈렸어요: ${this.describe(el)}`);
+          if (reported.some((parent) => parent.contains(el))) continue;
+          const rect = el.getBoundingClientRect();
+          if (!rect.width && !rect.height) continue;
+          if (!allowOverflow && (rect.right > box.right + scale || rect.bottom > box.bottom + scale
+            || rect.left < box.left - scale || rect.top < box.top - scale)) {
+            err(i, 'out', `${this.describe(el)}이(가) 슬라이드 밖으로 나가요`);
+            reported.push(el);
+            continue;
+          }
+          const cs = getComputedStyle(el);
+          if (!allowOverflow && /(hidden|clip|auto|scroll)/.test(`${cs.overflowX} ${cs.overflowY}`)
+            && (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1)) {
+            err(i, 'clip', `${this.describe(el)} 안의 내용이 잘려요`);
+            reported.push(el);
+            continue;
+          }
+          // 수식의 첨자 등 라이브러리가 그린 내부 글자는 본문 최소 크기에서 제외한다.
+          if (el.closest('.katex, math')) continue;
+          const hasText = Array.from(el.childNodes).some((node) =>
+            node.nodeType === 3 && /\S/.test(node.nodeValue.replace(/\u2060/g, '')));
+          if (!hasText) continue;
+          const block = el.closest('p, li, td, th, h1, h2, h3, h4, figcaption, small, .caption, label') || el;
+          const size = parseFloat(cs.fontSize);
+          if (!textBlocks.has(block) || size < textBlocks.get(block)) textBlocks.set(block, size);
+        }
+        for (const [block, size] of textBlocks) {
+          if (size < 18) err(i, 'tiny-text', `${this.describe(block)} 글자가 ${size}px로 너무 작아요 (최소 18px)`);
+          else if (size < 20 && block.matches('p, li, td, th') && !block.closest('small, .caption, figcaption, .kicker')) {
+            warn(i, 'small-text', `${this.describe(block)} 본문이 ${size}px예요 (권장 20px 이상)`);
+          }
+        }
+      });
+    } finally {
+      for (const snapshot of snapshots) {
+        snapshot.slide.classList.toggle('is-active', snapshot.active);
+        for (const step of snapshot.steps) step.el.classList.toggle('is-shown', step.shown);
+      }
+      root.classList.toggle('ch-auditing', wasAuditing);
+    }
+    return { ok: !errors.length, errors, warnings,
+      info: { slides: Stage.slides.length, aiAdded: qsa('[data-ai]', Stage.deck).length } };
+  },
+
+  toggle() {
+    if (this.panel.classList.contains('is-open')) { this.close(); return; }
+    Panels.close();
+    Toolbar.closePop();
+    this.render(this.run());
+    this.panel.classList.add('is-open');
+    document.documentElement.classList.add('ch-audit-on');
+  },
+
+  close() {
+    this.panel.classList.remove('is-open');
+    document.documentElement.classList.remove('ch-audit-on');
+  },
+
+  render(report) {
+    const items = report.errors.concat(report.warnings);
+    const title = report.ok ? `자동 점검: 오류 없음 · 경고 ${report.warnings.length}`
+      : `자동 점검: 오류 ${report.errors.length} · 경고 ${report.warnings.length}`;
+    this.panel.replaceChildren(h('h2', { text: title }),
+      items.length ? h('ul', null, ...items.map((item) => h('li', { class: `is-${item.level}` },
+        item.slide == null ? h('span', { text: item.msg })
+          : h('button', { type: 'button', text: `${item.slide + 1}쪽 · ${item.msg}`,
+            onclick: () => Nav.go(item.slide, true) })))) : h('p', { text: '고칠 것이 없어요.' }),
+      h('p', { class: 'ch-audit-info', text: `슬라이드 ${report.info.slides}장 · AI 추가 표시 ${report.info.aiAdded}곳 (점선으로 보임)` }));
+  },
+};
+
 /* ---- 99-boot.js ---- */
 // 시작 순서. 엔진이 두 번 포함돼도 한 번만 실행한다.
 let readyResolve;
@@ -1279,10 +1774,15 @@ async function start() {
   Stage.init();
   Panels.init();   // Nav보다 먼저: 첫 show 이벤트로 목차 현재 위치를 표시
   Nav.init();
+  KeepWords.apply(Stage.deck);   // 목차 제목을 뽑은 뒤 어절을 감싼다
   await Store.init();
   await Session.init();
   Ink.init();      // Session.doc이 있어야 한다
   await Toolbar.init();
+  Board.init();    // 툴바 자리(slots.board)에 버튼을 넣는다
+  await Settings.init();
+  Print.init();
+  Audit.init();    // ?audit도 모든 준비가 끝난 다음 실행한다
 }
 
 function boot() {
@@ -1291,7 +1791,8 @@ function boot() {
   ClassHTML.go = (n) => Nav.go(n);
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon };
+  ClassHTML.audit = () => Audit.run();
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

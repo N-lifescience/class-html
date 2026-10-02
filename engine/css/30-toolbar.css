@@ -14,7 +14,7 @@
 .ch-tb-btn:active { transform: scale(.95); }
 .ch-tb-btn:focus-visible, .ch-tb-handle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .ch-tb-btn[aria-pressed="true"] { background: var(--accent); color: #fff; }
-.ch-toolbar[data-dock="left"] .ch-tb-btn, .ch-toolbar[data-dock="right"] .ch-tb-btn { min-width: 48px; height: 48px; }
+.ch-toolbar[data-dock="left"] .ch-tb-btn, .ch-toolbar[data-dock="right"] .ch-tb-btn { min-width: 52px; height: 52px; }
 .ch-toolbar[data-dock="left"] .ch-tb-btn span, .ch-toolbar[data-dock="right"] .ch-tb-btn span { display: none; }
 .ch-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .ch-icon-style path { fill: var(--swatch, currentColor); stroke: rgba(255, 255, 255, .6); stroke-width: 1.5; }

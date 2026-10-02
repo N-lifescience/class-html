@@ -174,6 +174,76 @@ test('그리면 0.5초 뒤 저장된다', async () => {
   const saved = await I().Store.get('ink:test-ink:기본');
   eq(saved.slides.i1.length, page().length);
 });
+
+test('지우다 장을 바꾸면 미완성 지우기는 취소되고 원래 획이 남는다', async () => {
+  const { Session, Tools, Ink } = I();
+  await Session.clearCurrent();
+  ClassHTML.go(0);
+  Tools.set('pen');
+  drag(null, [300, 300], [400, 300]);
+  const original = JSON.stringify(page());
+  Tools.set('eraser');
+  ptr('pointerdown', null, 300, 300);
+  eq(page().length, 0);
+  ClassHTML.go(1);
+  ptr('pointerup', null, 300, 300);
+  eq(page().length, 0);
+  ClassHTML.go(0);
+  eq(JSON.stringify(page()), original);
+  eq(Ink.undo(), true);
+  eq(page().length, 0);
+});
+
+test('그리다 반을 바꾸면 다음 반에 미완성 획이 저장되지 않는다', async () => {
+  const { Session, Tools, Ink } = I();
+  await Session.clearCurrent();
+  await Session.addClass('전환 확인반');
+  Tools.set('pen');
+  ptr('pointerdown', null, 300, 300);
+  ptr('pointermove', null, 400, 300);
+  await Session.switchTo('전환 확인반');
+  ptr('pointerup', null, 400, 300);
+  eq(Ink.gesture, null);
+  eq(page().length, 0);
+  await Session.switchTo('기본');
+  eq(page().length, 0);
+  drag(null, [300, 300], [400, 300]);
+  eq(page().length, 1);
+});
+
+test('지우던 중 저장이 끝나도 취소한 획이 다시 저장된다', async () => {
+  const { Session, Tools } = I();
+  await Session.clearCurrent();
+  Tools.set('pen');
+  drag(null, [300, 300], [400, 300]);
+  Tools.set('eraser');
+  ptr('pointerdown', null, 300, 300);
+  await wait(700); // 앞서 그린 획의 지연 저장이 지우개 입력 도중 실행됨
+  eq((await I().Store.get(Session.key(Session.current))).slides.i1.length, 0);
+  ClassHTML.go(1);
+  ptr('pointerup', null, 300, 300);
+  await wait(700);
+  eq((await I().Store.get(Session.key(Session.current))).slides.i1.length, 1);
+  ClassHTML.go(0);
+});
+
+test('완성된 획이 없어도 되돌리기·지우기는 미완성 펜 흔적을 지운다', async () => {
+  const { Session, Tools, Ink } = I();
+  const alpha = () => {
+    const ratio = Ink.cv.pen.width / 1280;
+    return Ink.ctx.pen.getImageData(Math.round(350 * ratio), Math.round(300 * ratio), 1, 1).data[3];
+  };
+  for (const method of ['undo', 'clear']) {
+    await Session.clearCurrent();
+    Tools.set('pen');
+    ptr('pointerdown', null, 300, 300);
+    ptr('pointermove', null, 400, 300);
+    assert(alpha() > 0, 'live pen preview');
+    eq(Ink[method](), false);
+    eq(alpha(), 0);
+    eq(Ink.gesture, null);
+  }
+});
 </script>
 </body>
 </html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko" data-deck="m1-demo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>판서 엔진 시험장</title>
+<link rel="stylesheet" href="../engine/class-html.css">
+<script defer src="../engine/class-html.js"></script>
+</head>
+<body>
+<section class="slide cover" id="cover" data-title="표지">
+  <p class="kicker">class-html · M1 시험 덱</p>
+  <h1>판서 엔진<br>시험장</h1>
+  <p>아래 툴바에서 펜을 고른 뒤, 펜을 든 채로 ▶를 눌러 넘겨 보세요.</p>
+</section>
+<section class="slide" id="pen-keep" data-sec="1. 펜을 든 채로" data-title="펜을 든 채로 넘기기">
+  <h2>펜을 끄지 않고 넘기기</h2>
+  <ul>
+    <li>툴바의 ◀ ▶, 키보드 → ←, 프레젠터 리모컨은 펜 상태에서도 넘깁니다.</li>
+    <li>장을 넘겨도 펜은 그대로이고, 돌아오면 판서가 남아 있습니다.</li>
+  </ul>
+  <p>여기에 자유롭게 써 보세요.</p>
+</section>
+<section class="slide" id="tap-drag" data-sec="1. 펜을 든 채로" data-title="톡 누르기와 끌기">
+  <h2>버튼은 톡, 판서는 쭉</h2>
+  <p>펜 상태에서 버튼을 <mark>톡 누르면</mark> 버튼이 눌리고, 버튼 위에서 <mark>끌면</mark> 판서가 됩니다.</p>
+  <p><button type="button" id="counter-btn">눌러 보기 <b id="counter">0</b></button></p>
+  <p>슬라이더는 펜 상태에서도 그대로 움직입니다. <input type="range" id="demo-range" min="0" max="100" value="40"><output id="demo-out">40</output></p>
+</section>
+<section class="slide" id="steps" data-sec="2. 단계 공개" data-title="질문과 답">
+  <h2>소금을 뿌리면 왜 달팽이가 움츠러들까?</h2>
+  <p class="step">① 몸 밖이 몸 안보다 진해진다.</p>
+  <p class="step">② 물이 몸 밖으로 빠져나간다.</p>
+  <p class="step">③ 세포의 부피가 줄어든다.</p>
+</section>
+<section class="slide" id="words" data-sec="3. 조판" data-title="어절 단위 줄바꿈">
+  <h2>어절 단위 줄바꿈</h2>
+  <p>세포막은 인지질 이중층과 막단백질로 이루어져 있으며, 물질의 종류에 따라 <mark>선택적으로 투과</mark>시키는 성질이 있어 세포 안팎의 환경 차이를 유지하는 데 필요한 일을 합니다.</p>
+  <table>
+    <tr><th>구분</th><th>단순확산</th><th>촉진확산</th></tr>
+    <tr><td>통로</td><td>인지질 이중층</td><td>수송단백질</td></tr>
+    <tr><td>에너지</td><td>쓰지 않음</td><td>쓰지 않음</td></tr>
+  </table>
+</section>
+<section class="slide" id="board-demo" data-sec="4. 칠판" data-title="칠판 모드">
+  <h2>칠판 모드</h2>
+  <ul>
+    <li>툴바의 「칠판」을 누르면 빈 칠판이 열리고, 같은 자리 버튼이 「슬라이드」로 바뀝니다.</li>
+    <li>칠판은 여러 장 만들 수 있고, 바탕(흰색·모눈·줄·초록 칠판·좌표평면)을 고를 수 있습니다.</li>
+    <li>반을 바꾸면 그 반의 판서와 칠판이 나옵니다.</li>
+  </ul>
+</section>
+<section class="slide" id="checklist" data-title="확인해 볼 것">
+  <h2>확인해 볼 것</h2>
+  <ol>
+    <li>펜 → ▶ → 쓰기 → ◀ : 앞 장 판서가 남아 있나요?</li>
+    <li>반 메뉴에서 「2반」 추가 → 판서가 비었나요? 「기본」으로 돌아가면 판서가 다시 나오나요?</li>
+    <li>창을 닫았다 다시 열어도 판서가 남아 있나요?</li>
+    <li>Ctrl+P → 인쇄 미리보기에 모든 장이 단계를 펼친 채로 나오나요?</li>
+  </ol>
+</section>
+<script>
+const range = document.getElementById('demo-range');
+range.addEventListener('input', () => { document.getElementById('demo-out').textContent = range.value; });
+let taps = 0;
+document.getElementById('counter-btn').addEventListener('click', () => {
+  taps += 1;
+  document.getElementById('counter').textContent = String(taps);
+});
+</script>
+</body>
+</html>

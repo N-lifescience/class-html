@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ko" data-deck="test-board">
+<head>
+<meta charset="utf-8">
+<title>board</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="pointer.js"></script>
+</head>
+<body>
+<section class="slide" id="b1"><h2>하나</h2><p class="step">단계</p><input id="input" aria-label="입력"></section>
+<section class="slide" id="b2"><h2>둘</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const btn = (name) => document.querySelector(`.ch-toolbar [data-name="${name}"]`);
+const key = (k, opts, target) => (target || document).dispatchEvent(new KeyboardEvent('keydown', Object.assign({ key: k, bubbles: true, cancelable: true }, opts || {})));
+const toggleLabel = () => btn('board').querySelector('span').textContent;
+const boardLabel = () => document.querySelector('.ch-board-label').textContent;
+const board = () => I().Session.doc.boards[I().Session.doc.board];
+const reset = async () => {
+  I().Board.close();
+  ClassHTML.go(0);
+  I().Tools.penColor = '#1F2328';
+  I().Tools.set('hand');
+  await I().Session.clearCurrent();
+};
+const draw = (x = 100, y = 300) => {
+  I().Tools.set('pen');
+  drag(null, [x, y], [x + 200, y + 20]);
+};
+
+test('칠판 버튼: 같은 요소에서 칠판 ↔ 슬라이드', () => {
+  const toggle = btn('board');
+  eq(toggleLabel(), '칠판');
+  eq(toggle.getAttribute('aria-pressed'), 'false');
+  toggle.click();
+  assert(I().Board.active, 'active');
+  assert(btn('board') === toggle, 'same toggle element');
+  eq(toggleLabel(), '슬라이드');
+  eq(toggle.getAttribute('aria-pressed'), 'true');
+  assert(document.body.classList.contains('ch-board-on'), 'body class');
+  assert(!I().Board.el.hidden, 'board visible');
+  assert(I().Nav.override === I().Board, 'nav override');
+  assert(getComputedStyle(document.querySelector('.slide.is-active')).visibility === 'hidden', 'slide hidden');
+  toggle.click();
+  assert(!I().Board.active, 'closed');
+  eq(toggleLabel(), '칠판');
+  assert(I().Board.el.hidden, 'board hidden');
+  eq(I().Nav.override, null);
+  eq(getComputedStyle(btn('boardAdd')).display, 'none');
+});
+
+test('칠판 모드 중 보던 슬라이드와 단계·주소를 그대로 보존', async () => {
+  await reset();
+  ClassHTML.next();
+  eq(I().Nav.state.shown, 1);
+  const before = { ...I().Nav.state };
+  const hash = location.hash;
+  I().Board.open();
+  I().Board.add();
+  key('ArrowLeft');
+  key('ArrowRight');
+  eq(I().Nav.state, before);
+  eq(location.hash, hash);
+  I().Board.close();
+  eq(I().Nav.state, before);
+  assert(document.querySelector('#b1 .step').classList.contains('is-shown'), 'step still visible');
+  eq(I().Ink.ref, { kind: 'slide', key: 'b1' });
+});
+
+test('칠판의 ◀ ▶는 경계를 넘지 않고 현재 쪽 바로 뒤에 추가', async () => {
+  await reset();
+  I().Board.open();
+  eq(boardLabel(), '칠판 1 / 1');
+  btn('next').click();
+  btn('prev').click();
+  eq(boardLabel(), '칠판 1 / 1');
+  const first = board();
+  btn('boardAdd').click();
+  I().Board.setBg('grid');
+  const second = board();
+  eq(boardLabel(), '칠판 2 / 2');
+  btn('prev').click();
+  btn('boardAdd').click();
+  eq(I().Session.doc.boards[0], first);
+  eq(I().Session.doc.boards[2], second);
+  eq(boardLabel(), '칠판 2 / 3');
+  btn('next').click();
+  eq(I().Board.el.dataset.bg, 'grid');
+  eq(I().Ink.ref, { kind: 'board', index: 2 });
+});
+
+test('칠판 판서와 슬라이드 판서는 쪽마다 독립', async () => {
+  await reset();
+  draw();
+  const slidePage = I().Ink.page;
+  I().Board.open();
+  draw(300, 400);
+  eq(board().strokes.length, 1);
+  eq(slidePage.length, 1);
+  I().Board.add();
+  eq(I().Ink.page.length, 0);
+  draw(400, 500);
+  eq(I().Ink.page.length, 1);
+  I().Board.prev();
+  eq(I().Ink.page[0].p.slice(0, 2), [300, 400]);
+  I().Board.close();
+  assert(I().Ink.page === slidePage, 'original slide array');
+});
+
+test('칠판의 되돌리기는 현재 칠판 기록만 되돌린다', async () => {
+  await reset();
+  I().Board.open();
+  draw();
+  I().Board.add();
+  draw(400, 500);
+  btn('undo').click();
+  eq(board().strokes.length, 0);
+  I().Board.prev();
+  eq(board().strokes.length, 1);
+  btn('undo').click();
+  eq(board().strokes.length, 0);
+});
+
+test('다섯 바탕과 미리보기 배경은 모두 유효한 CSS', async () => {
+  await reset();
+  I().Board.open();
+  btn('bg').click();
+  const choices = [...document.querySelectorAll('.ch-pop .ch-bg')];
+  eq(choices.map((b) => b.dataset.bg), ['white', 'grid', 'lines', 'green', 'coord']);
+  for (const b of choices) {
+    eq(b.getAttribute('aria-pressed'), String(b.dataset.bg === 'white'));
+    const preview = getComputedStyle(b.querySelector('i'));
+    if (['grid', 'lines', 'coord'].includes(b.dataset.bg)) assert(preview.backgroundImage !== 'none', `${b.dataset.bg} preview`);
+  }
+  for (const bg of ['white', 'grid', 'lines', 'green', 'coord']) {
+    I().Board.setBg(bg);
+    eq(board().bg, bg);
+    eq(I().Board.el.dataset.bg, bg);
+    if (bg !== 'white') assert(getComputedStyle(I().Board.el).backgroundImage !== 'none', `${bg} background`);
+  }
+  I().Board.setBg('invalid');
+  eq(board().bg, 'coord');
+});
+
+test('초록 칠판에서는 먹색→흰색, 밝은 칠판으로 돌아오면 먹색', async () => {
+  await reset();
+  I().Board.open();
+  btn('bg').click();
+  document.querySelector('.ch-pop .ch-bg[data-bg="green"]').click();
+  eq(I().Board.el.dataset.bg, 'green');
+  assert(document.body.classList.contains('ch-dark-page'), 'dark');
+  eq(I().Tools.penColor, '#FFFFFF');
+  assert(!I().Toolbar.pop, 'background pop closed');
+  btn('style').click();
+  assert(document.querySelector('.ch-swatch[aria-label="#FFFFFF"]'), 'white available');
+  I().Board.add();
+  eq(board().bg, 'green');
+  eq(I().Tools.penColor, '#FFFFFF');
+  I().Board.setBg('white');
+  eq(I().Tools.penColor, '#1F2328');
+  assert(!document.body.classList.contains('ch-dark-page'), 'light');
+});
+
+test('색 펜은 초록·밝은 바탕을 이동해도 고른 색 유지', async () => {
+  await reset();
+  I().Tools.penColor = '#D7263D';
+  I().Board.open();
+  I().Board.setBg('green');
+  eq(I().Tools.penColor, '#D7263D');
+  I().Board.close();
+  eq(I().Tools.penColor, '#D7263D');
+});
+
+test('획 있는 칠판 삭제는 확인을 받고 취소 시 그대로', async () => {
+  await reset();
+  I().Board.open();
+  I().Board.add();
+  draw();
+  const original = window.confirm;
+  let confirms = 0;
+  try {
+    window.confirm = () => { confirms += 1; return false; };
+    btn('boardDel').click();
+    eq(I().Session.doc.boards.length, 2);
+    eq(board().strokes.length, 1);
+    window.confirm = () => { confirms += 1; return true; };
+    btn('boardDel').click();
+    eq(I().Session.doc.boards.length, 1);
+    eq(boardLabel(), '칠판 1 / 1');
+    eq(confirms, 2);
+  } finally { window.confirm = original; }
+});
+
+test('빈 칠판은 확인 없이 삭제하고 남은 쪽 번호를 보정', async () => {
+  await reset();
+  I().Board.open();
+  I().Board.add();
+  I().Board.add();
+  const original = window.confirm;
+  try {
+    window.confirm = () => { throw new Error('empty board confirmation'); };
+    I().Board.remove();
+    eq(boardLabel(), '칠판 2 / 2');
+    eq(I().Ink.ref, { kind: 'board', index: 1 });
+  } finally { window.confirm = original; }
+});
+
+test('마지막 칠판 삭제는 한 장을 남기고 이전 undo를 버린다', async () => {
+  await reset();
+  I().Board.open();
+  I().Board.setBg('green');
+  draw();
+  const original = window.confirm;
+  try {
+    window.confirm = () => true;
+    I().Board.remove();
+    eq(I().Session.doc.boards.length, 1);
+    eq(boardLabel(), '칠판 1 / 1');
+    eq(board().strokes.length, 0);
+    eq(I().Ink.undo(), false);
+  } finally { window.confirm = original; }
+});
+
+test('칠판 이 장 지우기는 undo로 복구', async () => {
+  await reset();
+  I().Board.open();
+  draw();
+  draw(400, 500);
+  const original = window.confirm;
+  try {
+    window.confirm = () => true;
+    btn('clear').click();
+    eq(board().strokes.length, 0);
+    btn('undo').click();
+    eq(board().strokes.length, 2);
+  } finally { window.confirm = original; }
+});
+
+test('C는 토글하고 반복·조합·수정키·입력칸에서는 토글하지 않는다', async () => {
+  await reset();
+  for (const opts of [{ repeat: true }, { ctrlKey: true }, { metaKey: true }, { altKey: true }, { isComposing: true }]) key('c', opts);
+  key('c', {}, document.getElementById('input'));
+  assert(!I().Board.active, 'ignored keys');
+  key('ㅊ', { code: 'KeyC' });
+  assert(I().Board.active, 'physical C opens');
+  key('C');
+  assert(!I().Board.active, 'C closes');
+});
+
+test('직접 쪽 이동·Home·End·숫자 Enter는 칠판을 닫고 슬라이드 이동', async () => {
+  await reset();
+  I().Board.open();
+  ClassHTML.go(1);
+  assert(!I().Board.active, 'go closes');
+  eq(I().Nav.state.slide, 1);
+  I().Board.open();
+  key('Home');
+  assert(!I().Board.active, 'Home closes');
+  eq(I().Nav.state.slide, 0);
+  I().Board.open();
+  key('End');
+  assert(!I().Board.active, 'End closes');
+  eq(I().Nav.state.slide, 1);
+  I().Board.open();
+  key('1');
+  key('Enter');
+  assert(!I().Board.active, 'number closes');
+  eq(I().Nav.state.slide, 0);
+});
+
+test('토글·칠판 이동 때 열린 색·바탕 메뉴를 닫는다', async () => {
+  await reset();
+  btn('style').click();
+  I().Board.open();
+  eq(I().Toolbar.pop, null);
+  btn('bg').click();
+  key('c');
+  eq(I().Toolbar.pop, null);
+  I().Board.open();
+  I().Board.add();
+  btn('bg').click();
+  I().Board.prev();
+  eq(I().Toolbar.pop, null);
+});
+
+test('open·close 중복 호출은 상태 변경 이벤트를 중복시키지 않는다', async () => {
+  await reset();
+  const events = [];
+  I().on('board', (active) => events.push(active));
+  I().Board.open();
+  I().Board.open();
+  I().Board.close();
+  I().Board.close();
+  eq(events, [true, false]);
+});
+
+test('슬라이드 모드의 숨긴 칠판 조작은 문서를 바꾸지 않는다', async () => {
+  await reset();
+  const before = JSON.stringify(I().Session.doc);
+  btn('boardAdd').click();
+  btn('boardDel').click();
+  I().Board.setBg('green');
+  I().Board.next();
+  I().Board.prev();
+  eq(JSON.stringify(I().Session.doc), before);
+  assert(I().Board.el.hidden, 'stays hidden');
+  assert(!I().Toolbar.pop, 'no hidden menu');
+});
+
+test('반 전환 후 칠판 번호·바탕·판서는 각 반 문서를 따른다', async () => {
+  await reset();
+  await I().Session.addClass('칠판반');
+  I().Board.open();
+  I().Board.add();
+  I().Board.setBg('green');
+  draw();
+  btn('bg').click();
+  await I().Session.switchTo('칠판반');
+  assert(I().Board.active, 'board stays open');
+  eq(boardLabel(), '칠판 1 / 1');
+  eq(I().Board.el.dataset.bg, 'white');
+  eq(I().Ink.ref, { kind: 'board', index: 0 });
+  eq(I().Ink.page.length, 0);
+  eq(I().Toolbar.pop, null);
+  eq(I().Tools.penColor, '#1F2328');
+  draw(400, 500);
+  await I().Session.switchTo('기본');
+  eq(boardLabel(), '칠판 2 / 2');
+  eq(I().Board.el.dataset.bg, 'green');
+  eq(I().Ink.ref, { kind: 'board', index: 1 });
+  eq(I().Ink.page[0].p.slice(0, 2), [100, 300]);
+  eq(I().Tools.penColor, '#FFFFFF');
+  I().Board.close();
+  eq(I().Ink.ref, { kind: 'slide', key: 'b1' });
+});
+
+test('반의 판서 모두 비우기와 백업 불러오기는 칠판 ref를 갱신', async () => {
+  await reset();
+  I().Board.open();
+  I().Board.add();
+  I().Board.setBg('lines');
+  draw();
+  const backup = await I().Session.exportBackup();
+  await I().Session.clearCurrent();
+  eq(boardLabel(), '칠판 1 / 1');
+  eq(I().Ink.ref, { kind: 'board', index: 0 });
+  eq(I().Ink.page.length, 0);
+  const imported = await I().Session.importBackup(backup);
+  assert(imported.ok, 'imported');
+  eq(boardLabel(), '칠판 2 / 2');
+  eq(I().Board.el.dataset.bg, 'lines');
+  eq(I().Ink.ref, { kind: 'board', index: 1 });
+  eq(I().Ink.page.length, 1);
+});
+
+test('그리다 칠판 이동하면 미완성 획은 다른 쪽에 저장되지 않는다', async () => {
+  await reset();
+  I().Board.open();
+  I().Tools.set('pen');
+  ptr('pointerdown', null, 100, 300);
+  ptr('pointermove', null, 200, 310);
+  I().Board.add();
+  ptr('pointerup', null, 200, 310);
+  eq(board().strokes.length, 0);
+  I().Board.prev();
+  eq(board().strokes.length, 0);
+  draw();
+  eq(board().strokes.length, 1);
+});
+
+test('보던 칠판 번호·바탕·판서가 지연 저장되고 재로드된다', async () => {
+  await reset();
+  I().Board.open();
+  I().Board.add();
+  I().Board.setBg('coord');
+  draw();
+  await wait(700);
+  const saved = await I().Store.get('ink:test-board:기본');
+  eq(saved.boards.length, 2);
+  eq(saved.board, 1);
+  eq(saved.boards[1].bg, 'coord');
+  eq(saved.boards[1].strokes.length, 1);
+  I().Board.close();
+  await I().Session.loadCurrent();
+  I().Board.open();
+  eq(boardLabel(), '칠판 2 / 2');
+  eq(I().Board.el.dataset.bg, 'coord');
+  eq(I().Ink.page.length, 1);
+});
+</script>
+</body>
+</html>

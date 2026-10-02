@@ -102,6 +102,54 @@ test('툴바 설정은 저장된다', async () => {
   eq(saved.penColor, '#D7263D');
   eq(saved.penWidth, 12);
 });
+
+test('툴바·팝오버·손잡이의 Enter·Space는 장을 넘기지 않고 기본 클릭을 허용한다', () => {
+  const { Nav, Toolbar } = I();
+  Nav.go(0);
+  const press = (target) => {
+    target.focus();
+    for (const k of ['Enter', ' ']) {
+      const e = new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true });
+      target.dispatchEvent(e);
+      eq(Nav.state.slide, 0, `${k}: slide`);
+      eq(e.defaultPrevented, false, `${k}: default click allowed`);
+    }
+  };
+  press(btn('pen'));
+  btn('style').click();
+  press(document.querySelector('.ch-pop .ch-swatch'));
+  Toolbar.closePop();
+  btn('class').click();
+  press(document.querySelector('.ch-pop .ch-class'));
+  Toolbar.closePop();
+  Toolbar.setCollapsed(true);
+  press(Toolbar.handle);
+  Toolbar.setCollapsed(false);
+  document.activeElement.blur();
+});
+
+test('Esc는 색·반 팝오버를 닫고 손 모드로 돌아간다', () => {
+  for (const name of ['style', 'class']) {
+    btn('pen').click();
+    btn(name).click();
+    assert(document.querySelector('.ch-pop'), `${name}: open`);
+    key('Escape');
+    eq(document.querySelector('.ch-pop'), null, `${name}: closed`);
+    eq(I().Tools.current, 'hand');
+  }
+});
+
+test('좌우 도킹의 도구 버튼도 최소 52px이다', () => {
+  const T = I().Toolbar;
+  for (const dock of ['left', 'right']) {
+    T.prefs.dock = dock;
+    T.applyDock();
+    const rect = btn('pen').getBoundingClientRect();
+    assert(rect.width >= 52 && rect.height >= 52, `${dock}: ${rect.width}×${rect.height}`);
+  }
+  T.prefs.dock = 'bottom';
+  T.applyDock();
+});
 </script>
 </body>
 </html>

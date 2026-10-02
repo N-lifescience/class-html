@@ -75,10 +75,13 @@ const Toolbar = {
       onclick: () => this.setCollapsed(false),
     }, icon('tools'), h('span', { text: '도구' }));
     this.build();
+    this.el.addEventListener('keydown', (e) => this.buttonKeys(e));
+    this.handle.addEventListener('keydown', (e) => this.buttonKeys(e));
     document.body.append(this.el, this.handle);
     on('tool', () => this.sync());
     on('session', () => this.sync());
     on('key', (e) => this.onKey(e));
+    on('panels-close', () => this.closePop());
     document.addEventListener('pointerdown', (e) => {
       if (!this.pop || this.pop.contains(e.target)) return;
       if (this.popAnchor && this.popAnchor.contains(e.target)) return;
@@ -96,6 +99,11 @@ const Toolbar = {
   },
 
   menuItem(label, onclick) { return h('button', { type: 'button', class: 'ch-menu-item', text: label, onclick }); },
+
+  // 버튼의 기본 Enter·Space 클릭은 유지하고, 장 넘기기 단축키까지 전달하지 않는다.
+  buttonKeys(e) {
+    if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+  },
 
   build() {
     const S = this.slots;
@@ -131,6 +139,7 @@ const Toolbar = {
     if (this.pop && this.popAnchor === anchor) { this.closePop(); return; }
     this.closePop();
     this.pop = h('div', { class: 'ch-pop', role: 'dialog' }, makeContent());
+    this.pop.addEventListener('keydown', (e) => this.buttonKeys(e));
     this.popAnchor = anchor;
     document.body.append(this.pop);
     const a = anchor.getBoundingClientRect();

@@ -64,6 +64,19 @@ test('백업 내보내기 → 비우기 → 불러오기', async () => {
   eq(S.doc.slides.a.length, 1);
   eq((await S.importBackup('{"app":"x"}')).ok, false);
 });
+test('반을 바꾸는 도중 저장이 끼어들어도 다른 반 키에 쓰지 않는다', async () => {
+  const { Session: S, Store: St, InkModel: M } = I();
+  M.add(S.hist, M.page(S.doc, { kind: 'slide', key: 'z' }), stroke('pen'));   // 기본 반에만 그린다
+  const get = St.get;
+  St.get = (k) => wait(300).then(() => get.call(St, k));   // 느린 디스크
+  const p = S.switchTo('2반');
+  while (S.current !== '2반') await wait(5);
+  await S.flush();   // 바꾸는 도중 창 숨김
+  await p;
+  St.get = get;
+  eq(inked(await S.load('2반')), 0);
+  eq((await S.load('기본')).slides.z.length, 1);
+});
 test('반 삭제: 지운 반의 판서도 지우고, 마지막 하나는 못 지운다', async () => {
   const { Session: S, Store: St } = I();
   await S.switchTo('2반');
@@ -72,6 +85,41 @@ test('반 삭제: 지운 반의 판서도 지우고, 마지막 하나는 못 지
   eq(S.current, '기본');
   eq(await St.get('ink:test-session:2반'), undefined);
   eq(await S.removeClass('기본'), false);
+});
+test('반을 지우는 도중 저장이 끼어들어도 지운 반 판서가 되살아나지 않는다', async () => {
+  const { Session: S, Store: St, InkModel: M } = I();
+  await S.addClass('3반');
+  await S.switchTo('3반');
+  M.add(S.hist, M.page(S.doc, { kind: 'slide', key: 'r' }), stroke('pen'));
+  const p = S.removeClass('3반');
+  S.flush();   // 지우는 도중 창 숨김
+  await p;
+  await S.flush();
+  eq(S.current, '기본');
+  eq(await St.get('ink:test-session:3반'), undefined);
+});
+test('저장이 실패해도 백업 내보내기는 된다', async () => {
+  const { Session: S, Store: St, InkModel: M } = I();
+  M.add(S.hist, M.page(S.doc, { kind: 'slide', key: 'q' }), stroke('pen'));
+  const setItem = Storage.prototype.setItem;
+  Storage.prototype.setItem = () => { throw new DOMException('가득 참', 'QuotaExceededError'); };
+  St.backend = 'local';
+  try {
+    eq(await St.set('t', 1), false);
+    eq(M.parseBackup(await S.exportBackup()).classes['기본'].slides.q.length, 1);
+  } finally {
+    Storage.prototype.setItem = setItem;
+    St.backend = 'idb';
+  }
+});
+test('저장소의 반 목록이 깨져 있어도 정리해서 쓴다', async () => {
+  const { Session: S, Store: St } = I();
+  await St.set('classes', { list: ['A', 'A', '__proto__', '  ', 5, 'x'.repeat(21), 'B'], current: 'zzz' });
+  await St.set('ink:test-session:A', { slides: 'broken', boards: 7 });
+  await S.init();   // 저장소에서 다시 읽는다
+  eq(S.classes, ['A', 'B']);
+  eq(S.current, 'A');
+  eq(S.doc.boards.length, 1);
 });
 </script>
 </body>

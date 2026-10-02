@@ -31,30 +31,45 @@ const Store = {
       const t = this.db.transaction('kv', mode);
       const req = fn(t.objectStore('kv'));
       t.oncomplete = () => resolve(req.result);
-      t.onerror = () => reject(t.error);
+      // 용량 초과 같은 커밋 실패는 요청 오류 없이 abort만 온다
+      t.onerror = t.onabort = () => reject(t.error || req.error || new Error('indexedDB transaction failed'));
     });
   },
 
-  async get(key) {
-    if (this.backend === 'idb') return this.tx('readonly', (s) => s.get(key));
-    if (this.backend === 'local') {
-      try {
+  // 수업 중에 멈추거나 예외를 던지지 않도록, 실패하면 경고만 남기고 fallback을 돌려준다.
+  async guard(what, key, fallback, fn) {
+    try { return await fn(); } catch (err) {
+      console.warn(`[class-html] 저장소 ${what} 실패:`, key, err);
+      return fallback;
+    }
+  },
+
+  get(key) {
+    return this.guard('읽기', key, undefined, () => {
+      if (this.backend === 'idb') return this.tx('readonly', (s) => s.get(key));
+      if (this.backend === 'local') {
         const v = localStorage.getItem(`class-html:${key}`);
         return v == null ? undefined : JSON.parse(v);
-      } catch (err) { return undefined; }
-    }
-    return this.mem.get(key);
+      }
+      return this.mem.get(key);
+    });
   },
 
-  async set(key, value) {
-    if (this.backend === 'idb') { await this.tx('readwrite', (s) => s.put(value, key)); return; }
-    if (this.backend === 'local') { localStorage.setItem(`class-html:${key}`, JSON.stringify(value)); return; }
-    this.mem.set(key, value);
+  set(key, value) {
+    return this.guard('쓰기', key, false, async () => {
+      if (this.backend === 'idb') await this.tx('readwrite', (s) => s.put(value, key));
+      else if (this.backend === 'local') localStorage.setItem(`class-html:${key}`, JSON.stringify(value));
+      else this.mem.set(key, value);
+      return true;
+    });
   },
 
-  async del(key) {
-    if (this.backend === 'idb') { await this.tx('readwrite', (s) => s.delete(key)); return; }
-    if (this.backend === 'local') { localStorage.removeItem(`class-html:${key}`); return; }
-    this.mem.delete(key);
+  del(key) {
+    return this.guard('지우기', key, false, async () => {
+      if (this.backend === 'idb') await this.tx('readwrite', (s) => s.delete(key));
+      else if (this.backend === 'local') localStorage.removeItem(`class-html:${key}`);
+      else this.mem.delete(key);
+      return true;
+    });
   },
 };

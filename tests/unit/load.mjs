@@ -6,9 +6,9 @@ import vm from 'node:vm';
 
 const srcDir = join(dirname(fileURLToPath(import.meta.url)), '../../engine/src');
 
-export function load(files, names) {
+export function load(files, names, globals = {}) {
   const code = files.map((f) => readFileSync(join(srcDir, f), 'utf8')).join('\n');
-  const ctx = vm.createContext({ console });
+  const ctx = vm.createContext({ console, ...globals });
   return vm.runInContext(`${code}\n;({ ${names.join(', ')} })`, ctx);
 }
 

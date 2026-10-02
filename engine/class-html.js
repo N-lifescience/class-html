@@ -549,36 +549,53 @@ const Store = {
       const t = this.db.transaction('kv', mode);
       const req = fn(t.objectStore('kv'));
       t.oncomplete = () => resolve(req.result);
-      t.onerror = () => reject(t.error);
+      // 용량 초과 같은 커밋 실패는 요청 오류 없이 abort만 온다
+      t.onerror = t.onabort = () => reject(t.error || req.error || new Error('indexedDB transaction failed'));
     });
   },
 
-  async get(key) {
-    if (this.backend === 'idb') return this.tx('readonly', (s) => s.get(key));
-    if (this.backend === 'local') {
-      try {
+  // 수업 중에 멈추거나 예외를 던지지 않도록, 실패하면 경고만 남기고 fallback을 돌려준다.
+  async guard(what, key, fallback, fn) {
+    try { return await fn(); } catch (err) {
+      console.warn(`[class-html] 저장소 ${what} 실패:`, key, err);
+      return fallback;
+    }
+  },
+
+  get(key) {
+    return this.guard('읽기', key, undefined, () => {
+      if (this.backend === 'idb') return this.tx('readonly', (s) => s.get(key));
+      if (this.backend === 'local') {
         const v = localStorage.getItem(`class-html:${key}`);
         return v == null ? undefined : JSON.parse(v);
-      } catch (err) { return undefined; }
-    }
-    return this.mem.get(key);
+      }
+      return this.mem.get(key);
+    });
   },
 
-  async set(key, value) {
-    if (this.backend === 'idb') { await this.tx('readwrite', (s) => s.put(value, key)); return; }
-    if (this.backend === 'local') { localStorage.setItem(`class-html:${key}`, JSON.stringify(value)); return; }
-    this.mem.set(key, value);
+  set(key, value) {
+    return this.guard('쓰기', key, false, async () => {
+      if (this.backend === 'idb') await this.tx('readwrite', (s) => s.put(value, key));
+      else if (this.backend === 'local') localStorage.setItem(`class-html:${key}`, JSON.stringify(value));
+      else this.mem.set(key, value);
+      return true;
+    });
   },
 
-  async del(key) {
-    if (this.backend === 'idb') { await this.tx('readwrite', (s) => s.delete(key)); return; }
-    if (this.backend === 'local') { localStorage.removeItem(`class-html:${key}`); return; }
-    this.mem.delete(key);
+  del(key) {
+    return this.guard('지우기', key, false, async () => {
+      if (this.backend === 'idb') await this.tx('readwrite', (s) => s.delete(key));
+      else if (this.backend === 'local') localStorage.removeItem(`class-html:${key}`);
+      else this.mem.delete(key);
+      return true;
+    });
   },
 };
 
 /* ---- 23-session.js ---- */
-// 현재 반과 그 반의 판서 문서. 저장은 0.5초 늦춰서 하고, 반을 바꿀 때는 먼저 저장한다.
+// 현재 반과 그 반의 판서 문서. 저장은 0.5초 늦춰서 한다.
+// 반 바꾸기·추가·삭제·비우기·백업은 run으로 하나씩 차례로 하고, 현재 반과 문서는 swap으로 한 번에 바꾼다.
+// 그래서 flush(지연 저장, 창 숨김, 창 닫기)가 언제 불려도 문서는 자기 반 키에만 써진다.
 const Session = {
   deck: 'deck',
   classes: ['기본'],
@@ -586,6 +603,7 @@ const Session = {
   doc: null,
   hist: null,
   timer: 0,
+  queue: Promise.resolve(),
 
   deckKey() {
     const raw = document.documentElement.dataset.deck || document.title || location.pathname;
@@ -596,7 +614,9 @@ const Session = {
     this.deck = this.deckKey();
     const saved = await Store.get('classes');
     if (saved && Array.isArray(saved.list)) {
-      const list = saved.list.filter((c) => typeof c === 'string' && c.trim()).slice(0, 50);
+      // 저장소 값은 믿지 않는다: 문자열, 20자 이하, 위험 키 아님, 중복 없음
+      const ok = (c) => typeof c === 'string' && c.trim() && c.length <= 20 && !BAD_KEYS.includes(c);
+      const list = [...new Set(saved.list.filter(ok))].slice(0, 50);
       if (list.length) {
         this.classes = list;
         this.current = list.includes(saved.current) ? saved.current : list[0];
@@ -611,11 +631,21 @@ const Session = {
 
   async load(cls) { return InkModel.sanitizeDoc(await Store.get(this.key(cls))) || InkModel.emptyDoc(); },
 
-  async loadCurrent() {
-    this.doc = await this.load(this.current);
+  run(fn) {
+    const p = this.queue.then(fn);
+    this.queue = p.catch(() => {});
+    return p;
+  },
+
+  swap(cls, doc) {
+    clearTimeout(this.timer);
+    this.current = cls;
+    this.doc = doc;
     this.hist = InkModel.history();
     emit('session');
   },
+
+  async loadCurrent() { this.swap(this.current, await this.load(this.current)); },
 
   changed() {
     clearTimeout(this.timer);
@@ -629,63 +659,68 @@ const Session = {
 
   async saveClasses() { await Store.set('classes', { list: this.classes, current: this.current }); },
 
-  async switchTo(cls) {
-    if (!this.classes.includes(cls) || cls === this.current) return;
-    await this.flush();
-    this.current = cls;
-    await this.saveClasses();
-    await this.loadCurrent();
-  },
-
-  async addClass(name) {
-    const n = String(name || '').trim().slice(0, 20);
-    if (!n || this.classes.includes(n) || BAD_KEYS.includes(n)) return false;
-    this.classes.push(n);
-    await this.saveClasses();
-    return true;
-  },
-
-  async removeClass(cls) {
-    if (this.classes.length <= 1 || !this.classes.includes(cls)) return false;
-    if (cls === this.current) clearTimeout(this.timer);   // 지울 반의 대기 중 저장은 버린다
-    else await this.flush();
-    this.classes = this.classes.filter((c) => c !== cls);
-    await Store.del(this.key(cls));
-    if (cls === this.current) {
-      this.current = this.classes[0];
+  switchTo(cls) {
+    return this.run(async () => {
+      if (!this.classes.includes(cls) || cls === this.current) return;
+      const doc = await this.load(cls);
+      const prevKey = this.key(this.current);
+      const prevDoc = this.doc;
+      this.swap(cls, doc);
+      await Store.set(prevKey, prevDoc);   // 읽는 동안 그린 획까지 옛 반에 저장
       await this.saveClasses();
-      await this.loadCurrent();
-    } else {
+    });
+  },
+
+  addClass(name) {
+    return this.run(async () => {
+      const n = String(name || '').trim().slice(0, 20);
+      if (!n || this.classes.includes(n) || BAD_KEYS.includes(n)) return false;
+      this.classes.push(n);
       await this.saveClasses();
-    }
-    return true;
+      return true;
+    });
   },
 
-  async clearCurrent() {
-    this.doc = InkModel.emptyDoc();
-    this.hist = InkModel.history();
-    await this.flush();
-    emit('session');
+  removeClass(cls) {
+    return this.run(async () => {
+      if (this.classes.length <= 1 || !this.classes.includes(cls)) return false;
+      this.classes = this.classes.filter((c) => c !== cls);
+      // 현재 반이면 먼저 다른 반으로 옮긴 뒤 지운다(대기 중 저장은 swap이 버린다). 그래야 flush가 지운 키를 되살리지 못한다.
+      if (cls === this.current) this.swap(this.classes[0], await this.load(this.classes[0]));
+      await Store.del(this.key(cls));
+      await this.saveClasses();
+      return true;
+    });
   },
 
-  async exportBackup() {
-    await this.flush();
-    const all = {};
-    for (const c of this.classes) all[c] = await this.load(c);
-    return InkModel.backup(this.deck, all);
+  clearCurrent() {
+    return this.run(async () => {
+      this.swap(this.current, InkModel.emptyDoc());
+      await this.flush();
+    });
+  },
+
+  exportBackup() {
+    return this.run(async () => {
+      const all = {};
+      // 현재 반은 메모리의 문서를 쓴다: 저장이 실패하고 있어도 백업은 된다
+      for (const c of this.classes) all[c] = c === this.current ? this.doc : await this.load(c);
+      return InkModel.backup(this.deck, all);
+    });
   },
 
   async importBackup(text) {
     const r = InkModel.parseBackup(text);
     if (!r.ok) return r;
-    await this.flush();
-    for (const [c, d] of Object.entries(r.classes)) {
-      if (!this.classes.includes(c)) this.classes.push(c);
-      await Store.set(this.key(c), d);
-    }
-    await this.saveClasses();
-    await this.loadCurrent();
-    return r;
+    return this.run(async () => {
+      for (const [c, d] of Object.entries(r.classes)) {
+        if (!this.classes.includes(c)) this.classes.push(c);
+        if (c === this.current) this.swap(c, d);
+        await Store.set(this.key(c), d);
+      }
+      await this.saveClasses();
+      return r;
+    });
   },
 };
 

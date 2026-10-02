@@ -13,10 +13,11 @@
     await window.ClassHTML.ready;
     const out = document.getElementById('results');
     const failed = [];
+    if (!cases.length) failed.push('✗ 등록된 테스트가 없어요');
     for (const c of cases) {
       try { await c.fn(); } catch (err) { failed.push(`✗ ${c.name}: ${err.message}`); }
     }
-    const summary = failed.length ? `FAIL ${failed.length}/${cases.length}` : `PASS ${cases.length}`;
+    const summary = failed.length ? `FAIL ${failed.length}/${Math.max(cases.length, 1)}` : `PASS ${cases.length}`;
     out.textContent = [summary, ...failed].join('\n');
     out.dataset.summary = summary;
   };

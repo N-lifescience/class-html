@@ -61,8 +61,11 @@ async function runPage(file) {
   }
 }
 
+const files = process.argv.slice(2);
+if (!files.length) { console.error('usage: node tests/run-browser.mjs <a.test.html> [b.test.html ...]'); process.exit(2); }
+
 let failed = 0;
-for (const file of process.argv.slice(2)) {
+for (const file of files) {
   const { summary, detail } = await runPage(file);
   console.log(`${summary.padEnd(10)} ${file}`);
   if (!summary.startsWith('PASS')) { failed++; console.log(detail); }

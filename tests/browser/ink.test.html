@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko" data-deck="test-ink">
+<head>
+<meta charset="utf-8">
+<title>ink</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="pointer.js"></script>
+</head>
+<body>
+<section class="slide" id="i1">
+  <h2>판서</h2>
+  <button id="tap" type="button">눌러 보기</button>
+  <input id="rng" type="range" min="0" max="10" value="5">
+  <p>빈 곳</p>
+</section>
+<section class="slide" id="i2"><h2>둘째</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const page = () => I().Ink.page;
+let taps = 0;
+document.getElementById('tap').addEventListener('click', () => { taps += 1; });
+
+test('캔버스는 무대 × 배율 × 화면 밀도 크기', () => {
+  const { Ink, Stage } = I();
+  eq(Ink.cv.pen.width, Math.round(1280 * Stage.scale * devicePixelRatio));
+  eq(Ink.cv.hl.height, Math.round(720 * Stage.scale * devicePixelRatio));
+});
+test('손 모드에서는 그려지지 않는다', () => {
+  I().Tools.set('hand');
+  drag(null, [100, 300], [300, 320]);
+  eq(page().length, 0);
+});
+test('펜으로 끌면 획 하나', () => {
+  const { Tools } = I();
+  Tools.set('pen');
+  drag(null, [100, 300], [300, 320]);
+  eq(page().length, 1);
+  eq(page()[0].t, 'pen');
+  eq(page()[0].c, Tools.penColor);
+  eq(page()[0].w, Tools.penWidth);
+  assert(page()[0].p.length >= 4, 'points');
+});
+test('펜을 든 채로 버튼을 톡 누르면 버튼이 눌린다', () => {
+  const btn = document.getElementById('tap');
+  const before = page().length;
+  ptr('pointerdown', btn, 200, 200);
+  ptr('pointerup', btn, 200, 200);
+  btn.click();
+  eq(taps, 1);
+  eq(page().length, before);
+});
+test('버튼 위에서 끌면 판서가 되고 클릭은 취소된다', () => {
+  const btn = document.getElementById('tap');
+  const before = page().length;
+  drag(btn, [200, 200], [260, 240]);
+  btn.click();
+  eq(taps, 1);
+  eq(page().length, before + 1);
+});
+test('슬라이더는 펜 상태에서도 조작용', () => {
+  const before = page().length;
+  drag(document.getElementById('rng'), [400, 400], [500, 400]);
+  eq(page().length, before);
+});
+test('두 번째 손가락은 무시한다', () => {
+  const before = page().length;
+  ptr('pointerdown', null, 600, 300, { pointerId: 1 });
+  ptr('pointerdown', null, 700, 300, { pointerId: 2 });
+  ptr('pointermove', null, 700, 360, { pointerId: 2 });
+  ptr('pointerup', null, 700, 360, { pointerId: 2 });
+  ptr('pointermove', null, 650, 330, { pointerId: 1 });
+  ptr('pointerup', null, 650, 330, { pointerId: 1 });
+  eq(page().length, before + 1);
+});
+test('형광펜은 폭 24, 종류 hl', () => {
+  I().Tools.set('hl');
+  drag(null, [100, 500], [400, 500]);
+  const s = page()[page().length - 1];
+  eq(s.t, 'hl');
+  eq(s.w, 24);
+});
+test('지우개로 문지르면 지워지고 되돌리기로 한 번에 복구', () => {
+  const { Tools, Ink } = I();
+  const before = page().length;
+  Tools.set('eraser');
+  drag(null, [100, 500], [400, 500]);
+  eq(page().length, before - 1);
+  eq(Ink.undo(), true);
+  eq(page().length, before);
+});
+test('레이저는 저장하지 않고 1초 뒤 사라진다', async () => {
+  const before = page().length;
+  I().Tools.set('laser');
+  drag(null, [100, 100], [300, 100]);
+  eq(page().length, before);
+  assert(I().Ink.laser.length > 0, 'laser points');
+  await wait(1300);
+  eq(I().Ink.laser.length, 0);
+});
+test('장을 넘기면 그 장의 쪽으로 바뀐다', () => {
+  ClassHTML.go(1);
+  eq(page().length, 0);
+  ClassHTML.go(0);
+  assert(page().length > 0, 'first slide strokes back');
+});
+test('손바닥 지우기가 켜지면 넓은 터치는 지우개', () => {
+  const { Tools, Ink } = I();
+  Tools.set('pen');
+  Ink.palmErase = true;
+  const before = page().length;
+  drag(null, [100, 300], [300, 320], { pointerType: 'touch', width: 80, height: 80 });
+  eq(page().length, before - 1);
+  Ink.palmErase = false;
+});
+test('그리면 0.5초 뒤 저장된다', async () => {
+  await wait(700);
+  const saved = await I().Store.get('ink:test-ink:기본');
+  eq(saved.slides.i1.length, page().length);
+});
+</script>
+</body>
+</html>

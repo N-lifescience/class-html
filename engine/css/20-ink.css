@@ -1,0 +1,6 @@
+.ch-ink { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
+.ch-ink canvas { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; }
+.ch-ink-hl { opacity: .45; mix-blend-mode: multiply; }
+.ch-dark-page .ch-ink-hl { opacity: .55; mix-blend-mode: screen; }
+body:not([data-tool="hand"]) .ch-deck { cursor: crosshair; user-select: none; -webkit-user-select: none; }
+body[data-tool="eraser"] .ch-deck { cursor: cell; }

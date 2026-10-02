@@ -9,6 +9,7 @@ async function start() {
   await Store.init();
   await Session.init();
   Ink.init();      // Session.doc이 있어야 한다
+  await Toolbar.init();
 }
 
 function boot() {
@@ -17,7 +18,7 @@ function boot() {
   ClassHTML.go = (n) => Nav.go(n);
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink };
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

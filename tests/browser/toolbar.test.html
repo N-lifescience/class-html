@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko" data-deck="test-toolbar">
+<head>
+<meta charset="utf-8">
+<title>toolbar</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="pointer.js"></script>
+</head>
+<body>
+<section class="slide" id="t1"><h2>하나</h2></section>
+<section class="slide" id="t2"><h2>둘</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const btn = (name) => document.querySelector(`.ch-toolbar [data-name="${name}"]`);
+const key = (k, opts) => document.dispatchEvent(new KeyboardEvent('keydown', Object.assign({ key: k, bubbles: true, cancelable: true }, opts)));
+
+test('툴바가 있고 처음에는 손 모드', () => {
+  assert(document.querySelector('.ch-toolbar'), 'toolbar');
+  eq(I().Tools.current, 'hand');
+  eq(btn('hand').getAttribute('aria-pressed'), 'true');
+});
+test('도구 버튼과 단축키', () => {
+  btn('pen').click();
+  eq(I().Tools.current, 'pen');
+  eq(btn('pen').getAttribute('aria-pressed'), 'true');
+  key('h'); eq(I().Tools.current, 'hl');
+  key('e'); eq(I().Tools.current, 'eraser');
+  key('l'); eq(I().Tools.current, 'laser');
+  key('p'); eq(I().Tools.current, 'pen');
+  key('Escape'); eq(I().Tools.current, 'hand');
+});
+test('◀ ▶ 버튼은 펜을 든 채로도 넘긴다', () => {
+  btn('pen').click();
+  btn('next').click(); eq(I().Nav.state.slide, 1);
+  btn('prev').click(); eq(I().Nav.state.slide, 0);
+  eq(I().Tools.current, 'pen');
+});
+test('색 팝오버: 색을 고르면 펜 색이 바뀌고 닫힌다', () => {
+  btn('style').click();
+  const sw = document.querySelectorAll('.ch-pop .ch-swatch');
+  eq(sw.length, 5);
+  sw[1].click();
+  eq(I().Tools.penColor, '#D7263D');
+  eq(document.querySelector('.ch-pop'), null);
+});
+test('굵기 선택', () => {
+  btn('style').click();
+  document.querySelectorAll('.ch-pop .ch-width')[2].click();
+  eq(I().Tools.penWidth, 12);
+});
+test('형광펜일 때는 형광펜 색 4개', () => {
+  btn('hl').click();
+  btn('style').click();
+  eq(document.querySelectorAll('.ch-pop .ch-swatch').length, 4);
+  document.querySelectorAll('.ch-pop .ch-swatch')[2].click();
+  eq(I().Tools.hlColor, '#FFB3D1');
+});
+test('되돌리기 버튼과 Ctrl+Z', () => {
+  btn('pen').click();
+  drag(null, [100, 300], [300, 320]);
+  drag(null, [100, 400], [300, 420]);
+  eq(I().Ink.page.length, 2);
+  btn('undo').click(); eq(I().Ink.page.length, 1);
+  key('z', { ctrlKey: true }); eq(I().Ink.page.length, 0);
+});
+test('이 장 지우기는 확인 후', () => {
+  drag(null, [100, 300], [300, 320]);
+  window.confirm = () => false; btn('clear').click(); eq(I().Ink.page.length, 1);
+  window.confirm = () => true; btn('clear').click(); eq(I().Ink.page.length, 0);
+});
+test('위치 바꾸기: 아래 → 왼쪽, 화면 여백도 옮긴다', () => {
+  btn('dock').click();
+  eq(document.querySelector('.ch-toolbar').dataset.dock, 'left');
+  eq(document.documentElement.style.getPropertyValue('--ch-reserve-left'), '76px');
+  eq(document.documentElement.style.getPropertyValue('--ch-reserve-bottom'), '0px');
+  btn('dock').click();
+  btn('dock').click();
+  eq(document.querySelector('.ch-toolbar').dataset.dock, 'bottom');
+});
+test('접기와 펼치기', () => {
+  btn('collapse').click();
+  assert(document.querySelector('.ch-toolbar').hidden, 'hidden');
+  assert(!document.querySelector('.ch-tb-handle').hidden, 'handle shown');
+  document.querySelector('.ch-tb-handle').click();
+  assert(!document.querySelector('.ch-toolbar').hidden, 'shown again');
+});
+test('반 메뉴: 반을 추가하면 그 반으로 바뀌고 이름이 보인다', async () => {
+  window.prompt = () => '3반';
+  btn('class').click();
+  [...document.querySelectorAll('.ch-pop .ch-menu-item')].find((b) => b.textContent.includes('반 추가')).click();
+  await wait(300);
+  eq(I().Session.current, '3반');
+  eq(btn('class').querySelector('span').textContent, '3반');
+});
+test('툴바 설정은 저장된다', async () => {
+  await wait(100);
+  const saved = await I().Store.get('toolbar');
+  eq(saved.dock, 'bottom');
+  eq(saved.penColor, '#D7263D');
+  eq(saved.penWidth, 12);
+});
+</script>
+</body>
+</html>

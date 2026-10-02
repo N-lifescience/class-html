@@ -1,0 +1,39 @@
+.ch-toolbar { position: fixed; z-index: 50; display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: var(--ch-ui); color: var(--ch-ui-fg); border-radius: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); font-family: var(--ch-font); }
+.ch-toolbar[data-dock="bottom"] { left: 50%; bottom: 8px; transform: translateX(-50%); max-width: calc(100vw - 16px); overflow-x: auto; }
+.ch-toolbar[data-dock="left"], .ch-toolbar[data-dock="right"] { top: 50%; transform: translateY(-50%); flex-direction: column; max-height: calc(100vh - 16px); overflow-y: auto; }
+.ch-toolbar[data-dock="left"] { left: 8px; }
+.ch-toolbar[data-dock="right"] { right: 8px; }
+.ch-toolbar[hidden], .ch-tb-handle[hidden] { display: none; }
+.ch-tb-group { display: flex; align-items: center; gap: 4px; }
+.ch-toolbar[data-dock="left"] .ch-tb-group, .ch-toolbar[data-dock="right"] .ch-tb-group { flex-direction: column; }
+.ch-tb-group:empty { display: none; }
+.ch-tb-group + .ch-tb-group { padding-left: 6px; border-left: 1px solid rgba(255, 255, 255, .12); }
+.ch-toolbar[data-dock="left"] .ch-tb-group + .ch-tb-group, .ch-toolbar[data-dock="right"] .ch-tb-group + .ch-tb-group { padding: 6px 0 0; border-left: 0; border-top: 1px solid rgba(255, 255, 255, .12); }
+.ch-tb-btn, .ch-tb-handle { all: unset; box-sizing: border-box; min-width: 52px; height: 56px; padding: 6px 6px 4px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: var(--ch-ui-fg); font: 600 11px/1 var(--ch-font); white-space: nowrap; -webkit-tap-highlight-color: transparent; transition: background .15s, transform .15s; }
+.ch-tb-btn:hover { background: var(--ch-ui-2); }
+.ch-tb-btn:active { transform: scale(.95); }
+.ch-tb-btn:focus-visible, .ch-tb-handle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ch-tb-btn[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.ch-toolbar[data-dock="left"] .ch-tb-btn, .ch-toolbar[data-dock="right"] .ch-tb-btn { min-width: 48px; height: 48px; }
+.ch-toolbar[data-dock="left"] .ch-tb-btn span, .ch-toolbar[data-dock="right"] .ch-tb-btn span { display: none; }
+.ch-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ch-icon-style path { fill: var(--swatch, currentColor); stroke: rgba(255, 255, 255, .6); stroke-width: 1.5; }
+.ch-tb-handle { position: fixed; z-index: 50; background: var(--ch-ui); box-shadow: 0 8px 24px rgba(0, 0, 0, .3); }
+.ch-tb-handle[data-dock="bottom"] { left: 50%; bottom: 8px; transform: translateX(-50%); }
+.ch-tb-handle[data-dock="left"] { left: 8px; top: 50%; transform: translateY(-50%); }
+.ch-tb-handle[data-dock="right"] { right: 8px; top: 50%; transform: translateY(-50%); }
+.ch-pop { position: fixed; z-index: 75; min-width: 200px; max-width: min(420px, 92vw); padding: 14px; background: var(--ch-ui); color: var(--ch-ui-fg); border-radius: 16px; box-shadow: 0 16px 40px rgba(0, 0, 0, .4); font-family: var(--ch-font); animation: ch-pop .3s var(--ch-ease-out); }
+.ch-pop h3 { margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--ch-ui-mute); }
+.ch-swatches, .ch-widths, .ch-class-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.ch-widths { margin-top: 12px; }
+.ch-swatch, .ch-width, .ch-class, .ch-menu-item { all: unset; box-sizing: border-box; cursor: pointer; }
+.ch-swatch { width: 44px; height: 44px; border-radius: 50%; background: var(--c); border: 3px solid transparent; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+.ch-swatch[aria-pressed="true"] { border-color: #fff; }
+.ch-width { width: 56px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--ch-ui-2); }
+.ch-width::before { content: ""; width: 32px; height: var(--w); border-radius: 99px; background: currentColor; }
+.ch-width[aria-pressed="true"] { outline: 2px solid var(--accent); }
+.ch-class { min-width: 64px; height: 44px; padding: 0 14px; display: grid; place-items: center; border-radius: 10px; background: var(--ch-ui-2); font-size: 15px; font-weight: 600; }
+.ch-class[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.ch-pop-class .ch-class-list { margin-bottom: 8px; }
+.ch-menu-item { display: block; width: 100%; margin-top: 6px; padding: 12px; border-radius: 10px; font-size: 15px; }
+.ch-menu-item:hover, .ch-menu-item:focus-visible { background: var(--ch-ui-2); }

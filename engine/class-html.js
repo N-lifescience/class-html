@@ -39,15 +39,222 @@ const ClassHTML = {
   onHide(fn) { on('hide', fn); },
 };
 
+/* ---- 10-steps.js ---- */
+// 순수 단계 로직. 슬라이드 안 .step 요소를 묶음 단위로 하나씩 연다.
+// keys: 문서 순서대로 각 .step의 data-step 값(숫자) 또는 null.
+// data-step이 없는 단계는 바로 앞 단계 다음에 열린다.
+const Steps = {
+  groups(keys) {
+    const byKey = new Map();
+    let base = 0;
+    let n = 0;
+    keys.forEach((v, i) => {
+      let key;
+      if (typeof v === 'number' && Number.isFinite(v)) { key = v; base = v; n = 0; } else { n += 1; key = base + n * 1e-6; }
+      if (!byKey.has(key)) byKey.set(key, []);
+      byKey.get(key).push(i);
+    });
+    return Array.from(byKey.entries()).sort((a, b) => a[0] - b[0]).map((e) => e[1]);
+  },
+
+  next(state, counts) {
+    if (state.shown < counts[state.slide]) return { slide: state.slide, shown: state.shown + 1 };
+    if (state.slide < counts.length - 1) return { slide: state.slide + 1, shown: 0 };
+    return state;
+  },
+
+  prev(state, counts) {
+    if (state.shown > 0) return { slide: state.slide, shown: state.shown - 1 };
+    if (state.slide > 0) return { slide: state.slide - 1, shown: counts[state.slide - 1] };
+    return state;
+  },
+
+  go(index, counts, allShown) {
+    const slide = clamp(index, 0, counts.length - 1);
+    return { slide, shown: allShown ? counts[slide] : 0 };
+  },
+};
+
+/* ---- 11-stage.js ---- */
+// 1280×720 고정 무대를 만들고 슬라이드를 옮겨 담아 창 크기에 맞춘다.
+const Stage = {
+  viewport: null,
+  deck: null,
+  slides: [],
+  scale: 1,
+
+  init() {
+    this.slides = qsa('section.slide');
+    if (!this.slides.length) {
+      const empty = h('section', { class: 'slide' }, h('h2', { text: '슬라이드가 없어요' }),
+        h('p', { text: '<section class="slide"> 요소를 넣어 주세요.' }));
+      document.body.append(empty);
+      this.slides = [empty];
+    }
+    this.viewport = h('div', { class: 'ch-viewport' });
+    this.deck = h('div', { class: 'ch-deck' });
+    this.viewport.append(this.deck);
+    document.body.prepend(this.viewport);
+    this.slides.forEach((s, i) => {
+      this.deck.append(s);
+      s.dataset.key = s.id || `s${i + 1}`;
+      s.dataset.page = `${i + 1} / ${this.slides.length}`;
+    });
+    if (!document.body.dataset.tool) document.body.dataset.tool = 'hand';
+    window.addEventListener('resize', () => this.fit());
+    this.fit();
+  },
+
+  fit() {
+    const w = this.viewport.clientWidth || window.innerWidth;
+    const hgt = this.viewport.clientHeight || window.innerHeight;
+    this.scale = Math.min(w / STAGE_W, hgt / STAGE_H);
+    this.deck.style.transform = `scale(${this.scale})`;
+    emit('resize', this.scale);
+  },
+
+  // 화면 좌표(clientX/Y) → 무대 좌표(0~1280, 0~720)
+  toStage(clientX, clientY) {
+    const r = this.deck.getBoundingClientRect();
+    return [(clientX - r.left) * STAGE_W / r.width, (clientY - r.top) * STAGE_H / r.height];
+  },
+};
+
+/* ---- 12-nav.js ---- */
+// 넘기기: 단계 공개, 키보드, 손 모드 스와이프, 주소 #쪽, 진행 막대.
+const Nav = {
+  state: { slide: 0, shown: 0 },
+  groups: [],
+  counts: [],
+  override: null,   // 칠판 모드처럼 넘기기를 가로채는 대상 { next(), prev(), close() }
+  digits: '',
+  digitTimer: 0,
+  progress: null,
+
+  init() {
+    this.groups = Stage.slides.map((slide) => {
+      const steps = qsa('.step', slide);
+      const keys = steps.map((el) => (el.dataset.step != null && el.dataset.step !== '' ? Number(el.dataset.step) : null));
+      return Steps.groups(keys).map((g) => g.map((i) => steps[i]));
+    });
+    this.counts = this.groups.map((g) => g.length);
+    const fromHash = parseInt(location.hash.slice(1), 10);
+    this.state = Steps.go(Number.isFinite(fromHash) ? fromHash - 1 : 0, this.counts, false);
+    this.progress = h('div', { class: 'ch-progress', 'aria-hidden': 'true' }, h('i'));
+    document.body.append(this.progress);
+    document.addEventListener('keydown', (e) => this.onKey(e));
+    this.bindSwipe();
+    this.render(-1);
+  },
+
+  set(next) {
+    const before = this.state.slide;
+    this.state = next;
+    this.render(before);
+  },
+
+  next() {
+    if (this.override) return this.override.next();
+    this.set(Steps.next(this.state, this.counts));
+  },
+
+  prev() {
+    if (this.override) return this.override.prev();
+    this.set(Steps.prev(this.state, this.counts));
+  },
+
+  go(index, allShown) {
+    if (this.override) this.override.close();
+    this.set(Steps.go(index, this.counts, !!allShown));
+  },
+
+  render(before) {
+    const { slide, shown } = this.state;
+    Stage.slides.forEach((s, i) => s.classList.toggle('is-active', i === slide));
+    this.groups[slide].forEach((g, gi) => g.forEach((el) => el.classList.toggle('is-shown', gi < shown)));
+    this.progress.firstChild.style.width = `${((slide + 1) / Stage.slides.length) * 100}%`;
+    history.replaceState(null, '', `#${slide + 1}`);
+    if (before !== slide) {
+      if (before >= 0) emit('hide', Stage.slides[before], before);
+      emit('show', Stage.slides[slide], slide);
+    }
+  },
+
+  onKey(e) {
+    if (e.defaultPrevented || e.isComposing) return;
+    const t = e.target;
+    if (t && t.closest && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) { emit('key', e); return; }
+    const k = e.key;
+    if (/^[0-9]$/.test(k)) {
+      this.digits += k;
+      clearTimeout(this.digitTimer);
+      this.digitTimer = setTimeout(() => { this.digits = ''; }, 1500);
+      return;
+    }
+    if (k === 'Enter' && this.digits) {
+      e.preventDefault();
+      const n = parseInt(this.digits, 10);
+      this.digits = '';
+      this.go(n - 1);
+      return;
+    }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) {
+      e.preventDefault();
+      this.next();
+    } else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) {
+      e.preventDefault();
+      this.prev();
+    } else if (k === 'Home') {
+      e.preventDefault();
+      this.go(0);
+    } else if (k === 'End') {
+      e.preventDefault();
+      this.go(this.counts.length - 1);
+    } else {
+      emit('key', e);   // 나머지 글자 키는 각 모듈(목차, 툴바, 칠판, 점검)이 처리
+    }
+  },
+
+  // 손 모드에서 손가락으로 좌우로 밀면 넘긴다.
+  bindSwipe() {
+    let start = null;
+    Stage.deck.addEventListener('pointerdown', (e) => {
+      const ok = e.pointerType === 'touch' && document.body.dataset.tool === 'hand'
+        && !(e.target.closest && e.target.closest('input, textarea, select, [data-no-ink]'));
+      start = ok ? [e.clientX, e.clientY] : null;
+    });
+    Stage.deck.addEventListener('pointerup', (e) => {
+      if (!start) return;
+      const dx = e.clientX - start[0];
+      const dy = e.clientY - start[1];
+      start = null;
+      if (Math.abs(dx) > 60 && Math.abs(dy) < 50) { if (dx < 0) this.next(); else this.prev(); }
+    });
+  },
+};
+
 /* ---- 99-boot.js ---- */
 // 시작 순서. 엔진이 두 번 포함돼도 한 번만 실행한다.
 let readyResolve;
 ClassHTML.ready = new Promise((resolve) => { readyResolve = resolve; });
 
+async function start() {
+  Stage.init();
+  Nav.init();
+}
+
 function boot() {
   if (window.ClassHTML && window.ClassHTML !== ClassHTML) return;
   window.ClassHTML = ClassHTML;
-  readyResolve(ClassHTML);
+  ClassHTML.go = (n) => Nav.go(n);
+  ClassHTML.next = () => Nav.next();
+  ClassHTML.prev = () => Nav.prev();
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps };
+  start().then(() => readyResolve(ClassHTML), (err) => {
+    console.error('[class-html]', err);
+    readyResolve(ClassHTML);
+  });
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

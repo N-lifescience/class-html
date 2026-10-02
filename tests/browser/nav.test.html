@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko" data-deck="test-nav">
+<head>
+<meta charset="utf-8">
+<title>nav</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="s1" data-sec="1장" data-title="처음">
+  <h2>질문</h2>
+  <p class="step" id="a1">답 1</p>
+  <p class="step" data-step="5" id="a2">답 2</p>
+  <input id="field" value="">
+</section>
+<section class="slide" id="s2" data-title="둘째"><h2>둘째</h2></section>
+<section class="slide" id="s3" data-title="셋째"><h2>셋째</h2><p class="step" id="c1">마지막</p></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const key = (k, target) => (target || document).dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+const shown = (id) => document.getElementById(id).classList.contains('is-shown');
+const active = () => ClassHTML._internal.Nav.state.slide;
+
+test('처음에는 1쪽, 단계는 숨김', () => {
+  eq(active(), 0);
+  assert(!shown('a1') && !shown('a2'), 'steps hidden');
+  assert(document.getElementById('s1').classList.contains('is-active'), 's1 active');
+});
+test('무대가 확대·축소되고 쪽 번호와 열쇠가 붙는다', () => {
+  const { Stage } = ClassHTML._internal;
+  assert(Stage.scale > 0, 'scale');
+  assert(Stage.deck.style.transform.includes('scale('), 'transform');
+  eq(document.getElementById('s2').dataset.page, '2 / 3');
+  eq(document.getElementById('s2').dataset.key, 's2');
+  eq(document.body.dataset.tool, 'hand');
+});
+test('→ 키는 단계를 하나씩 열고 다 열리면 다음 장', () => {
+  key('ArrowRight'); assert(shown('a1') && !shown('a2'), 'first step');
+  key('ArrowRight'); assert(shown('a2'), 'second step');
+  key('ArrowRight'); eq(active(), 1); eq(location.hash, '#2');
+});
+test('← 키는 이전 장을 단계 펼친 채로 보여 준다', () => {
+  key('ArrowLeft'); eq(active(), 0); assert(shown('a1') && shown('a2'), 'all shown');
+  key('ArrowLeft'); assert(!shown('a2'), 'last step hidden');
+});
+test('숫자 + Enter로 쪽 이동', () => { key('3'); key('Enter'); eq(active(), 2); });
+test('onShow 훅이 불린다', () => {
+  let got = -1;
+  ClassHTML.onShow((el, i) => { got = i; });
+  ClassHTML.go(1);
+  eq(got, 1);
+});
+test('입력칸에서 친 키는 넘기지 않는다', () => {
+  ClassHTML.go(0);
+  key('ArrowRight', document.getElementById('field'));
+  eq(active(), 0);
+  assert(!shown('a1'), 'no step');
+});
+test('Home · End', () => { key('End'); eq(active(), 2); key('Home'); eq(active(), 0); });
+test('처리하지 않은 키는 key 이벤트로 넘긴다', () => {
+  let got = '';
+  const off = (e) => { got = e.key; };
+  ClassHTML._internal.on('key', off);
+  key('q');
+  eq(got, 'q');
+});
+</script>
+</body>
+</html>

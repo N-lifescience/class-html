@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko" data-deck="test-smoke">
+<head>
+<meta charset="utf-8">
+<title>smoke</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="a" data-title="하나"><h2>하나</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+test('엔진이 시작되고 API를 내놓는다', async () => {
+  assert(window.ClassHTML, 'window.ClassHTML');
+  eq(typeof ClassHTML.version, 'string', 'version');
+});
+</script>
+</body>
+</html>

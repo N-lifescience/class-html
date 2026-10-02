@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+# 교과서·출판사 자료와 변환 결과는 저장소에 넣지 않는다
+private/

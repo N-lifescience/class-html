@@ -1,0 +1,23 @@
+/*! class-html engine v1.0.0-dev | MIT | https://github.com/N-lifescience/class-html */
+/* ---- 00-tokens.css ---- */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+:root {
+  --ch-paper: #F4F1EA;
+  --ch-ink: #1F2328;
+  --ch-mute: #6B6F76;
+  --ch-line: #DDD7CC;
+  --accent: #E8541A;
+  --ch-ok: #2E7D4F;
+  --ch-bad: #C2362F;
+  --ch-info: #2563EB;
+  --ch-hl: #FFE45C;
+  --ch-ui: #16181D;
+  --ch-ui-2: #24272E;
+  --ch-ui-fg: #F4F1EA;
+  --ch-ui-mute: #9AA0A6;
+  --ch-font: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --ch-mono: ui-monospace, Consolas, "D2Coding", monospace;
+  --ch-ease-out: cubic-bezier(.2, .7, .2, 1);
+  --ch-ease-in: cubic-bezier(.5, 0, .8, .3);
+}

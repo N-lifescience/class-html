@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko" data-deck="test-session">
+<head>
+<meta charset="utf-8">
+<title>session</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="a"><h2>하나</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const stroke = (t) => ({ t, c: t === 'hl' ? '#FFE45C' : '#000000', w: t === 'hl' ? 24 : 3, p: [1, 1, 5, 5] });
+// 판서층이 화면에 보이는 슬라이드의 빈 배열을 미리 만들 수 있으므로, 획이 있는 슬라이드만 센다.
+const inked = (doc) => Object.values(doc.slides).filter((a) => a.length).length;
+
+test('저장소는 IndexedDB', () => { eq(I().Store.backend, 'idb'); });
+test('처음에는 기본 반 하나, 덱 이름은 data-deck', () => {
+  eq(I().Session.classes, ['기본']);
+  eq(I().Session.current, '기본');
+  eq(I().Session.deck, 'test-session');
+});
+test('반 추가: 빈 이름·중복은 거절', async () => {
+  const S = I().Session;
+  eq(await S.addClass('  2반  '), true);
+  eq(await S.addClass('2반'), false);
+  eq(await S.addClass('   '), false);
+  eq(S.classes, ['기본', '2반']);
+});
+test('반을 바꿔도 각자의 판서가 남는다', async () => {
+  const { Session: S, InkModel: M } = I();
+  M.add(S.hist, M.page(S.doc, { kind: 'slide', key: 'a' }), stroke('pen'));
+  S.changed();
+  await S.switchTo('2반');
+  eq(S.current, '2반');
+  eq(inked(S.doc), 0);
+  await S.switchTo('기본');
+  eq(S.doc.slides.a.length, 1);
+});
+test('지연 저장은 0.5초 뒤 저장소에 쓴다', async () => {
+  const { Session: S, Store: St, InkModel: M } = I();
+  M.add(S.hist, M.page(S.doc, { kind: 'slide', key: 'b' }), stroke('hl'));
+  S.changed();
+  await wait(700);
+  const saved = await St.get('ink:test-session:기본');
+  eq(saved.slides.b.length, 1);
+});
+test('session 이벤트가 문서 교체를 알린다', async () => {
+  let n = 0;
+  I().on('session', () => { n += 1; });
+  await I().Session.switchTo('2반');
+  await I().Session.switchTo('기본');
+  eq(n, 2);
+});
+test('백업 내보내기 → 비우기 → 불러오기', async () => {
+  const S = I().Session;
+  const text = await S.exportBackup();
+  await S.clearCurrent();
+  eq(inked(S.doc), 0);
+  const r = await S.importBackup(text);
+  eq(r.ok, true);
+  eq(S.doc.slides.a.length, 1);
+  eq((await S.importBackup('{"app":"x"}')).ok, false);
+});
+test('반 삭제: 지운 반의 판서도 지우고, 마지막 하나는 못 지운다', async () => {
+  const { Session: S, Store: St } = I();
+  await S.switchTo('2반');
+  eq(await S.removeClass('2반'), true);
+  eq(S.classes, ['기본']);
+  eq(S.current, '기본');
+  eq(await St.get('ink:test-session:2반'), undefined);
+  eq(await S.removeClass('기본'), false);
+});
+</script>
+</body>
+</html>

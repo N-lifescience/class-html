@@ -515,6 +515,180 @@ const InkModel = {
   },
 };
 
+/* ---- 22-store.js ---- */
+// 키-값 저장소. IndexedDB가 안 되면 localStorage, 그것도 안 되면 메모리(창을 닫으면 사라짐).
+const Store = {
+  backend: 'memory',
+  db: null,
+  mem: new Map(),
+
+  async init() {
+    try {
+      this.db = await new Promise((resolve, reject) => {
+        const req = indexedDB.open('class-html', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('kv');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+        setTimeout(() => reject(new Error('indexedDB timeout')), 3000);
+      });
+      this.backend = 'idb';
+      return;
+    } catch (err) { /* localStorage로 */ }
+    try {
+      localStorage.setItem('class-html:probe', '1');
+      localStorage.removeItem('class-html:probe');
+      this.backend = 'local';
+    } catch (err) {
+      this.backend = 'memory';
+      console.warn('[class-html] 브라우저 저장소를 쓸 수 없어 판서가 창을 닫으면 사라집니다.');
+    }
+  },
+
+  tx(mode, fn) {
+    return new Promise((resolve, reject) => {
+      const t = this.db.transaction('kv', mode);
+      const req = fn(t.objectStore('kv'));
+      t.oncomplete = () => resolve(req.result);
+      t.onerror = () => reject(t.error);
+    });
+  },
+
+  async get(key) {
+    if (this.backend === 'idb') return this.tx('readonly', (s) => s.get(key));
+    if (this.backend === 'local') {
+      try {
+        const v = localStorage.getItem(`class-html:${key}`);
+        return v == null ? undefined : JSON.parse(v);
+      } catch (err) { return undefined; }
+    }
+    return this.mem.get(key);
+  },
+
+  async set(key, value) {
+    if (this.backend === 'idb') { await this.tx('readwrite', (s) => s.put(value, key)); return; }
+    if (this.backend === 'local') { localStorage.setItem(`class-html:${key}`, JSON.stringify(value)); return; }
+    this.mem.set(key, value);
+  },
+
+  async del(key) {
+    if (this.backend === 'idb') { await this.tx('readwrite', (s) => s.delete(key)); return; }
+    if (this.backend === 'local') { localStorage.removeItem(`class-html:${key}`); return; }
+    this.mem.delete(key);
+  },
+};
+
+/* ---- 23-session.js ---- */
+// 현재 반과 그 반의 판서 문서. 저장은 0.5초 늦춰서 하고, 반을 바꿀 때는 먼저 저장한다.
+const Session = {
+  deck: 'deck',
+  classes: ['기본'],
+  current: '기본',
+  doc: null,
+  hist: null,
+  timer: 0,
+
+  deckKey() {
+    const raw = document.documentElement.dataset.deck || document.title || location.pathname;
+    return String(raw).trim().slice(0, 120) || 'deck';
+  },
+
+  async init() {
+    this.deck = this.deckKey();
+    const saved = await Store.get('classes');
+    if (saved && Array.isArray(saved.list)) {
+      const list = saved.list.filter((c) => typeof c === 'string' && c.trim()).slice(0, 50);
+      if (list.length) {
+        this.classes = list;
+        this.current = list.includes(saved.current) ? saved.current : list[0];
+      }
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') this.flush(); });
+    window.addEventListener('pagehide', () => this.flush());
+    await this.loadCurrent();
+  },
+
+  key(cls) { return `ink:${this.deck}:${cls}`; },
+
+  async load(cls) { return InkModel.sanitizeDoc(await Store.get(this.key(cls))) || InkModel.emptyDoc(); },
+
+  async loadCurrent() {
+    this.doc = await this.load(this.current);
+    this.hist = InkModel.history();
+    emit('session');
+  },
+
+  changed() {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.flush(), 500);
+  },
+
+  async flush() {
+    clearTimeout(this.timer);
+    if (this.doc) await Store.set(this.key(this.current), this.doc);
+  },
+
+  async saveClasses() { await Store.set('classes', { list: this.classes, current: this.current }); },
+
+  async switchTo(cls) {
+    if (!this.classes.includes(cls) || cls === this.current) return;
+    await this.flush();
+    this.current = cls;
+    await this.saveClasses();
+    await this.loadCurrent();
+  },
+
+  async addClass(name) {
+    const n = String(name || '').trim().slice(0, 20);
+    if (!n || this.classes.includes(n) || BAD_KEYS.includes(n)) return false;
+    this.classes.push(n);
+    await this.saveClasses();
+    return true;
+  },
+
+  async removeClass(cls) {
+    if (this.classes.length <= 1 || !this.classes.includes(cls)) return false;
+    if (cls === this.current) clearTimeout(this.timer);   // 지울 반의 대기 중 저장은 버린다
+    else await this.flush();
+    this.classes = this.classes.filter((c) => c !== cls);
+    await Store.del(this.key(cls));
+    if (cls === this.current) {
+      this.current = this.classes[0];
+      await this.saveClasses();
+      await this.loadCurrent();
+    } else {
+      await this.saveClasses();
+    }
+    return true;
+  },
+
+  async clearCurrent() {
+    this.doc = InkModel.emptyDoc();
+    this.hist = InkModel.history();
+    await this.flush();
+    emit('session');
+  },
+
+  async exportBackup() {
+    await this.flush();
+    const all = {};
+    for (const c of this.classes) all[c] = await this.load(c);
+    return InkModel.backup(this.deck, all);
+  },
+
+  async importBackup(text) {
+    const r = InkModel.parseBackup(text);
+    if (!r.ok) return r;
+    await this.flush();
+    for (const [c, d] of Object.entries(r.classes)) {
+      if (!this.classes.includes(c)) this.classes.push(c);
+      await Store.set(this.key(c), d);
+    }
+    await this.saveClasses();
+    await this.loadCurrent();
+    return r;
+  },
+};
+
 /* ---- 99-boot.js ---- */
 // 시작 순서. 엔진이 두 번 포함돼도 한 번만 실행한다.
 let readyResolve;
@@ -524,6 +698,8 @@ async function start() {
   Stage.init();
   Panels.init();   // Nav보다 먼저: 첫 show 이벤트로 목차 현재 위치를 표시
   Nav.init();
+  await Store.init();
+  await Session.init();
 }
 
 function boot() {
@@ -532,7 +708,7 @@ function boot() {
   ClassHTML.go = (n) => Nav.go(n);
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels };
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

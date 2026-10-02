@@ -6,6 +6,8 @@ async function start() {
   Stage.init();
   Panels.init();   // Nav보다 먼저: 첫 show 이벤트로 목차 현재 위치를 표시
   Nav.init();
+  await Store.init();
+  await Session.init();
 }
 
 function boot() {
@@ -14,7 +16,7 @@ function boot() {
   ClassHTML.go = (n) => Nav.go(n);
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels };
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

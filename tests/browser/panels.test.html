@@ -8,27 +8,66 @@
 <script src="harness.js"></script>
 </head>
 <body>
-<section class="slide" id="p1" data-sec="가" data-title="첫"><h2>첫</h2></section>
+<section class="slide" id="p1" data-sec="가" data-title="첫 장 제목"><h2>첫</h2></section>
 <section class="slide" id="p2" data-sec="나" data-title="둘"><h2>둘</h2></section>
 <section class="slide" id="p3"><h2>제목만 있음</h2></section>
+<section class="slide" id="p4"><p>제목 없음</p></section>
 <pre id="results" data-summary="pending"></pre>
 <script>
-const key = (k) => document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+const key = (k, opts) => document.dispatchEvent(new KeyboardEvent('keydown', Object.assign({ key: k, bubbles: true, cancelable: true }, opts)));
 const $ = (s) => document.querySelector(s);
+const visible = (el) => getComputedStyle(el).display !== 'none';
 
-test('목차는 슬라이드마다 버튼, 제목은 data-title 또는 첫 제목', () => {
+test('목차: data-title이 먼저, 없으면 첫 제목, 그것도 없으면 N쪽', () => {
   const btns = document.querySelectorAll('.ch-toc button');
-  eq(btns.length, 3);
-  assert(btns[2].textContent.includes('제목만 있음'), 'fallback title');
+  eq(btns.length, 4);
+  assert(btns[0].textContent.includes('첫 장 제목'), 'data-title first');
+  eq(btns[0].querySelector('small').textContent, '가');
+  assert(btns[2].textContent.includes('제목만 있음'), 'heading fallback');
+  assert(btns[3].textContent.includes('4쪽'), 'page fallback');
   assert(btns[0].classList.contains('is-current'), 'current marked');
+  eq(btns[0].getAttribute('aria-current'), 'page');
 });
 test('T로 목차를 열고 버튼으로 이동하면 닫힌다', () => {
   key('t');
-  assert($('.ch-toc').classList.contains('is-open'), 'open');
+  assert(visible($('.ch-toc')), 'open (visible)');
   document.querySelectorAll('.ch-toc button')[1].click();
   eq(ClassHTML._internal.Nav.state.slide, 1);
-  assert(!$('.ch-toc').classList.contains('is-open'), 'closed');
-  assert(document.querySelectorAll('.ch-toc button')[1].classList.contains('is-current'), 'current moved');
+  assert(!visible($('.ch-toc')), 'closed');
+  const b1 = document.querySelectorAll('.ch-toc button')[1];
+  assert(b1.classList.contains('is-current'), 'current moved');
+  eq(b1.getAttribute('aria-current'), 'page');
+});
+test('T를 두 번 누르면 닫히고, Ctrl+T는 무시한다', () => {
+  key('t');
+  key('t');
+  assert(!$('.ch-toc').classList.contains('is-open'), 'toggled closed');
+  key('t', { ctrlKey: true });
+  assert(!$('.ch-toc').classList.contains('is-open'), 'ctrl ignored');
+});
+test('한글 입력 상태(key가 Process)여도 키 자리로 알아듣는다', () => {
+  key('Process', { code: 'KeyT' });
+  assert($('.ch-toc').classList.contains('is-open'), 'opened by code');
+  key('Escape');
+});
+test('목차 버튼에서 Enter를 눌러도 넘기기로 가로채지 않는다', () => {
+  key('t');
+  const before = ClassHTML._internal.Nav.state.slide;
+  const ev = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+  document.querySelectorAll('.ch-toc button')[2].dispatchEvent(ev);
+  eq(ev.defaultPrevented, false);
+  eq(ClassHTML._internal.Nav.state.slide, before);
+  key('Escape');
+});
+test('목차와 도움말은 동시에 열리지 않고, 닫을 때 panels-close를 알린다', () => {
+  let closes = 0;
+  ClassHTML._internal.on('panels-close', () => { closes += 1; });
+  key('t');
+  key('?');
+  assert(visible($('.ch-help')) && !visible($('.ch-toc')), 'only help open');
+  key('Escape');
+  assert(!visible($('.ch-help')), 'help closed');
+  assert(closes >= 2, `panels-close emitted ${closes} times`);
 });
 test('B·W로 화면 가리기, 같은 키로 해제', () => {
   key('b'); eq($('.ch-shade').dataset.mode, 'black');
@@ -43,6 +82,14 @@ test('?는 도움말, Esc는 모두 닫기', () => {
 });
 test('가린 화면을 누르면 해제', () => {
   key('b'); $('.ch-shade').click();
+  eq($('.ch-shade').dataset.mode, '');
+});
+test('키를 누르고 있어도(반복 입력) 깜박이지 않는다', () => {
+  key('b');
+  key('b', { repeat: true });
+  key('b', { repeat: true });
+  eq($('.ch-shade').dataset.mode, 'black');
+  key('b');
   eq($('.ch-shade').dataset.mode, '');
 });
 </script>

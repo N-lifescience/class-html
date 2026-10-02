@@ -28,6 +28,13 @@ function h(tag, props, ...kids) {
 function qsa(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
+// 단축키 이름. 한글 입력 상태(key가 'Process'나 'ㅅ')에서도 같은 자리의 영문 글자로 읽는다.
+function keyName(e) {
+  if (/^Key[A-Z]$/.test(e.code || '')) return e.code.slice(3).toLowerCase();
+  if (e.code === 'Slash' && e.shiftKey) return '?';
+  return String(e.key || '').toLowerCase();
+}
+
 const ClassHTML = {
   version: typeof VERSION === 'string' ? VERSION : 'dev',
   onShow(fn) { on('show', fn); },

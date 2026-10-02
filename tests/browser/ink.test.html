@@ -13,7 +13,7 @@
   <h2>판서</h2>
   <button id="tap" type="button">눌러 보기</button>
   <input id="rng" type="range" min="0" max="10" value="5">
-  <p>빈 곳</p>
+  <p>빈 곳 <a id="lnk" href="#x">링크</a></p>
 </section>
 <section class="slide" id="i2"><h2>둘째</h2></section>
 <pre id="results" data-summary="pending"></pre>
@@ -27,6 +27,11 @@ test('캔버스는 무대 × 배율 × 화면 밀도 크기', () => {
   const { Ink, Stage } = I();
   eq(Ink.cv.pen.width, Math.round(1280 * Stage.scale * devicePixelRatio));
   eq(Ink.cv.hl.height, Math.round(720 * Stage.scale * devicePixelRatio));
+});
+test('형광펜층은 슬라이드 글자와 곱하기로 섞인다', () => {
+  const { Ink } = I();
+  eq(getComputedStyle(Ink.layer).zIndex, 'auto');   // 판서층이 쌓임 맥락을 만들면 섞이지 않고 글자가 흐려진다
+  eq(getComputedStyle(Ink.cv.hl).mixBlendMode, 'multiply');
 });
 test('손 모드에서는 그려지지 않는다', () => {
   I().Tools.set('hand');
@@ -75,6 +80,44 @@ test('두 번째 손가락은 무시한다', () => {
   ptr('pointerup', null, 650, 330, { pointerId: 1 });
   eq(page().length, before + 1);
 });
+test('덱 밖에서 손을 떼도 획이 끝나고 다음 클릭·획은 정상', async () => {
+  const { Ink } = I();
+  const btn = document.getElementById('tap');
+  const t0 = taps;
+  ptr('pointerdown', btn, 200, 200);
+  ptr('pointermove', btn, 260, 240);
+  ptr('pointerup', document.body, 900, 700);   // 덱 밖에서 뗌
+  eq(Ink.gesture, null);
+  await wait(10);
+  btn.click();
+  eq(taps, t0 + 1);
+  const before = page().length;
+  drag(null, [500, 600], [600, 650]);
+  eq(page().length, before + 1);
+  eq(page()[page().length - 1].p.slice(0, 2), [500, 600]);
+});
+test('놓친 pointerup 뒤 같은 포인터로 다시 누르면 새 획', () => {
+  const before = page().length;
+  ptr('pointerdown', null, 700, 500);
+  ptr('pointermove', null, 760, 520);   // 이 획의 pointerup을 놓쳤다
+  ptr('pointerdown', null, 900, 500);
+  ptr('pointermove', null, 960, 520);
+  ptr('pointerup', null, 960, 520);
+  eq(page().length, before + 2);
+  eq(page()[page().length - 1].p.slice(0, 2), [900, 500]);
+});
+test('펜을 든 채로는 링크·그림의 끌어 놓기가 시작되지 않는다', () => {
+  const { Tools } = I();
+  const fire = () => {
+    const ev = new DragEvent('dragstart', { bubbles: true, cancelable: true });
+    document.getElementById('lnk').dispatchEvent(ev);
+    return ev.defaultPrevented;
+  };
+  eq(fire(), true);
+  Tools.set('hand');
+  eq(fire(), false);
+  Tools.set('pen');
+});
 test('형광펜은 폭 24, 종류 hl', () => {
   I().Tools.set('hl');
   drag(null, [100, 500], [400, 500]);
@@ -114,6 +157,17 @@ test('손바닥 지우기가 켜지면 넓은 터치는 지우개', () => {
   drag(null, [100, 300], [300, 320], { pointerType: 'touch', width: 80, height: 80 });
   eq(page().length, before - 1);
   Ink.palmErase = false;
+});
+test('빠르게 문질러 표본 사이가 벌어져도 지운다', () => {
+  const { Tools } = I();
+  Tools.set('pen');
+  drag(null, [1000, 100], [1000, 300]);   // 세로 획
+  const before = page().length;
+  Tools.set('eraser');
+  ptr('pointerdown', null, 950, 200);
+  ptr('pointermove', null, 1050, 200);    // 두 표본 사이 100px, 세로 획은 그 가운데
+  ptr('pointerup', null, 1050, 200);
+  eq(page().length, before - 1);
 });
 test('그리면 0.5초 뒤 저장된다', async () => {
   await wait(700);

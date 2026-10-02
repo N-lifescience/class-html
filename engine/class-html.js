@@ -772,8 +772,11 @@ const Ink = {
     const d = Stage.deck;
     d.addEventListener('pointerdown', (e) => this.down(e), true);
     d.addEventListener('pointermove', (e) => this.move(e), true);
-    d.addEventListener('pointerup', (e) => this.up(e), true);
-    d.addEventListener('pointercancel', (e) => this.up(e), true);
+    // 덱 밖에서 손을 떼도 획이 끝나도록 창에서 듣는다
+    window.addEventListener('pointerup', (e) => this.up(e), true);
+    window.addEventListener('pointercancel', (e) => this.up(e), true);
+    // 펜을 든 채로 링크·그림을 끌면 브라우저 끌어 놓기가 포인터를 가로채 획이 끊긴다
+    d.addEventListener('dragstart', (e) => { if (Tools.current !== 'hand') e.preventDefault(); }, true);
     d.addEventListener('click', (e) => {
       if (!this.suppressClick) return;
       this.suppressClick = false;
@@ -841,9 +844,13 @@ const Ink = {
 
   down(e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    if (this.gesture) {                                   // 두 번째 손가락·손바닥은 무시
-      if (e.pointerId !== this.gesture.id) { e.preventDefault(); e.stopPropagation(); }
-      return;
+    if (this.gesture) {
+      if (e.pointerId !== this.gesture.id) {              // 두 번째 손가락·손바닥은 무시
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      this.up(e);                                         // 같은 포인터가 다시 눌렸다: 놓친 pointerup 대신 지금 끝낸다
     }
     this.suppressClick = false;
     const tool = this.toolFor(e);
@@ -899,8 +906,13 @@ const Ink = {
       ctx.stroke();
       p.push(InkGeom.round(x), InkGeom.round(y));
     } else if (g.tool === 'eraser') {
-      const removed = InkModel.eraseAt(this.page, x, y, ERASER_R);
-      if (removed.length) { g.removed.push(...removed); this.redraw(); }
+      // 빠르게 문질러 표본 사이가 벌어져도 빠짐없이 지우도록 반지름의 절반 간격으로 채운다
+      const [x0, y0] = g.last || [x, y];
+      const n = Math.max(1, Math.ceil(Math.hypot(x - x0, y - y0) / (ERASER_R / 2)));
+      const before = g.removed.length;
+      for (let i = 1; i <= n; i++) g.removed.push(...InkModel.eraseAt(this.page, x0 + ((x - x0) * i) / n, y0 + ((y - y0) * i) / n, ERASER_R));
+      if (g.removed.length > before) this.redraw();
+      g.last = [x, y];
       this.ring(x, y);
     } else if (g.tool === 'laser') {
       this.laser.push({ x, y, t: performance.now() });
@@ -912,6 +924,8 @@ const Ink = {
     const g = this.gesture;
     if (!g || e.pointerId !== g.id) return;
     this.gesture = null;
+    // 뒤따르는 클릭은 같은 차례에 온다. 클릭이 없으면(취소, 덱 밖에서 뗌) 다음 클릭을 막지 않게 풀어 둔다.
+    if (this.suppressClick) setTimeout(() => { this.suppressClick = false; });
     if (!g.started) return;                               // 톡 누름: 클릭을 그대로 보낸다
     if (g.stroke) {
       InkModel.add(Session.hist, this.page, g.stroke);
@@ -930,12 +944,16 @@ const Ink = {
     const c = this.ctx.laser;
     c.clearRect(0, 0, STAGE_W, STAGE_H);
     c.save();
-    c.strokeStyle = 'rgba(31, 35, 40, .55)';
     c.lineWidth = 1.5;
     c.setLineDash([4, 4]);
-    c.beginPath();
-    c.arc(x, y, ERASER_R, 0, Math.PI * 2);
-    c.stroke();
+    // 흰 점선과 어두운 점선을 엇갈려 그려 흰 화면과 초록 칠판 어디서나 보인다
+    for (const [color, offset] of [['rgba(255, 255, 255, .85)', 4], ['rgba(31, 35, 40, .75)', 0]]) {
+      c.strokeStyle = color;
+      c.lineDashOffset = offset;
+      c.beginPath();
+      c.arc(x, y, ERASER_R, 0, Math.PI * 2);
+      c.stroke();
+    }
     c.restore();
   },
 

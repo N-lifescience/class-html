@@ -39,9 +39,11 @@ body { font-family: var(--ch-font); color: var(--ch-ink); word-break: keep-all; 
 @keyframes ch-slide-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
 
 /* ---- 20-ink.css ---- */
-.ch-ink { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
+/* .ch-ink에는 z-index를 주지 않는다: 쌓임 맥락이 생기면 형광펜(multiply)이 슬라이드와 섞이지 못하고 글자를 흐린다 */
+.ch-ink { position: absolute; inset: 0; pointer-events: none; }
 .ch-ink canvas { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; }
-.ch-ink-hl { opacity: .45; mix-blend-mode: multiply; }
+.ch-ink-pen, .ch-ink-laser { z-index: 30; }
+.ch-ink-hl { z-index: 29; opacity: .45; mix-blend-mode: multiply; }
 .ch-dark-page .ch-ink-hl { opacity: .55; mix-blend-mode: screen; }
 body:not([data-tool="hand"]) .ch-deck { cursor: crosshair; user-select: none; -webkit-user-select: none; }
 body[data-tool="eraser"] .ch-deck { cursor: cell; }

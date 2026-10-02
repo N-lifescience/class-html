@@ -40,20 +40,22 @@ const Nav = {
     this.set(Steps.prev(this.state, this.counts));
   },
 
+  // index는 0부터 센다(화면의 쪽 번호·#주소·숫자+Enter는 1부터). 숫자가 아니면 무시한다.
   go(index, allShown) {
+    if (!Number.isFinite(index)) return;
     if (this.override) this.override.close();
-    this.set(Steps.go(index, this.counts, !!allShown));
+    this.set(Steps.go(Math.round(index), this.counts, !!allShown));
   },
 
   render(before) {
     const { slide, shown } = this.state;
     Stage.slides.forEach((s, i) => s.classList.toggle('is-active', i === slide));
     this.groups[slide].forEach((g, gi) => g.forEach((el) => el.classList.toggle('is-shown', gi < shown)));
-    this.progress.firstChild.style.width = `${((slide + 1) / Stage.slides.length) * 100}%`;
-    history.replaceState(null, '', `#${slide + 1}`);
+    this.progress.firstChild.style.transform = `scaleX(${(slide + 1) / Stage.slides.length})`;
     if (before !== slide) {
       if (before >= 0) emit('hide', Stage.slides[before], before);
       emit('show', Stage.slides[slide], slide);
+      try { history.replaceState(null, '', `#${slide + 1}`); } catch (err) { /* 잦은 호출을 막는 브라우저가 있다 */ }
     }
   },
 
@@ -76,6 +78,7 @@ const Nav = {
       this.go(n - 1);
       return;
     }
+    this.digits = '';   // 쪽 번호를 치다가 다른 키를 누르면 번호는 버린다
     if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) {
       e.preventDefault();
       this.next();
@@ -97,12 +100,14 @@ const Nav = {
   bindSwipe() {
     let start = null;
     Stage.deck.addEventListener('pointerdown', (e) => {
-      const ok = e.pointerType === 'touch' && document.body.dataset.tool === 'hand'
+      // 두 번째 손가락이 닿으면(isPrimary 아님) 스와이프를 취소한다.
+      const ok = e.isPrimary && e.pointerType === 'touch' && document.body.dataset.tool === 'hand'
         && !(e.target.closest && e.target.closest('input, textarea, select, [data-no-ink]'));
       start = ok ? [e.clientX, e.clientY] : null;
     });
+    Stage.deck.addEventListener('pointercancel', () => { start = null; });
     Stage.deck.addEventListener('pointerup', (e) => {
-      if (!start) return;
+      if (!start || !e.isPrimary) return;
       const dx = e.clientX - start[0];
       const dy = e.clientY - start[1];
       start = null;

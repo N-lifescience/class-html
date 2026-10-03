@@ -123,7 +123,7 @@ const Plot = {
     const y1 = PLOT_PAD.t;
     const grid = svgEl('g', { class: 'ch-plot-grid' });
     const labels = svgEl('g', { class: 'ch-plot-ticks' });
-    for (const v of niceTicks(item.x[0], item.x[1], Math.max(2, Math.floor((x1 - x0) / 110)))) {
+    for (const v of niceTicks(item.x[0], item.x[1], Math.max(2, Math.floor((x1 - x0) / 90)))) {
       const x = this.sx(item, v);
       grid.append(svgEl('line', { x1: x, x2: x, y1, y2: y0 }));
       labels.append(svgEl('text', { x, y: y0 + 26, 'text-anchor': 'middle' }, Expr.format(v)));

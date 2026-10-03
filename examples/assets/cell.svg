@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+  <!-- 식물 세포 모식도(자체 제작, MIT) -->
+  <rect width="600" height="400" fill="#FFFFFF"/>
+  <rect x="60" y="40" width="480" height="320" rx="36" fill="#E8F5DF" stroke="#4E7A3A" stroke-width="10"/>
+  <rect x="84" y="64" width="432" height="272" rx="26" fill="#F6FBF1" stroke="#7FA36B" stroke-width="4"/>
+  <ellipse cx="330" cy="200" rx="130" ry="90" fill="#CFE8F7" stroke="#5A8DB3" stroke-width="4"/>
+  <circle cx="170" cy="150" r="42" fill="#E9D7F2" stroke="#8A5BA6" stroke-width="4"/>
+  <g fill="#6BAA4F"><ellipse cx="160" cy="280" rx="22" ry="12"/><ellipse cx="470" cy="110" rx="22" ry="12"/><ellipse cx="480" cy="290" rx="22" ry="12"/></g>
+  <g font-family="sans-serif" font-size="24" font-weight="700" fill="#2B3A22">
+    <text x="330" y="208" text-anchor="middle">액포</text>
+    <text x="170" y="158" text-anchor="middle">핵</text>
+  </g>
+</svg>

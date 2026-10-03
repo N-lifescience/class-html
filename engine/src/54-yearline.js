@@ -45,7 +45,15 @@ const Yearline = {
       const range = h('input', { type: 'range', min, max: to, step: 1, value: min, 'aria-label': ol.getAttribute('aria-label') || '연도' });
       const ticks = h('div', { class: 'ch-stop-labels ch-yl-ticks', 'aria-hidden': 'true' });
       const tickYears = [...new Set([years[0], ...events.filter((e) => e.flag).map((e) => e.year), to])];
-      ticks.append(h('span', { text: '시작', style: 'left:0%' }), ...tickYears.map((y) => h('span', { text: String(y), style: `left:${x(y)}` })));
+      const pct = (y) => ((y - min) / span) * 100;
+      const kept = [];
+      for (const y of tickYears) {
+        const last = kept.length ? pct(kept[kept.length - 1]) : 0;
+        if (pct(y) - last < 7 && y !== to) continue;
+        if (y === to && kept.length && pct(y) - pct(kept[kept.length - 1]) < 7) kept.pop();
+        kept.push(y);
+      }
+      ticks.append(h('span', { text: '시작', style: 'left:0%' }), ...kept.map((y) => h('span', { text: String(y), style: `left:${x(y)}` })));
       wrap.append(h('div', { class: 'ch-yl-head' }, now, recent), axis, h('div', { class: 'ch-stops ch-yl-stops' }, range, ticks), ol);
 
       const item = { ol, wrap, events, years, min, to, range, now, recent, year: min, st: null };

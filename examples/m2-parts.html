@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko" data-deck="m2-parts">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수업 HTML 부품 모음</title>
+<link rel="stylesheet" href="../engine/class-html.css">
+<script defer src="../engine/class-html.js"></script>
+<style>
+  /* 단원 성격마다 머리 띠 색을 바꾼다(원본 PPT 색을 이어 쓰는 방법의 예) */
+  .slide[data-sec^="1"] { --tab: #0F766E; }
+  .slide[data-sec^="2"] { --tab: #B45309; }
+  .slide[data-sec^="3"] { --tab: #1D4ED8; }
+  .slide[data-sec^="4"] { --tab: #7C3AED; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
+  .cycle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 0 0 20px; padding: 18px; border-radius: 18px; background: var(--ch-soft); }
+  .cycle > div { padding: 16px; border-radius: 14px; background: var(--ch-card); text-align: center; font-size: 28px; font-weight: 800; }
+  .cycle > div small { display: block; margin-top: 6px; font-size: 22px; font-weight: 600; color: var(--ch-mute); }
+  .meter { display: grid; grid-template-columns: 110px 1fr 120px; align-items: center; gap: 14px; margin: 0 0 12px; font-size: 24px; font-weight: 700; }
+  .meter output { text-align: right; font-size: 24px; }
+  .verdict { margin: 18px 0 6px; font-size: 40px !important; font-weight: 800; }
+  .verdict.is-ok { color: var(--ch-ok); }
+  .verdict.is-bad { color: var(--ch-bad); }
+  .seg { display: flex; gap: 10px; margin: 0 0 16px; }
+  .seg b { align-self: center; min-width: 110px; font-size: 24px; }
+</style>
+</head>
+<body data-theme="ppt" style="--accent:#0F766E">
+
+<section class="slide cover" id="cover" data-title="표지">
+  <p class="kicker">class-html · M2 부품 예시</p>
+  <h1>수업 HTML<br>부품 모음</h1>
+  <p>모든 내용과 그림은 이 저장소에서 직접 만들었다.<br>펜을 든 채로 단추·막대·카드를 조작해 보자.</p>
+</section>
+
+<section class="slide" id="water" data-sec="1. 단계 공개" data-title="물의 순환(단계 막대)">
+  <h2>물은 어떻게 돌고 돌까?</h2>
+  <div class="reveal" data-stops="시작|증발|응결|강수|흐름">
+    <div class="cycle veil">
+      <div data-at="1">증발<small>바다·호수의 물</small></div>
+      <div data-at="2">응결<small>구름이 생긴다</small></div>
+      <div data-at="3">강수<small>비와 눈</small></div>
+      <div data-at="4">흐름<small>강과 지하수</small></div>
+    </div>
+    <p data-only="0">막대를 움직이거나 → 를 눌러 한 단계씩 열어 보자.</p>
+    <p data-only="1">햇빛을 받은 물이 수증기가 되어 올라간다.</p>
+    <p data-only="2">수증기가 높은 곳에서 식으면 작은 물방울이 된다.<br>물방울이 모여 구름이 된다.</p>
+    <p data-only="3">물방울이 커지면 비나 눈이 되어 내린다.</p>
+    <p data-only="4">땅에 내린 물은 강과 지하수가 되어 바다로 돌아간다.</p>
+  </div>
+</section>
+
+<section class="slide" id="compare" data-sec="1. 단계 공개" data-title="확산과 삼투(비교 전환)">
+  <h2>확산과 삼투는 무엇이 다를까?</h2>
+  <div class="switch" data-stops="시작|확산|삼투">
+    <table class="compare" data-only="1">
+      <tr><th>움직이는 것</th><td>용질(물에 녹은 물질)</td></tr>
+      <tr><th>방향</th><td>농도가 높은 곳 → 낮은 곳</td></tr>
+      <tr><th>예</th><td>향수 냄새가 방 안에 퍼진다.</td></tr>
+    </table>
+    <table class="compare" data-only="2">
+      <tr><th>움직이는 것</th><td>물(용매)</td></tr>
+      <tr><th>방향</th><td>용액 농도가 낮은 쪽 → 높은 쪽</td></tr>
+      <tr><th>예</th><td>배추를 소금에 절이면 숨이 죽는다.</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="slide" id="island" data-sec="2. 사회 부품" data-title="가상 섬나라 통일(지도 단계 공개)">
+  <h2>섬나라는 어떻게 하나가 되었을까?</h2>
+  <div class="cols" style="grid-template-columns: 540px 1fr">
+    <figure class="map-reveal fig" id="map" data-stops="시작|북부|남부|동섬" data-approx="근사 · 회색은 아직 통일 전">
+      <img src="assets/island.svg" alt="가상의 섬나라 지도. 북부, 남부, 동쪽 작은 섬">
+      <svg viewBox="0 0 800 500">
+        <polygon data-from="1" points="120,90 380,60 600,110 640,220 115,232"/>
+        <polygon data-from="2" points="115,232 640,220 610,360 420,420 180,380 110,250"/>
+        <polygon data-from="3" points="655,315 768,315 768,390 655,390"/>
+      </svg>
+    </figure>
+    <div>
+      <p data-for="map" data-only="1"><b>1단계</b><br>북부의 작은 나라들이<br>먼저 하나로 뭉쳤다.</p>
+      <p data-for="map" data-only="2"><b>2단계</b><br>북부가 남부를 합쳐<br>큰 섬이 하나가 되었다.</p>
+      <p data-for="map" data-only="3"><b>3단계</b><br>동섬이 마지막으로 합류해<br>통일을 마쳤다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="space" data-sec="2. 사회 부품" data-title="우주 탐사 연표(연표 막대)">
+  <h2>우주 탐사의 걸음</h2>
+  <ol class="yearline" data-from="1955" data-to="2025">
+    <li data-year="1957" data-tag="소련" data-flag>스푸트니크 1호 발사</li>
+    <li data-year="1961" data-tag="소련">가가린의 첫 유인 비행</li>
+    <li data-year="1969" data-tag="미국" data-flag>아폴로 11호 달 착륙</li>
+    <li data-year="1971" data-tag="소련">첫 우주 정거장 살류트 1호</li>
+    <li data-year="1990" data-tag="미국">허블 우주 망원경 발사</li>
+    <li data-year="1998" data-tag="국제">국제 우주 정거장 조립 시작</li>
+    <li data-year="2013" data-tag="한국" data-flag>나로호 발사 성공</li>
+    <li data-year="2022" data-tag="한국">누리호 발사 성공, 다누리 발사</li>
+  </ol>
+</section>
+
+<section class="slide" id="sort" data-sec="3. 확인 활동" data-title="확산일까, 삼투일까(분류 카드)">
+  <h2>확산일까, 삼투일까?</h2>
+  <p>카드를 끌거나, 카드를 누른 뒤 칸을 눌러 옮겨 보자.</p>
+  <div class="sort">
+    <div class="bin" data-bin="d"><h3>확산</h3></div>
+    <div class="bin" data-bin="o"><h3>삼투</h3></div>
+    <span data-bin="d" data-why="냄새 분자가 농도가 낮은 곳으로 퍼진다." data-hint="퍼져 나가는 것은 물일까, 냄새 분자일까?">향수 냄새가 퍼진다</span>
+    <span data-bin="o" data-why="배추 속 물이 진한 소금물 쪽으로 빠져나간다." data-hint="움직이는 것은 물이다.">절인 배추의 숨이 죽는다</span>
+    <span data-bin="d" data-why="산소가 농도가 낮은 혈액 쪽으로 이동한다." data-hint="이동하는 것은 산소다.">폐포의 산소가 혈액으로</span>
+    <span data-bin="o" data-why="물이 적혈구 안으로 들어와 부풀다 터진다." data-hint="증류수와 적혈구 사이에서 움직이는 것은?">증류수 속 적혈구가 터진다</span>
+  </div>
+</section>
+
+<section class="slide" id="quiz1" data-sec="3. 확인 활동" data-title="확인 문제 1(하나 고르기)">
+  <p class="q" data-n="1">물질이 농도가 높은 곳에서 낮은 곳으로<br>퍼져 나가는 현상은?</p>
+  <div class="quiz" data-cols="2">
+    <button class="opt" data-why="삼투는 막을 사이에 둔 물의 이동이다.">삼투</button>
+    <button class="opt" data-ok data-why="맞다. 확산이다. 에너지를 쓰지 않는다.">확산</button>
+    <button class="opt" data-why="능동 수송은 농도가 낮은 곳에서 높은 곳으로, 에너지를 써서 옮긴다.">능동 수송</button>
+    <button class="opt" data-why="세포내 섭취는 막이 물질을 감싸 안으로 들이는 것이다.">세포내 섭취</button>
+  </div>
+  <div class="answer step"><p>확산: 높은 농도 → 낮은 농도, 에너지를 쓰지 않는다.</p></div>
+</section>
+
+<section class="slide" id="quiz2" data-sec="3. 확인 활동" data-title="확인 문제 2(여러 개 고르기)">
+  <p class="q" data-n="2">세포가 에너지(ATP)를 쓰는 이동을 모두 고르자.</p>
+  <div class="quiz" data-multi data-cols="2" data-why="맞다. 능동 수송, 세포내 섭취, 세포외 배출은 에너지를 쓴다.">
+    <button class="opt">단순 확산</button>
+    <button class="opt">촉진 확산</button>
+    <button class="opt" data-ok>능동 수송</button>
+    <button class="opt" data-ok>세포내 섭취</button>
+    <button class="opt" data-ok>세포외 배출</button>
+    <button class="opt">삼투</button>
+  </div>
+</section>
+
+<section class="slide" id="order" data-sec="3. 확인 활동" data-title="현미경 관찰 순서(순서 배열)">
+  <h2>현미경으로 관찰하는 순서</h2>
+  <ol class="order">
+    <li data-why="처음에는 시야가 넓은 저배율로 찾는다.">저배율 대물렌즈로 돌린다</li>
+    <li data-why="표본이 움직이지 않게 고정한다.">프레파라트를 재물대에 고정한다</li>
+    <li data-why="렌즈와 표본이 부딪치지 않게 옆에서 본다.">옆에서 보며 대물렌즈를 내린다</li>
+    <li data-why="멀어지는 방향으로 움직여야 안전하다.">접안렌즈를 보며 경통을 올린다</li>
+    <li data-why="마지막에 미동 나사로 선명하게 맞춘다.">미동 나사로 초점을 맞춘다</li>
+  </ol>
+</section>
+
+<section class="slide" id="osmosis" data-sec="4. 계산과 그래프" data-title="흡수력(계산 상자와 그래프)">
+  <h2>흡수력 = 삼투압 − 팽압</h2>
+  <div class="calc cols" style="grid-template-columns: 500px 1fr; gap: 30px" data-const="k = 8.7; pmax = k / 1.35"
+       data-let="o = k / v; t = v <= 1 ? 0 : pmax * ((v - 1) / 0.35) ^ 1.6; s = o - t">
+    <div>
+      <p style="margin-bottom:0">세포의 상대적 부피 <output data-expr="v" data-digits="2"></output></p>
+      <input type="range" name="v" min="0.85" max="1.35" step="0.01" value="1.1" aria-label="세포의 상대적 부피">
+      <div class="meter">삼투압 <div class="bar" data-value="o" data-max="10.5" style="--bar-c:#0F766E"></div><output data-expr="o" data-digits="1" data-unit="기압"></output></div>
+      <div class="meter">팽압 <div class="bar" data-value="t" data-max="10.5" style="--bar-c:#6D4AA6"></div><output data-expr="t" data-digits="1" data-unit="기압"></output></div>
+      <div class="meter">흡수력 <div class="bar" data-value="s" data-max="10.5" style="--bar-c:#B45309"></div><output data-expr="s" data-digits="1" data-unit="기압"></output></div>
+      <p data-show="v < 1"><b>원형질 분리</b>: 팽압이 0이다.</p>
+      <p data-show="v >= 1 && s > 0.05"><b>물을 흡수하는 중</b>: 팽압이 커지며<br>흡수력이 줄어든다.</p>
+      <p data-show="s <= 0.05"><b>최대 팽윤</b>: 흡수력이 0이다.</p>
+    </div>
+    <figure class="plot" data-x="0.85, 1.35" data-y="0, 11" data-height="380" data-xlabel="세포의 상대적 부피" data-ylabel="압력(기압)">
+      <i data-line="k / x" data-label="삼투압" data-color="#0F766E"></i>
+      <i data-line="x <= 1 ? 0 : pmax * ((x - 1) / 0.35) ^ 1.6" data-label="팽압" data-color="#6D4AA6"></i>
+      <i data-line="k / x - (x <= 1 ? 0 : pmax * ((x - 1) / 0.35) ^ 1.6)" data-label="흡수력" data-color="#B45309" data-dash></i>
+      <i data-vline="v"></i>
+    </figure>
+  </div>
+</section>
+
+<section class="slide" id="vote" data-sec="4. 계산과 그래프" data-title="선거권 판정(계산 상자 단추)">
+  <h2>누가 투표할 수 있을까?</h2>
+  <p>가상의 나라 「바다국」의 선거법: 1920년에는 남자 21세·여자 30세,<br>1930년에는 모두 21세부터 투표할 수 있다.</p>
+  <div class="calc" data-let="need = year == 1920 && sex == '여자' ? 30 : 21; ok = age >= need">
+    <div class="seg"><b>선거법</b><button data-set="year" data-value="1920">1920년</button><button data-set="year" data-value="1930">1930년</button>
+      <b style="margin-left:40px">성별</b><button data-set="sex" data-value="남자">남자</button><button data-set="sex" data-value="여자">여자</button></div>
+    <p style="margin:0">나이 <output data-expr="age" data-unit="세"></output></p>
+    <input type="range" name="age" min="15" max="40" value="25" aria-label="나이">
+    <p class="verdict" data-expr="ok ? '투표할 수 있다.' : '투표할 수 없다.'" data-class="is-ok: ok; is-bad: !ok"></p>
+    <p data-expr="age + '세는 기준 나이 ' + need + '세' + (ok ? ' 이상이다.' : '보다 어리다.')"></p>
+  </div>
+</section>
+
+<section class="slide" id="figure" data-sec="4. 계산과 그래프" data-title="정답 상자와 그림 확대">
+  <h2>식물 세포에서 물을 저장하는 곳은?</h2>
+  <div class="cols" style="grid-template-columns: 520px 1fr">
+    <figure class="fig"><img src="assets/cell.svg" alt="식물 세포 모식도. 세포벽, 세포막, 핵, 액포, 엽록체"><figcaption>식물 세포 모식도(자체 제작)</figcaption></figure>
+    <div class="answer"><p>액포</p></div>
+  </div>
+</section>
+
+</body>
+</html>

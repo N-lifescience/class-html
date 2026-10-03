@@ -7,6 +7,10 @@ const MapReveal = {
   init() {
     this.list = [];
     qsa('figure.map-reveal', Stage.deck).forEach((fig, n) => {
+      // 지도와 막대를 한 덩어리로 묶어 바깥 칸 배치(grid 등)에서 함께 움직이게 한다
+      const holder = h('div', { class: 'ch-map-holder' });
+      fig.before(holder);
+      holder.append(fig);
       const img = fig.querySelector(':scope > img');
       const svg = fig.querySelector(':scope > svg');
       // 그림과 다각형만 상자로 묶어 그림 설명(figcaption)과 겹치지 않게 한다. 상자가 0단계 가림막이 된다.

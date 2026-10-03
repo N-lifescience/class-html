@@ -67,6 +67,10 @@ const KeepWords = {
       if (/^\s+$/.test(part)) frag.append(part);
       else frag.append(h('span', { class: 'w', text: part }));
     }
-    node.replaceWith(frag);
+    // flex·grid 상자 안에서는 낱말 span 하나하나가 따로 놓여 사이 공백이 사라진다. 한 덩어리로 감싼다.
+    const parent = node.parentElement;
+    if (parent && /flex|grid/.test(getComputedStyle(parent).display) && frag.childNodes.length > 1) {
+      node.replaceWith(h('span', { class: 'ch-wrun' }, frag));
+    } else node.replaceWith(frag);
   },
 };

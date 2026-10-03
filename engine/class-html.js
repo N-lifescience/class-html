@@ -1601,7 +1601,11 @@ const KeepWords = {
       if (/^\s+$/.test(part)) frag.append(part);
       else frag.append(h('span', { class: 'w', text: part }));
     }
-    node.replaceWith(frag);
+    // flex·grid 상자 안에서는 낱말 span 하나하나가 따로 놓여 사이 공백이 사라진다. 한 덩어리로 감싼다.
+    const parent = node.parentElement;
+    if (parent && /flex|grid/.test(getComputedStyle(parent).display) && frag.childNodes.length > 1) {
+      node.replaceWith(h('span', { class: 'ch-wrun' }, frag));
+    } else node.replaceWith(frag);
   },
 };
 
@@ -2370,6 +2374,10 @@ const MapReveal = {
   init() {
     this.list = [];
     qsa('figure.map-reveal', Stage.deck).forEach((fig, n) => {
+      // 지도와 막대를 한 덩어리로 묶어 바깥 칸 배치(grid 등)에서 함께 움직이게 한다
+      const holder = h('div', { class: 'ch-map-holder' });
+      fig.before(holder);
+      holder.append(fig);
       const img = fig.querySelector(':scope > img');
       const svg = fig.querySelector(':scope > svg');
       // 그림과 다각형만 상자로 묶어 그림 설명(figcaption)과 겹치지 않게 한다. 상자가 0단계 가림막이 된다.
@@ -2479,7 +2487,15 @@ const Yearline = {
       const range = h('input', { type: 'range', min, max: to, step: 1, value: min, 'aria-label': ol.getAttribute('aria-label') || '연도' });
       const ticks = h('div', { class: 'ch-stop-labels ch-yl-ticks', 'aria-hidden': 'true' });
       const tickYears = [...new Set([years[0], ...events.filter((e) => e.flag).map((e) => e.year), to])];
-      ticks.append(h('span', { text: '시작', style: 'left:0%' }), ...tickYears.map((y) => h('span', { text: String(y), style: `left:${x(y)}` })));
+      const pct = (y) => ((y - min) / span) * 100;
+      const kept = [];
+      for (const y of tickYears) {
+        const last = kept.length ? pct(kept[kept.length - 1]) : 0;
+        if (pct(y) - last < 7 && y !== to) continue;
+        if (y === to && kept.length && pct(y) - pct(kept[kept.length - 1]) < 7) kept.pop();
+        kept.push(y);
+      }
+      ticks.append(h('span', { text: '시작', style: 'left:0%' }), ...kept.map((y) => h('span', { text: String(y), style: `left:${x(y)}` })));
       wrap.append(h('div', { class: 'ch-yl-head' }, now, recent), axis, h('div', { class: 'ch-stops ch-yl-stops' }, range, ticks), ol);
 
       const item = { ol, wrap, events, years, min, to, range, now, recent, year: min, st: null };
@@ -3184,7 +3200,7 @@ const Plot = {
     const y1 = PLOT_PAD.t;
     const grid = svgEl('g', { class: 'ch-plot-grid' });
     const labels = svgEl('g', { class: 'ch-plot-ticks' });
-    for (const v of niceTicks(item.x[0], item.x[1], Math.max(2, Math.floor((x1 - x0) / 110)))) {
+    for (const v of niceTicks(item.x[0], item.x[1], Math.max(2, Math.floor((x1 - x0) / 90)))) {
       const x = this.sx(item, v);
       grid.append(svgEl('line', { x1: x, x2: x, y1, y2: y0 }));
       labels.append(svgEl('text', { x, y: y0 + 26, 'text-anchor': 'middle' }, Expr.format(v)));

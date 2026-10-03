@@ -24,9 +24,9 @@
 .slide .answer.sheet { flex: 1 1 auto; align-items: stretch; justify-content: flex-start; border-radius: 6px; background: var(--ch-card); box-shadow: 0 0 0 3px #E4E4E4, 0 6px 14px rgba(0, 0, 0, .08); text-align: left; }
 .slide .answer.sheet p { font-size: var(--ch-body, 24px); font-weight: 500; margin-bottom: 10px; }
 .slide .answer .label { display: inline-block; margin-bottom: 14px; padding: 4px 16px; border-radius: 8px; background: var(--label, #2E7D4F); color: #fff; font-size: 20px; font-weight: 700; }
-.ch-check { position: absolute; left: 50%; top: 50%; width: 88px; height: 88px; margin: -44px 0 0 -44px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: #00963A; color: #E3FEB8; box-shadow: 0 4px 10px rgba(0, 0, 0, .25); cursor: pointer; transition: transform .15s var(--ch-ease-out); }
-.ch-check:hover { transform: scale(1.06); }
-.ch-check .ch-icon { width: 52px; height: 52px; stroke-width: 3.2; }
+.slide .ch-check { position: absolute; left: 50%; top: 50%; width: 88px; height: 88px; margin: -44px 0 0 -44px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: #00963A; color: #E3FEB8; box-shadow: 0 4px 10px rgba(0, 0, 0, .25); cursor: pointer; transition: transform .15s var(--ch-ease-out); }
+.slide .ch-check:hover { transform: scale(1.06); }
+.slide .ch-check .ch-icon { width: 52px; height: 52px; stroke-width: 3.2; }
 .answer:has(.step.is-shown) > .ch-check { display: none; }
 
 /* 그림: <figure class="fig"><img …><figcaption>…</figcaption></figure>. 단추나 그림(손 모드)을 누르면 크게 본다. */
@@ -34,7 +34,7 @@
 .slide .fig img { display: block; max-width: 100%; border: 1px solid #CFCFCF; cursor: zoom-in; }
 .slide .fig figcaption { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 22px; font-weight: 700; color: var(--ch-ink); }
 .slide .fig figcaption::before { content: "▲"; display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; background: #777; color: #fff; font-size: 11px; }
-.ch-zoom-btn { position: absolute; right: 10px; top: 10px; z-index: 4; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(22, 24, 29, .72); color: #fff; cursor: pointer; }
+.slide .ch-zoom-btn { position: absolute; right: 10px; top: 10px; z-index: 4; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(22, 24, 29, .72); color: #fff; cursor: pointer; }
 .ch-zoom { position: fixed; inset: 0; z-index: 75; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10, 12, 16, .9); cursor: zoom-out; }
 .ch-zoom.is-open { display: flex; animation: ch-pop .25s var(--ch-ease-out); }
 .ch-zoom img { max-width: 96vw; max-height: 88vh; object-fit: contain; background: var(--ch-card); }
@@ -79,3 +79,4 @@
 .slide .ch-reset { min-height: 56px; padding: 0 22px; border-width: 2px; border-color: #AEB4BC; color: var(--ch-mute); font-size: 22px; }
 .ch-shake { animation: ch-shake .4s; }
 @keyframes ch-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.slide .ch-zoom-btn .ch-icon { width: 30px; height: 30px; }

@@ -16,7 +16,7 @@
     <div class="bin" data-bin="p" id="binP"><h3>식물</h3></div>
     <span data-bin="a" id="c1" data-why="고양이는 동물이다." data-hint="스스로 움직인다.">고양이</span>
     <span data-bin="a" id="c2" data-why="참새는 동물이다.">참새</span>
-    <span data-bin="p" id="c3" data-why="소나무는 식물이다." data-hint="광합성을 한다.">소나무</span>
+    <span data-bin="p" id="c3" data-why="소나무는 식물이다." data-hint="광합성을 한다.">늘 푸른 소나무</span>
   </div>
   <p class="step" id="next">다음 단계</p>
 </section>
@@ -43,6 +43,12 @@ test('카드는 카드 자리로 모이고, 펜 예외·톡 누르기 표시가 
   assert(t.bins.every((b) => b.hasAttribute('data-tap')), 'bins');
   eq($('box').style.getPropertyValue('--cols'), '2');
   eq(Array.from(t.pool.children), t.order);
+});
+test('flex 카드 안에서도 낱말 사이 띄어쓰기가 보인다(어절 보정)', () => {
+  const card = it().cards.find((c) => c.querySelectorAll('.w').length > 1);
+  const w = card.querySelectorAll('.w');
+  const gap = w[1].getBoundingClientRect().left - w[0].getBoundingClientRect().right;
+  assert(gap > 3, `gap ${gap}`);
 });
 test('섞는 순서는 장 열쇠로 정해진다', () => {
   const again = I().Sort.list[0].order.map((c) => c.id);

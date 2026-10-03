@@ -24,6 +24,7 @@ test('처음에는 정한 시간과 시작 단추, 이름', () => {
   eq(t('tm').face.textContent, '0:02');
   eq(t('tm').run.textContent, '시작');
   eq(t('tm').el.querySelector('.ch-timer-label').textContent, '남은 시간');
+  assert(!t('long').el.textContent.includes('null'), 'no null text without a label');
   assert(t('tm').run.getBoundingClientRect().height >= 56 * I().Stage.scale - 0.5, '56px');
 });
 test('시작하면 줄어들고, 멈추면 그대로, 이어서 하면 다시 줄어든다', async () => {

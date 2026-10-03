@@ -11,9 +11,9 @@ const Timer = {
       const run = h('button', { type: 'button', class: 'ch-timer-run' });
       const reset = h('button', { type: 'button', class: 'ch-reset', text: '다시' });
       const t = { el, total, left: total, face, run, reset, timer: 0, end: 0 };
-      el.replaceChildren(
-        el.dataset.label ? h('span', { class: 'ch-timer-label', text: el.dataset.label }) : null,
-        face, h('span', { class: 'ch-timer-btns' }, run, reset));
+      // replaceChildren은 null을 글자 'null'로 넣으므로 이름이 없을 때는 빼고 넘긴다
+      el.replaceChildren(...[el.dataset.label ? h('span', { class: 'ch-timer-label', text: el.dataset.label }) : null,
+        face, h('span', { class: 'ch-timer-btns' }, run, reset)].filter(Boolean));
       run.addEventListener('click', (e) => { this.toggle(t); e.currentTarget.blur(); });
       reset.addEventListener('click', (e) => { this.reset(t); e.currentTarget.blur(); });
       this.list.push(t);

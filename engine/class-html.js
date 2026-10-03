@@ -1890,6 +1890,7 @@ const Audit = {
 const Parts = {
   init() {
     Answer.init();
+    Blank.init();
     Zoom.init();
     Stepper.init();
     MapReveal.init();
@@ -1920,6 +1921,25 @@ const Answer = {
 
   // 상자 안 첫 단계까지 연다. 다른 장의 상자는 무시한다.
   reveal(box) { Nav.revealTo(box.querySelector('.step')); },
+};
+
+// 빈칸: <span class="blank">확산</span>. 핵심어를 가렸다가 누르면 연다(다시 누르면 가린다). 펜을 든 채로도 톡 누르면 된다.
+const Blank = {
+  init() {
+    for (const b of qsa('.blank', Stage.deck)) {
+      b.setAttribute('role', 'button');
+      b.setAttribute('aria-pressed', 'false');
+      b.tabIndex = 0;
+      const flip = () => b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+      b.addEventListener('click', flip);
+      b.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        e.stopPropagation();
+        flip();
+      });
+    }
+  },
 };
 
 // 그림 확대: figure.fig 안 그림. 확대 단추나 손 모드에서 그림을 누르면 크게 본다.
@@ -3722,7 +3742,7 @@ function boot() {
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
   ClassHTML.audit = () => Audit.run();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, Answer, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order, Calc, Plot, Zip, Pptx, Source, PptFill };
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, Answer, Blank, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order, Calc, Plot, Zip, Pptx, Source, PptFill };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

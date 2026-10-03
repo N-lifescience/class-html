@@ -71,6 +71,12 @@
   .ch-check, .ch-zoom-btn, .ch-zoom { display: none !important; }
 }
 
+/* 빈칸: 글자는 자리를 지키고 색만 감춘다(줄이 바뀌지 않게). 누르면 강조색으로 드러난다. */
+.slide .blank { display: inline-block; min-width: 3em; padding: 0 .25em; border-bottom: 3px solid var(--accent); border-radius: 4px; background: var(--ch-soft); color: transparent; cursor: pointer; }
+.slide .blank .w { color: inherit; }
+.slide .blank[aria-pressed="true"] { background: transparent; color: var(--accent); font-weight: 800; }
+@media print { .slide .blank { color: var(--accent) !important; background: transparent !important; } }
+
 /* 부품 공통: 맞음·틀림 알림 줄, 흔들림, 「다시」 단추 */
 .ch-row { display: flex; align-items: center; gap: 14px; }
 .slide .ch-fb { flex: 1; min-height: 40px; margin: 0; font-size: 26px; font-weight: 700; line-height: 1.45; }

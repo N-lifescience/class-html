@@ -6,11 +6,13 @@
 <link rel="stylesheet" href="../../engine/class-html.css">
 <script defer src="../../engine/class-html.js"></script>
 <script src="harness.js"></script>
+<script src="pointer.js"></script>
 </head>
 <body>
 <section class="slide" id="f1">
   <h2>정답 상자</h2>
   <div class="answer" id="ans"><p id="ansText">답은 바다다.</p></div>
+  <p>물질이 퍼져 나가는 현상은 <span class="blank" id="bl">확산</span>이다.</p>
   <figure class="fig" id="fig"><img id="img" alt="파란 네모" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='30'%3E%3Crect width='40' height='30' fill='%232563EB'/%3E%3C/svg%3E" style="width:200px"><figcaption>자체 제작 그림</figcaption></figure>
   <figure class="fig" id="empty"><img data-ppt="3-1" alt="빈 자리"></figure>
 </section>
@@ -48,6 +50,22 @@ test('다른 장의 정답 상자 ✓는 무시하고, 단계가 있으면 첫 �
   ClassHTML.go(1);
   check('ans2').click();
   assert($('s2a').classList.contains('is-shown') && !$('s2b').classList.contains('is-shown'), 'first step only');
+});
+test('빈칸: 처음엔 가리고 누르면 열리고 다시 누르면 가린다, 펜으로 톡 눌러도', () => {
+  ClassHTML.go(0);
+  const b = $('bl');
+  eq(getComputedStyle(b).color, 'rgba(0, 0, 0, 0)');
+  b.click();
+  eq(b.getAttribute('aria-pressed'), 'true');
+  assert(getComputedStyle(b).color !== 'rgba(0, 0, 0, 0)', 'shown');
+  I().Tools.set('pen');
+  const r = b.getBoundingClientRect();
+  ptr('pointerdown', b, 0, 0, { clientX: r.left + 5, clientY: r.top + 5 });
+  eq(I().Ink.gesture && I().Ink.gesture.started, false, 'tap waits');
+  ptr('pointerup', b, 0, 0, { clientX: r.left + 5, clientY: r.top + 5 });
+  b.click();
+  eq(b.getAttribute('aria-pressed'), 'false');
+  I().Tools.set('hand');
 });
 test('확대 단추를 누르면 크게, 설명 글도 함께, Esc로 닫기', () => {
   ClassHTML.go(0);

@@ -40,6 +40,9 @@ const REL = 'http://schemas.openxmlformats.org/package/2006/relationships';
 const pic = (rid, name) => `<p:pic><p:nvPicPr><p:cNvPr id="2" name="${name}"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="${rid}"/></p:blipFill><p:spPr/></p:pic>`;
 const slide = (body, bg = '') => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sld xmlns:a="${A}" xmlns:r="${R}" xmlns:p="${P}"><p:cSld>${bg}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/><p:sp><p:txBody><a:p><a:r><a:t>제목</a:t></a:r></a:p></p:txBody></p:sp>${body}</p:spTree></p:cSld></p:sld>`;
 const rels = (list) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${REL}">${list.map(([id, target, type]) => `<Relationship Id="${id}" Type="${type || 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image'}" Target="${target}"/>`).join('')}</Relationships>`;
+// 테마 색 집계 시험용 도형: 노랑(accent3) 3번, 직접 지정한 주황 2번
+const box = (fill) => `<p:sp><p:spPr><a:solidFill>${fill}</a:solidFill></p:spPr><p:txBody><a:p><a:r><a:t>내용 정리</a:t></a:r></a:p></p:txBody></p:sp>`;
+const FILLS = box('<a:schemeClr val="accent3"/>').repeat(3) + box('<a:srgbClr val="E8541A"/>').repeat(2);
 const SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10"><rect width="20" height="10" fill="#ff9900"/></svg>';
 
 export function files() {
@@ -49,7 +52,7 @@ export function files() {
     ['ppt/_rels/presentation.xml.rels', rels([['rId11', 'slides/slide1.xml', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide'], ['rId12', 'slides/slide2.xml', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide'], ['rId13', '/ppt/slides/slide3.xml', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide']]), 8],
     ['ppt/slides/slide2.xml', slide(pic('rId2', '빨강') + pic('rId3', '큰 파랑')), 8],
     ['ppt/slides/_rels/slide2.xml.rels', rels([['rId2', '../media/image1.png'], ['rId3', '../media/image2.png']]), 0],
-    ['ppt/slides/slide1.xml', slide(pic('rId5', '초록') + pic('rId6', '도형 EMF') + pic('rId7', '빨강 다시')), 8],
+    ['ppt/slides/slide1.xml', slide(pic('rId5', '초록') + pic('rId6', '도형 EMF') + pic('rId7', '빨강 다시') + FILLS), 8],
     ['ppt/slides/_rels/slide1.xml.rels', rels([['rId5', '../media/image3.png'], ['rId6', '../media/image4.emf'], ['rId7', '../media/image1.png']]), 8],
     ['ppt/slides/slide3.xml', slide('', `<p:bg><p:bgPr><a:blipFill><a:blip r:embed="rId9"/></a:blipFill></p:bgPr></p:bg>`), 8],
     ['ppt/slides/_rels/slide3.xml.rels', rels([['rId9', '../media/image5.svg']]), 8],
@@ -58,6 +61,7 @@ export function files() {
     ['ppt/media/image3.png', png(30, 30, [46, 158, 106]), 8],
     ['ppt/media/image4.emf', Buffer.from([1, 0, 0, 0, 0x6C, 0, 0, 0, 0x20, 0x45, 0x4D, 0x46]), 0],
     ['ppt/media/image5.svg', SVG, 8],
+    ['ppt/theme/theme1.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><a:theme xmlns:a="${A}" name="시험"><a:themeElements><a:clrScheme name="시험"><a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="1F3B70"/></a:dk2><a:lt2><a:srgbClr val="EEECE1"/></a:lt2><a:accent1><a:srgbClr val="C04F15"/></a:accent1><a:accent2><a:srgbClr val="157E7B"/></a:accent2><a:accent3><a:srgbClr val="FFDE21"/></a:accent3><a:accent4><a:srgbClr val="4F9BB4"/></a:accent4><a:accent5><a:srgbClr val="A77540"/></a:accent5><a:accent6><a:srgbClr val="89C5CF"/></a:accent6></a:clrScheme></a:themeElements></a:theme>`, 8],
   ];
 }
 

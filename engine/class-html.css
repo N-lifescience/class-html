@@ -5,13 +5,18 @@
 :root {
   --ch-paper: #F4F1EA;
   --ch-ink: #1F2328;
-  --ch-mute: #6B6F76;
+  --ch-mute: #62666D;
   --ch-line: #DDD7CC;
   --accent: #E8541A;
   --ch-ok: #2E7D4F;
   --ch-bad: #C2362F;
   --ch-info: #2563EB;
   --ch-hl: #FFE45C;
+  --ch-body: 28px;          /* 본문 글자(설계서 7.2-3: 28px 이상) */
+  --ch-card: #FFFFFF;       /* 카드·보기·단추 바탕 */
+  --ch-soft: #EEF0F3;       /* 번호 동그라미, 막대 바탕 */
+  --ch-ok-bg: #EAF7EF;
+  --ch-bad-bg: #FDECEA;
   --ch-ui: #16181D;
   --ch-ui-2: #24272E;
   --ch-ui-fg: #F4F1EA;
@@ -183,7 +188,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .slide h1 { margin: 0 0 20px; font-size: 80px; font-weight: 800; line-height: 1.1; letter-spacing: -.03em; }
 .slide h2 { margin: 0 0 28px; font-size: 42px; font-weight: 800; line-height: 1.2; letter-spacing: -.025em; }
 .slide h3 { margin: 0 0 12px; font-size: 27px; font-weight: 700; line-height: 1.3; letter-spacing: -.015em; }
-.slide p, .slide li { margin: 0 0 14px; font-size: var(--ch-body, 24px); line-height: 1.6; }
+.slide p, .slide li { margin: 0 0 14px; font-size: var(--ch-body); line-height: 1.6; }
 .slide ul, .slide ol { margin: 0 0 14px; padding-left: 1.2em; }
 .slide mark { background: linear-gradient(transparent 55%, var(--ch-hl) 55%); color: inherit; padding: 0 .1em; }
 .slide .kicker { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; font-size: 18px; font-weight: 700; color: var(--accent); }
@@ -191,7 +196,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .slide table { border-collapse: collapse; font-size: 22px; }
 .slide th, .slide td { padding: 10px 16px; border-bottom: 1px solid var(--ch-line); text-align: left; }
 .slide th { font-weight: 700; background: rgba(0, 0, 0, .03); }
-.slide button { font: 600 22px/1 var(--ch-font); padding: 14px 22px; border-radius: 12px; border: 2px solid var(--ch-ink); background: #fff; color: var(--ch-ink); cursor: pointer; }
+.slide button { font: 600 22px/1 var(--ch-font); padding: 14px 22px; border-radius: 12px; border: 2px solid var(--ch-ink); background: var(--ch-card); color: var(--ch-ink); cursor: pointer; }
 .slide button:active { transform: translateY(1px); }
 .slide input[type="range"] { width: 320px; vertical-align: middle; accent-color: var(--accent); }
 .slide output { margin-left: 8px; font: 700 24px/1 var(--ch-mono); }
@@ -201,15 +206,6 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 /* ---- 70-parts.css ---- */
 /* 공통 부품. 색은 변수로 받는다: --accent(주제 제목·번호), --tab·--tab-ink(장 머리 띠), --flag(연표),
    --pill(자료 단추), --qnum(문항 번호), --table-head·--table-side(비교표). 원본 PPT 색을 덱에서 넣는다. */
-
-/* 원본 PPT 테마: 흰 바탕, data-sec이 왼쪽 위 색 띠가 된다. 단원 성격마다 [data-sec="…"]{--tab:…}로 색을 바꾼다. */
-[data-theme="ppt"] { --ch-paper: #fff; --ch-body: 28px; --tab: var(--accent); --tab-ink: #fff; }
-[data-theme="ppt"] .slide { padding: 112px 80px 56px; background: linear-gradient(var(--tab), var(--tab)) top / 100% 30px no-repeat, var(--ch-paper); }
-[data-theme="ppt"] .slide::before { left: 0; top: 0; height: 78px; display: flex; align-items: center; padding: 0 48px 0 36px; border-radius: 0 0 44px 0; background: var(--tab); color: var(--tab-ink); font: 800 32px/1 var(--ch-font); letter-spacing: -.02em; }
-[data-theme="ppt"] .slide:not([data-sec]) { padding-top: 72px; background: var(--ch-paper); }
-[data-theme="ppt"] .slide:not([data-sec])::before { display: none; }
-[data-theme="ppt"] .slide h2:not([data-n]) { width: fit-content; padding-bottom: 8px; border-bottom: 4px solid var(--tab); font-size: 34px; }
-[data-theme="ppt"] .slide p, [data-theme="ppt"] .slide li { line-height: 1.7; }
 
 /* 번호 주제 제목: <h2 data-n="1">빈 체제의 성립</h2> */
 .slide h2[data-n] { display: flex; align-items: center; gap: 18px; color: var(--accent); font-size: 40px; }
@@ -229,9 +225,9 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .slide .q[data-n]::before { content: attr(data-n); position: absolute; left: 0; top: -.12em; color: var(--qnum, var(--accent)); font-size: 1.4em; font-weight: 800; }
 
 /* 정답 상자: 회색 둥근 상자 가운데 ✓ 단추. 누르거나 다음(→)을 누르면 내용이 열린다. .sheet는 남은 자리를 채우는 흰 답안지. */
-.slide .answer { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 170px; box-sizing: border-box; padding: 28px 56px; border-radius: 80px; background: #F0F0F0; text-align: center; }
+.slide .answer { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 170px; box-sizing: border-box; padding: 28px 56px; border-radius: 80px; background: var(--ch-soft); text-align: center; }
 .slide .answer p { margin: 0; font-size: 34px; font-weight: 800; }
-.slide .answer.sheet { flex: 1 1 auto; align-items: stretch; justify-content: flex-start; border-radius: 6px; background: #fff; box-shadow: 0 0 0 3px #E4E4E4, 0 6px 14px rgba(0, 0, 0, .08); text-align: left; }
+.slide .answer.sheet { flex: 1 1 auto; align-items: stretch; justify-content: flex-start; border-radius: 6px; background: var(--ch-card); box-shadow: 0 0 0 3px #E4E4E4, 0 6px 14px rgba(0, 0, 0, .08); text-align: left; }
 .slide .answer.sheet p { font-size: var(--ch-body, 24px); font-weight: 500; margin-bottom: 10px; }
 .slide .answer .label { display: inline-block; margin-bottom: 14px; padding: 4px 16px; border-radius: 8px; background: var(--label, #2E7D4F); color: #fff; font-size: 20px; font-weight: 700; }
 .ch-check { position: absolute; left: 50%; top: 50%; width: 88px; height: 88px; margin: -44px 0 0 -44px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: #00963A; color: #E3FEB8; box-shadow: 0 4px 10px rgba(0, 0, 0, .25); cursor: pointer; transition: transform .15s var(--ch-ease-out); }
@@ -247,7 +243,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .ch-zoom-btn { position: absolute; right: 10px; top: 10px; z-index: 4; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(22, 24, 29, .72); color: #fff; cursor: pointer; }
 .ch-zoom { position: fixed; inset: 0; z-index: 75; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10, 12, 16, .9); cursor: zoom-out; }
 .ch-zoom.is-open { display: flex; animation: ch-pop .25s var(--ch-ease-out); }
-.ch-zoom img { max-width: 96vw; max-height: 88vh; object-fit: contain; background: #fff; }
+.ch-zoom img { max-width: 96vw; max-height: 88vh; object-fit: contain; background: var(--ch-card); }
 .ch-zoom p { margin: 0; color: #fff; font: 700 20px/1.4 var(--ch-font); }
 
 /* 자료 단추(외부 링크): <a class="pill" href="…">사료 보기</a>, 색은 style="--pill:#…" */
@@ -290,15 +286,41 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .ch-shake { animation: ch-shake .4s; }
 @keyframes ch-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
 
+/* ---- 71-themes.css ---- */
+/* 테마(body[data-theme]). paper가 기본(00-tokens). 강조색은 body의 style="--accent:#…"로 바꾼다.
+   ppt: 원본 PPT의 대표 색을 잇는다(extract_pptx.py가 theme.json으로 추천 색을 낸다).
+   grid: 32px 모눈. chalk: 어두운 초록 칠판(흰 펜이 생기고 형광펜은 밝게 겹친다). */
+
+/* 원본 PPT 테마: 흰 바탕, data-sec이 왼쪽 위 색 띠가 된다. 단원 성격마다 [data-sec="…"]{--tab:…}로 색을 바꾼다. */
+[data-theme="ppt"] { --ch-paper: #FFFFFF; --tab: var(--accent); --tab-ink: #FFFFFF; }
+[data-theme="ppt"] .slide { padding: 112px 80px 56px; background: linear-gradient(var(--tab), var(--tab)) top / 100% 30px no-repeat, var(--ch-paper); }
+[data-theme="ppt"] .slide::before { left: 0; top: 0; height: 78px; display: flex; align-items: center; padding: 0 48px 0 36px; border-radius: 0 0 44px 0; background: var(--tab); color: var(--tab-ink); font: 800 32px/1 var(--ch-font); letter-spacing: -.02em; }
+[data-theme="ppt"] .slide:not([data-sec]) { padding-top: 72px; background: var(--ch-paper); }
+[data-theme="ppt"] .slide:not([data-sec])::before { display: none; }
+[data-theme="ppt"] .slide h2:not([data-n]) { width: fit-content; padding-bottom: 8px; border-bottom: 4px solid var(--tab); font-size: 40px; }
+[data-theme="ppt"] .slide p, [data-theme="ppt"] .slide li { line-height: 1.7; }
+
+[data-theme="grid"] { --ch-paper: #FBFBF8; }
+[data-theme="grid"] .slide { background: linear-gradient(#E6E9EC 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, #E6E9EC 1px, transparent 1px) 0 0 / 32px 32px, var(--ch-paper); }
+
+[data-theme="chalk"] {
+  --ch-paper: #1F3A2E; --ch-ink: #F1F5EE; --ch-mute: #B9CABE; --ch-line: #4A6B5A;
+  --ch-card: #29493A; --ch-soft: #355846; --ch-ok: #7FD99A; --ch-bad: #FF8A80; --ch-ok-bg: #24553A; --ch-bad-bg: #5A2A27;
+  --ch-hl: #8C7A1E; --accent: #F2C14E; --table-head: #2F6B4A; --table-side: #29493A;
+}
+[data-theme="chalk"] .slide { background: radial-gradient(ellipse at 30% 20%, #26473A, var(--ch-paper) 70%); }
+[data-theme="chalk"] .slide button, [data-theme="chalk"] .slide .ch-card, [data-theme="chalk"] .slide .quiz .opt { border-color: var(--ch-line); }
+[data-theme="chalk"] .slide th { background: rgba(255, 255, 255, .06); }
+
 /* ---- 72-stepper.css ---- */
 /* 단계 막대: 슬라이더(굵은 손잡이)와 눈금 이름. 색은 --stop-c(기본 --accent). */
 .ch-stops { position: relative; margin: 6px 0 0; padding-bottom: 48px; }
 .ch-stops input[type="range"], .slide .calc input[type="range"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 56px; margin: 0; background: transparent; cursor: pointer; --p: 0%; }
 .ch-stops input[type="range"]::-webkit-slider-runnable-track, .slide .calc input[type="range"]::-webkit-slider-runnable-track { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--stop-c, var(--accent)) var(--p), #D5D9DF var(--p)); }
-.ch-stops input[type="range"]::-webkit-slider-thumb, .slide .calc input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 46px; height: 46px; margin-top: -17px; border-radius: 50%; background: #fff; border: 7px solid var(--stop-c, var(--accent)); box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
+.ch-stops input[type="range"]::-webkit-slider-thumb, .slide .calc input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 46px; height: 46px; margin-top: -17px; border-radius: 50%; background: var(--ch-card); border: 7px solid var(--stop-c, var(--accent)); box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
 .ch-stops input[type="range"]::-moz-range-track, .slide .calc input[type="range"]::-moz-range-track { height: 12px; border-radius: 6px; background: #D5D9DF; }
 .ch-stops input[type="range"]::-moz-range-progress, .slide .calc input[type="range"]::-moz-range-progress { height: 12px; border-radius: 6px; background: var(--stop-c, var(--accent)); }
-.ch-stops input[type="range"]::-moz-range-thumb, .slide .calc input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 7px solid var(--stop-c, var(--accent)); }
+.ch-stops input[type="range"]::-moz-range-thumb, .slide .calc input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: var(--ch-card); border: 7px solid var(--stop-c, var(--accent)); }
 .ch-stop-labels { position: absolute; left: 23px; right: 23px; bottom: 0; height: 48px; pointer-events: none; }
 .ch-stop-labels span { position: absolute; top: 2px; transform: translateX(-50%); font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--ch-mute); white-space: pre; text-align: center; }
 .ch-stop-labels span.is-on { color: var(--ch-ink); }
@@ -306,7 +328,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 
 /* 단추형(비교 전환) */
 .ch-switch-btns { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 18px; }
-.slide .ch-switch-btn { min-height: 64px; padding: 0 30px; border: 2px solid var(--stop-c, var(--accent)); border-radius: 14px; background: #fff; color: var(--ch-ink); font: 700 26px/1.2 var(--ch-font); white-space: pre; }
+.slide .ch-switch-btn { min-height: 64px; padding: 0 30px; border: 2px solid var(--stop-c, var(--accent)); border-radius: 14px; background: var(--ch-card); color: var(--ch-ink); font: 700 26px/1.2 var(--ch-font); white-space: pre; }
 .slide .ch-switch-btn[aria-pressed="true"] { background: var(--stop-c, var(--accent)); color: #fff; }
 .slide .ch-switch-hint { margin: 0 0 12px; color: var(--ch-mute); font-size: 26px; }
 
@@ -332,7 +354,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .ch-hide { display: none !important; }
 .slide .calc input[type="range"] { width: 100%; }
 .slide .calc output { white-space: nowrap; }
-.slide .calc .bar { position: relative; height: 26px; border-radius: 13px; background: #E3E7EC; overflow: hidden; }
+.slide .calc .bar { position: relative; height: 26px; border-radius: 13px; background: var(--ch-soft); overflow: hidden; }
 .slide .calc .bar::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--bar-c, var(--accent)); transform: scaleX(var(--f, 0)); transform-origin: 0 50%; transition: transform .2s var(--ch-ease-out); }
 .slide .calc [data-set] { min-height: 56px; }
 .slide .calc [data-set][aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }
@@ -391,10 +413,10 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .slide .sort > .ch-pool, .slide .sort > .ch-row, .slide .sort > :not(.bin) { grid-column: 1 / -1; }
 .ch-pool { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 12px; min-height: 60px; }
 .ch-pool[hidden] { display: none; }
-.slide .ch-card { display: inline-flex; align-items: center; min-height: 58px; box-sizing: border-box; padding: 8px 20px; border: 2px solid #AEB4BC; border-radius: 14px; background: #fff; color: var(--ch-ink); font-size: 26px; font-weight: 700; line-height: 1.3; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: 0 3px 0 rgba(0, 0, 0, .12); }
+.slide .ch-card { display: inline-flex; align-items: center; min-height: 58px; box-sizing: border-box; padding: 8px 20px; border: 2px solid #AEB4BC; border-radius: 14px; background: var(--ch-card); color: var(--ch-ink); font-size: 26px; font-weight: 700; line-height: 1.3; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: 0 3px 0 rgba(0, 0, 0, .12); }
 .ch-card.is-sel { outline: 4px solid var(--accent); outline-offset: 2px; }
 .ch-card.is-drag { position: relative; z-index: 50; cursor: grabbing; box-shadow: 0 12px 26px rgba(0, 0, 0, .28); }
-.ch-card.is-done { border-color: var(--ch-ok); background: #EAF7EF; cursor: default; box-shadow: none; }
+.ch-card.is-done { border-color: var(--ch-ok); background: var(--ch-ok-bg); cursor: default; box-shadow: none; }
 .slide .sort .bin { min-height: 150px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; box-sizing: border-box; padding: 14px; border: 3px dashed #C3C9D1; border-radius: 18px; cursor: pointer; }
 .slide .sort .bin > h3 { width: 100%; margin: 0 0 4px; font-size: 28px; color: var(--bc, var(--ch-ink)); }
 .slide .sort .bin.is-hover { border-color: var(--accent); background: rgba(232, 84, 26, .06); }
@@ -406,13 +428,13 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 /* ---- 77-quiz.css ---- */
 /* 즉시 확인 문제 */
 .ch-opts { display: grid; grid-template-columns: repeat(var(--cols, 1), 1fr); gap: 12px 18px; margin: 6px 0 14px; }
-.slide .quiz .opt { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 64px; box-sizing: border-box; margin: 0; padding: 8px 22px; border: 2px solid #C3C9D1; border-radius: 16px; background: #fff; color: var(--ch-ink); font: 700 26px/1.35 var(--ch-font); text-align: left; cursor: pointer; }
-.ch-opt-n { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #EEF0F3; font-style: normal; font-size: 24px; }
+.slide .quiz .opt { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 64px; box-sizing: border-box; margin: 0; padding: 8px 22px; border: 2px solid #C3C9D1; border-radius: 16px; background: var(--ch-card); color: var(--ch-ink); font: 700 26px/1.35 var(--ch-font); text-align: left; cursor: pointer; }
+.ch-opt-n { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--ch-soft); font-style: normal; font-size: 24px; }
 .slide .quiz .opt.is-pick { border-color: var(--accent); background: rgba(232, 84, 26, .07); }
 .slide .quiz .opt.is-pick .ch-opt-n { background: var(--accent); color: #fff; }
-.slide .quiz .opt.is-right { border-color: var(--ch-ok); background: #EAF7EF; }
+.slide .quiz .opt.is-right { border-color: var(--ch-ok); background: var(--ch-ok-bg); }
 .slide .quiz .opt.is-right .ch-opt-n { background: var(--ch-ok); color: #fff; }
-.slide .quiz .opt.is-wrong { border-color: var(--ch-bad); background: #FDECEA; }
+.slide .quiz .opt.is-wrong { border-color: var(--ch-bad); background: var(--ch-bad-bg); }
 .slide .quiz .opt.is-wrong .ch-opt-n { background: var(--ch-bad); color: #fff; }
 .slide .quiz .opt.is-miss { border-style: dashed; border-color: var(--ch-ok); }
 .slide .ch-check-btn { min-height: 56px; padding: 0 30px; border-color: var(--accent); background: var(--accent); color: #fff; font-size: 24px; }
@@ -431,15 +453,15 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .ch-order > .ch-fb { grid-column: 1 / -1; }
 .ch-order > ol.order { display: none; }
 .ch-order-bank { display: grid; gap: 10px; }
-.slide .ch-order-item { min-height: 58px; padding: 8px 20px; border: 2px solid #AEB4BC; border-radius: 14px; background: #fff; font: 700 24px/1.3 var(--ch-font); text-align: left; }
+.slide .ch-order-item { min-height: 58px; padding: 8px 20px; border: 2px solid #AEB4BC; border-radius: 14px; background: var(--ch-card); font: 700 24px/1.3 var(--ch-font); text-align: left; }
 .slide .ch-order-item:disabled { opacity: .35; cursor: default; }
 .slide .ch-order-out h3 { margin: 0 0 8px; font-size: 24px; color: var(--ch-mute); }
 .slide .ch-order-slots { counter-reset: ch-order; margin: 0 0 10px; padding: 0; list-style: none; display: grid; gap: 8px; }
 .slide .ch-order-slots li { counter-increment: ch-order; position: relative; min-height: 52px; box-sizing: border-box; margin: 0; padding: 8px 16px 8px 56px; border: 2px solid #D5D9DF; border-radius: 12px; font-size: 24px; font-weight: 700; line-height: 1.35; }
-.slide .ch-order-slots li::before { content: counter(ch-order); position: absolute; left: 14px; top: 8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #EEF0F3; font-size: 20px; }
+.slide .ch-order-slots li::before { content: counter(ch-order); position: absolute; left: 14px; top: 8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--ch-soft); font-size: 20px; }
 .slide .ch-order-slots li.is-empty { border-style: dashed; }
-.slide .ch-order-slots li.is-right { border-color: var(--ch-ok); background: #EAF7EF; }
-.slide .ch-order-slots li.is-wrong { border-color: var(--ch-bad); background: #FDECEA; }
+.slide .ch-order-slots li.is-right { border-color: var(--ch-ok); background: var(--ch-ok-bg); }
+.slide .ch-order-slots li.is-wrong { border-color: var(--ch-bad); background: var(--ch-bad-bg); }
 .slide .ch-order-why { display: block; margin-top: 4px; font-size: 20px; font-weight: 500; color: var(--ch-mute); }
 
 @media print {
@@ -459,8 +481,8 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .ch-plot-line { fill: none; stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; }
 .ch-plot-line.is-dash { stroke-dasharray: 10 7; }
 .ch-plot-vline { stroke: var(--ch-ink); stroke-width: 2; stroke-dasharray: 5 5; opacity: .6; }
-.ch-plot-point { stroke: #fff; stroke-width: 3; }
-.ch-plot-plabel { font-size: 20px; font-weight: 700; fill: var(--ch-ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; }
+.ch-plot-point { stroke: var(--ch-paper); stroke-width: 3; }
+.ch-plot-plabel { font-size: 20px; font-weight: 700; fill: var(--ch-ink); paint-order: stroke; stroke: var(--ch-paper); stroke-width: 4px; }
 .ch-plot-legend { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 0 6px; font-size: 20px; font-weight: 700; }
 .ch-plot-legend span::before { content: ""; display: inline-block; width: 28px; margin-right: 8px; vertical-align: middle; border-top: 4px solid var(--c); }
 .ch-plot-legend span.is-dash::before { border-top-style: dashed; }

@@ -1,15 +1,6 @@
 /* 공통 부품. 색은 변수로 받는다: --accent(주제 제목·번호), --tab·--tab-ink(장 머리 띠), --flag(연표),
    --pill(자료 단추), --qnum(문항 번호), --table-head·--table-side(비교표). 원본 PPT 색을 덱에서 넣는다. */
 
-/* 원본 PPT 테마: 흰 바탕, data-sec이 왼쪽 위 색 띠가 된다. 단원 성격마다 [data-sec="…"]{--tab:…}로 색을 바꾼다. */
-[data-theme="ppt"] { --ch-paper: #fff; --ch-body: 28px; --tab: var(--accent); --tab-ink: #fff; }
-[data-theme="ppt"] .slide { padding: 112px 80px 56px; background: linear-gradient(var(--tab), var(--tab)) top / 100% 30px no-repeat, var(--ch-paper); }
-[data-theme="ppt"] .slide::before { left: 0; top: 0; height: 78px; display: flex; align-items: center; padding: 0 48px 0 36px; border-radius: 0 0 44px 0; background: var(--tab); color: var(--tab-ink); font: 800 32px/1 var(--ch-font); letter-spacing: -.02em; }
-[data-theme="ppt"] .slide:not([data-sec]) { padding-top: 72px; background: var(--ch-paper); }
-[data-theme="ppt"] .slide:not([data-sec])::before { display: none; }
-[data-theme="ppt"] .slide h2:not([data-n]) { width: fit-content; padding-bottom: 8px; border-bottom: 4px solid var(--tab); font-size: 34px; }
-[data-theme="ppt"] .slide p, [data-theme="ppt"] .slide li { line-height: 1.7; }
-
 /* 번호 주제 제목: <h2 data-n="1">빈 체제의 성립</h2> */
 .slide h2[data-n] { display: flex; align-items: center; gap: 18px; color: var(--accent); font-size: 40px; }
 .slide h2[data-n]::before { content: attr(data-n); flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 32px; box-shadow: 0 0 0 4px #DCDCDC; }
@@ -28,9 +19,9 @@
 .slide .q[data-n]::before { content: attr(data-n); position: absolute; left: 0; top: -.12em; color: var(--qnum, var(--accent)); font-size: 1.4em; font-weight: 800; }
 
 /* 정답 상자: 회색 둥근 상자 가운데 ✓ 단추. 누르거나 다음(→)을 누르면 내용이 열린다. .sheet는 남은 자리를 채우는 흰 답안지. */
-.slide .answer { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 170px; box-sizing: border-box; padding: 28px 56px; border-radius: 80px; background: #F0F0F0; text-align: center; }
+.slide .answer { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 170px; box-sizing: border-box; padding: 28px 56px; border-radius: 80px; background: var(--ch-soft); text-align: center; }
 .slide .answer p { margin: 0; font-size: 34px; font-weight: 800; }
-.slide .answer.sheet { flex: 1 1 auto; align-items: stretch; justify-content: flex-start; border-radius: 6px; background: #fff; box-shadow: 0 0 0 3px #E4E4E4, 0 6px 14px rgba(0, 0, 0, .08); text-align: left; }
+.slide .answer.sheet { flex: 1 1 auto; align-items: stretch; justify-content: flex-start; border-radius: 6px; background: var(--ch-card); box-shadow: 0 0 0 3px #E4E4E4, 0 6px 14px rgba(0, 0, 0, .08); text-align: left; }
 .slide .answer.sheet p { font-size: var(--ch-body, 24px); font-weight: 500; margin-bottom: 10px; }
 .slide .answer .label { display: inline-block; margin-bottom: 14px; padding: 4px 16px; border-radius: 8px; background: var(--label, #2E7D4F); color: #fff; font-size: 20px; font-weight: 700; }
 .ch-check { position: absolute; left: 50%; top: 50%; width: 88px; height: 88px; margin: -44px 0 0 -44px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: #00963A; color: #E3FEB8; box-shadow: 0 4px 10px rgba(0, 0, 0, .25); cursor: pointer; transition: transform .15s var(--ch-ease-out); }
@@ -46,7 +37,7 @@
 .ch-zoom-btn { position: absolute; right: 10px; top: 10px; z-index: 4; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(22, 24, 29, .72); color: #fff; cursor: pointer; }
 .ch-zoom { position: fixed; inset: 0; z-index: 75; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10, 12, 16, .9); cursor: zoom-out; }
 .ch-zoom.is-open { display: flex; animation: ch-pop .25s var(--ch-ease-out); }
-.ch-zoom img { max-width: 96vw; max-height: 88vh; object-fit: contain; background: #fff; }
+.ch-zoom img { max-width: 96vw; max-height: 88vh; object-fit: contain; background: var(--ch-card); }
 .ch-zoom p { margin: 0; color: #fff; font: 700 20px/1.4 var(--ch-font); }
 
 /* 자료 단추(외부 링크): <a class="pill" href="…">사료 보기</a>, 색은 style="--pill:#…" */

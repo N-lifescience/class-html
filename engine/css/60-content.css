@@ -1,7 +1,7 @@
 .slide h1 { margin: 0 0 20px; font-size: 80px; font-weight: 800; line-height: 1.1; letter-spacing: -.03em; }
 .slide h2 { margin: 0 0 28px; font-size: 42px; font-weight: 800; line-height: 1.2; letter-spacing: -.025em; }
 .slide h3 { margin: 0 0 12px; font-size: 27px; font-weight: 700; line-height: 1.3; letter-spacing: -.015em; }
-.slide p, .slide li { margin: 0 0 14px; font-size: var(--ch-body, 24px); line-height: 1.6; }
+.slide p, .slide li { margin: 0 0 14px; font-size: var(--ch-body); line-height: 1.6; }
 .slide ul, .slide ol { margin: 0 0 14px; padding-left: 1.2em; }
 .slide mark { background: linear-gradient(transparent 55%, var(--ch-hl) 55%); color: inherit; padding: 0 .1em; }
 .slide .kicker { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; font-size: 18px; font-weight: 700; color: var(--accent); }
@@ -9,7 +9,7 @@
 .slide table { border-collapse: collapse; font-size: 22px; }
 .slide th, .slide td { padding: 10px 16px; border-bottom: 1px solid var(--ch-line); text-align: left; }
 .slide th { font-weight: 700; background: rgba(0, 0, 0, .03); }
-.slide button { font: 600 22px/1 var(--ch-font); padding: 14px 22px; border-radius: 12px; border: 2px solid var(--ch-ink); background: #fff; color: var(--ch-ink); cursor: pointer; }
+.slide button { font: 600 22px/1 var(--ch-font); padding: 14px 22px; border-radius: 12px; border: 2px solid var(--ch-ink); background: var(--ch-card); color: var(--ch-ink); cursor: pointer; }
 .slide button:active { transform: translateY(1px); }
 .slide input[type="range"] { width: 320px; vertical-align: middle; accent-color: var(--accent); }
 .slide output { margin-left: 8px; font: 700 24px/1 var(--ch-mono); }

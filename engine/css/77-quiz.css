@@ -1,12 +1,12 @@
 /* 즉시 확인 문제 */
 .ch-opts { display: grid; grid-template-columns: repeat(var(--cols, 1), 1fr); gap: 12px 18px; margin: 6px 0 14px; }
-.slide .quiz .opt { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 64px; box-sizing: border-box; margin: 0; padding: 8px 22px; border: 2px solid #C3C9D1; border-radius: 16px; background: #fff; color: var(--ch-ink); font: 700 26px/1.35 var(--ch-font); text-align: left; cursor: pointer; }
-.ch-opt-n { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #EEF0F3; font-style: normal; font-size: 24px; }
+.slide .quiz .opt { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 64px; box-sizing: border-box; margin: 0; padding: 8px 22px; border: 2px solid #C3C9D1; border-radius: 16px; background: var(--ch-card); color: var(--ch-ink); font: 700 26px/1.35 var(--ch-font); text-align: left; cursor: pointer; }
+.ch-opt-n { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--ch-soft); font-style: normal; font-size: 24px; }
 .slide .quiz .opt.is-pick { border-color: var(--accent); background: rgba(232, 84, 26, .07); }
 .slide .quiz .opt.is-pick .ch-opt-n { background: var(--accent); color: #fff; }
-.slide .quiz .opt.is-right { border-color: var(--ch-ok); background: #EAF7EF; }
+.slide .quiz .opt.is-right { border-color: var(--ch-ok); background: var(--ch-ok-bg); }
 .slide .quiz .opt.is-right .ch-opt-n { background: var(--ch-ok); color: #fff; }
-.slide .quiz .opt.is-wrong { border-color: var(--ch-bad); background: #FDECEA; }
+.slide .quiz .opt.is-wrong { border-color: var(--ch-bad); background: var(--ch-bad-bg); }
 .slide .quiz .opt.is-wrong .ch-opt-n { background: var(--ch-bad); color: #fff; }
 .slide .quiz .opt.is-miss { border-style: dashed; border-color: var(--ch-ok); }
 .slide .ch-check-btn { min-height: 56px; padding: 0 30px; border-color: var(--accent); background: var(--accent); color: #fff; font-size: 24px; }

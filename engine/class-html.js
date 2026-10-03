@@ -1090,6 +1090,7 @@ const Board = {
       this.toggle();
     });
     this.setToggle();
+    if (document.body.dataset.theme === 'chalk') this.setDark(true);   // 흰 펜, 밝게 겹치는 형광펜
   },
 
   get doc() { return Session.doc; },
@@ -1112,7 +1113,7 @@ const Board = {
     if (Nav.override === this) Nav.override = null;
     document.body.classList.remove('ch-board-on');
     this.el.hidden = true;
-    this.setDark(false);
+    this.setDark(document.body.dataset.theme === 'chalk');   // 칠판 테마의 슬라이드는 어둡다
     this.setToggle();
     Ink.setPage({ kind: 'slide', key: Stage.slides[Nav.state.slide].dataset.key });
     emit('board', false);

@@ -1,0 +1,24 @@
+/* 테마(body[data-theme]). paper가 기본(00-tokens). 강조색은 body의 style="--accent:#…"로 바꾼다.
+   ppt: 원본 PPT의 대표 색을 잇는다(extract_pptx.py가 theme.json으로 추천 색을 낸다).
+   grid: 32px 모눈. chalk: 어두운 초록 칠판(흰 펜이 생기고 형광펜은 밝게 겹친다). */
+
+/* 원본 PPT 테마: 흰 바탕, data-sec이 왼쪽 위 색 띠가 된다. 단원 성격마다 [data-sec="…"]{--tab:…}로 색을 바꾼다. */
+[data-theme="ppt"] { --ch-paper: #FFFFFF; --tab: var(--accent); --tab-ink: #FFFFFF; }
+[data-theme="ppt"] .slide { padding: 112px 80px 56px; background: linear-gradient(var(--tab), var(--tab)) top / 100% 30px no-repeat, var(--ch-paper); }
+[data-theme="ppt"] .slide::before { left: 0; top: 0; height: 78px; display: flex; align-items: center; padding: 0 48px 0 36px; border-radius: 0 0 44px 0; background: var(--tab); color: var(--tab-ink); font: 800 32px/1 var(--ch-font); letter-spacing: -.02em; }
+[data-theme="ppt"] .slide:not([data-sec]) { padding-top: 72px; background: var(--ch-paper); }
+[data-theme="ppt"] .slide:not([data-sec])::before { display: none; }
+[data-theme="ppt"] .slide h2:not([data-n]) { width: fit-content; padding-bottom: 8px; border-bottom: 4px solid var(--tab); font-size: 40px; }
+[data-theme="ppt"] .slide p, [data-theme="ppt"] .slide li { line-height: 1.7; }
+
+[data-theme="grid"] { --ch-paper: #FBFBF8; }
+[data-theme="grid"] .slide { background: linear-gradient(#E6E9EC 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, #E6E9EC 1px, transparent 1px) 0 0 / 32px 32px, var(--ch-paper); }
+
+[data-theme="chalk"] {
+  --ch-paper: #1F3A2E; --ch-ink: #F1F5EE; --ch-mute: #B9CABE; --ch-line: #4A6B5A;
+  --ch-card: #29493A; --ch-soft: #355846; --ch-ok: #7FD99A; --ch-bad: #FF8A80; --ch-ok-bg: #24553A; --ch-bad-bg: #5A2A27;
+  --ch-hl: #8C7A1E; --accent: #F2C14E; --table-head: #2F6B4A; --table-side: #29493A;
+}
+[data-theme="chalk"] .slide { background: radial-gradient(ellipse at 30% 20%, #26473A, var(--ch-paper) 70%); }
+[data-theme="chalk"] .slide button, [data-theme="chalk"] .slide .ch-card, [data-theme="chalk"] .slide .quiz .opt { border-color: var(--ch-line); }
+[data-theme="chalk"] .slide th { background: rgba(255, 255, 255, .06); }

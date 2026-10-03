@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko" data-deck="test-themes">
+<head>
+<meta charset="utf-8">
+<title>themes</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body data-theme="chalk">
+<section class="slide" id="t1" data-sec="1. 단원"><h2>제목</h2><p id="body">본문</p>
+  <div class="quiz"><button class="opt" data-ok>보기</button></div></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+// WCAG 상대 휘도와 대비
+const rgb = (c) => { const m = c.match(/\d+(\.\d+)?/g).map(Number); return m.slice(0, 3); };
+const lum = (c) => { const [r, g, b] = rgb(c).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+const token = (name) => {
+  const probe = document.createElement('i');
+  probe.style.color = `var(${name})`;
+  document.getElementById('t1').append(probe);
+  const v = getComputedStyle(probe).color;
+  probe.remove();
+  return v;
+};
+
+for (const theme of ['paper', 'ppt', 'grid', 'chalk']) {
+  test(`${theme} 테마: 글자·흐린 글자·카드·맞음·틀림 대비 4.5:1 이상`, () => {
+    document.body.dataset.theme = theme;
+    const pairs = [['--ch-ink', '--ch-paper'], ['--ch-mute', '--ch-paper'], ['--ch-ink', '--ch-card'], ['--ch-ok', '--ch-ok-bg'], ['--ch-bad', '--ch-bad-bg'], ['--ch-ink', '--ch-soft']];
+    for (const [fg, bg] of pairs) {
+      const r = ratio(token(fg), token(bg));
+      assert(r >= 4.5, `${theme} ${fg}/${bg} = ${r.toFixed(2)}`);
+    }
+  });
+}
+test('본문 글자는 28px', () => {
+  document.body.dataset.theme = 'chalk';
+  eq(getComputedStyle(document.getElementById('body')).fontSize, '28px');
+});
+test('칠판 테마: 처음부터 어두운 화면(흰 펜), 칠판을 열고 닫아도 유지', () => {
+  assert(document.body.classList.contains('ch-dark-page'), 'dark');
+  eq(I().Tools.penColor, '#FFFFFF');
+  I().Board.open();
+  I().Board.setBg('white');
+  assert(!document.body.classList.contains('ch-dark-page'), 'white board is light');
+  I().Board.close();
+  assert(document.body.classList.contains('ch-dark-page'), 'dark again');
+  eq(I().Tools.penColor, '#FFFFFF');
+});
+test('ppt 테마: data-sec 띠와 흰 바탕', () => {
+  document.body.dataset.theme = 'ppt';
+  const s = document.getElementById('t1');
+  eq(getComputedStyle(s, '::before').content, '"1. 단원"');
+  eq(getComputedStyle(s, '::before').fontSize, '32px');
+  document.body.dataset.theme = 'chalk';
+});
+</script>
+</body>
+</html>

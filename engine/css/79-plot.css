@@ -9,8 +9,8 @@
 .ch-plot-line { fill: none; stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; }
 .ch-plot-line.is-dash { stroke-dasharray: 10 7; }
 .ch-plot-vline { stroke: var(--ch-ink); stroke-width: 2; stroke-dasharray: 5 5; opacity: .6; }
-.ch-plot-point { stroke: #fff; stroke-width: 3; }
-.ch-plot-plabel { font-size: 20px; font-weight: 700; fill: var(--ch-ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; }
+.ch-plot-point { stroke: var(--ch-paper); stroke-width: 3; }
+.ch-plot-plabel { font-size: 20px; font-weight: 700; fill: var(--ch-ink); paint-order: stroke; stroke: var(--ch-paper); stroke-width: 4px; }
 .ch-plot-legend { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 0 6px; font-size: 20px; font-weight: 700; }
 .ch-plot-legend span::before { content: ""; display: inline-block; width: 28px; margin-right: 8px; vertical-align: middle; border-top: 4px solid var(--c); }
 .ch-plot-legend span.is-dash::before { border-top-style: dashed; }

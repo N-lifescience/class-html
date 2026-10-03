@@ -2,7 +2,7 @@
 .ch-hide { display: none !important; }
 .slide .calc input[type="range"] { width: 100%; }
 .slide .calc output { white-space: nowrap; }
-.slide .calc .bar { position: relative; height: 26px; border-radius: 13px; background: #E3E7EC; overflow: hidden; }
+.slide .calc .bar { position: relative; height: 26px; border-radius: 13px; background: var(--ch-soft); overflow: hidden; }
 .slide .calc .bar::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--bar-c, var(--accent)); transform: scaleX(var(--f, 0)); transform-origin: 0 50%; transition: transform .2s var(--ch-ease-out); }
 .slide .calc [data-set] { min-height: 56px; }
 .slide .calc [data-set][aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }

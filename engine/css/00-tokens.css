@@ -3,13 +3,18 @@
 :root {
   --ch-paper: #F4F1EA;
   --ch-ink: #1F2328;
-  --ch-mute: #6B6F76;
+  --ch-mute: #62666D;
   --ch-line: #DDD7CC;
   --accent: #E8541A;
   --ch-ok: #2E7D4F;
   --ch-bad: #C2362F;
   --ch-info: #2563EB;
   --ch-hl: #FFE45C;
+  --ch-body: 28px;          /* 본문 글자(설계서 7.2-3: 28px 이상) */
+  --ch-card: #FFFFFF;       /* 카드·보기·단추 바탕 */
+  --ch-soft: #EEF0F3;       /* 번호 동그라미, 막대 바탕 */
+  --ch-ok-bg: #EAF7EF;
+  --ch-bad-bg: #FDECEA;
   --ch-ui: #16181D;
   --ch-ui-2: #24272E;
   --ch-ui-fg: #F4F1EA;

@@ -41,7 +41,7 @@ const Plot = {
       const item = { fig, n, errors: [], lines: [], vlines: [], points: [], sets: [], svg: null, legend: null, w: 0, h: 0, pad: PLOT_PAD, calc: Calc.of(fig) };
       const fail = (msg) => item.errors.push({ el: fig, msg });
       const range = (src, name) => {
-        const parts = String(src || '').split(',').map((s) => Expr.compile(s.trim()));
+        const parts = String(src || '').trim() ? this.split(src).map((s) => Expr.compile(s.trim())) : [];
         if (parts.length !== 2 || parts.some((c) => !c.ok)) { fail(`${name}: '작은 값, 큰 값' 꼴로 써 주세요`); return [0, 1]; }
         try {
           const [a, b] = parts.map((c) => Number(c.fn(item.calc ? item.calc.consts : {})));
@@ -64,7 +64,14 @@ const Plot = {
         const show = el.dataset.show != null ? c(el.dataset.show, 'data-show') : null;
         if (el.dataset.line != null) {
           const fn = c(el.dataset.line, 'data-line');
-          const dom = el.dataset.x != null ? range(el.dataset.x, 'data-line의 data-x') : null;
+          // 선의 범위는 계산 상자 변수로도 쓸 수 있어 그릴 때마다 계산한다
+          let dom = null;
+          if (el.dataset.x != null) {
+            const [as, bs] = this.split(el.dataset.x);
+            if (!bs) fail("data-line의 data-x: '작은 값, 큰 값' 꼴로 써 주세요");
+            else dom = [c(as, 'data-line의 data-x'), c(bs, 'data-line의 data-x')];
+            if (dom && !dom.every(Boolean)) dom = null;
+          }
           if (fn) item.lines.push({ fn, dom, show, label: el.dataset.label || '', dash: el.hasAttribute('data-dash'), color: el.dataset.color || PLOT_COLORS[color++ % PLOT_COLORS.length] });
         } else if (el.dataset.points != null) {
           const pts = String(el.dataset.points).split(';').map((pair) => pair.trim()).filter(Boolean).map((pair) => {
@@ -205,7 +212,9 @@ const Plot = {
       if (l.key) l.key.hidden = !l.on;
     }
     item.layer.replaceChildren(...item.lines.filter((l) => l.on).map((l) => {
-      const d = this.sample(item, l.fn, scope, l.dom).map((seg) => `M${seg.map(([x, y]) => `${r(x)} ${r(y)}`).join('L')}`).join('');
+      const dom = l.dom ? [val(l.dom[0]), val(l.dom[1])] : null;
+      if (dom && !dom.every(Number.isFinite)) return svgEl('path', { class: 'ch-plot-line', d: '' });
+      const d = this.sample(item, l.fn, scope, dom).map((seg) => `M${seg.map(([x, y]) => `${r(x)} ${r(y)}`).join('L')}`).join('');
       return svgEl('path', { class: `ch-plot-line${l.dash ? ' is-dash' : ''}`, d, style: `stroke:${l.color}` });
     }));
     const marks = [];

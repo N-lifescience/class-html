@@ -130,10 +130,13 @@ const Audit = {
         }
       };
       Stepper.openAll('audit');
-      // 풀기 전(분류 카드 더미가 칸 위에 있을 때)이 더 긴 부품도 있으므로 두 상태를 모두 잰다
-      Stage.slides.forEach((slide, i) => measure(slide, i));
+      // 풀기 전(분류 카드 더미가 칸 위에 있을 때)이 더 긴 부품도 있으므로 두 상태를 모두 잰다.
+      // 푸는 부품이 있는 장은 알림에 어느 상태였는지 적는다.
+      const SOLVABLE = '.sort, .quiz, .ch-order, .blank';
+      const state = (slide, name) => (slide.querySelector(SOLVABLE) ? name : undefined);
+      Stage.slides.forEach((slide, i) => measure(slide, i, state(slide, '부품을 풀기 전')));
       emit('audit-expand');   // 부품: 다 맞힌 뒤·이유가 나온 뒤처럼 가장 길어지는 상태로 잠깐 바꾼다
-      Stage.slides.forEach((slide, i) => measure(slide, i));
+      Stage.slides.forEach((slide, i) => measure(slide, i, state(slide, '부품을 다 푼 뒤')));
       // data-only 내용은 칸마다 다르므로 단계 막대의 칸마다 다시 잰다
       for (const st of Stepper.all) {
         if (!st.targets.some((t) => t.hasAttribute('data-only'))) continue;

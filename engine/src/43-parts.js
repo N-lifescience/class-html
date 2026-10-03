@@ -78,6 +78,16 @@ const Blank = {
         flip();
       });
     }
+    // 점검·다 연 화면: 빈칸도 연다(열면 굵어져 폭이 조금 바뀐다)
+    let snap = null;
+    on('audit-expand', () => {
+      snap = qsa('.blank', Stage.deck).map((b) => [b, b.getAttribute('aria-pressed')]);
+      for (const [b] of snap) b.setAttribute('aria-pressed', 'true');
+    });
+    on('audit-restore', () => {
+      for (const [b, v] of snap || []) b.setAttribute('aria-pressed', v);
+      snap = null;
+    });
   },
 };
 

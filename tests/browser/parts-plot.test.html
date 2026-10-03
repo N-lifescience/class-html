@@ -94,7 +94,11 @@ test('선마다 그릴 범위(data-x), 조건(data-show), 측정값 여러 개(d
   const demand = xs(mk.layer.querySelectorAll('path')[0].getAttribute('d'));
   near(Math.min(...demand), mk.pad.l + (100 / 600) * (640 - mk.pad.l - 18), 0.2);
   near(Math.max(...demand), mk.pad.l + (500 / 600) * (640 - mk.pad.l - 18), 0.2);
+  eq(mk.errors.length, 0);
   eq(mk.layer.querySelectorAll('path').length, 2);            // 2,500원: 초과 수요가 있다
+  const gap = xs(mk.layer.querySelectorAll('path')[1].getAttribute('d'));   // qs 200 ~ qd 400 구간만
+  near(Math.min(...gap), mk.pad.l + (200 / 600) * (640 - mk.pad.l - 18), 0.2);
+  near(Math.max(...gap), mk.pad.l + (400 / 600) * (640 - mk.pad.l - 18), 0.2);
   eq(mk.marks.querySelectorAll('circle').length, 3);
   const keys = Array.from(mk.legend.children);
   assert(keys[2].classList.contains('is-dot'), 'dot legend');

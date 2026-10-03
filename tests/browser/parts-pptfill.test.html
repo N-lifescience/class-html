@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko" data-deck="test-pptfill">
+<head>
+<meta charset="utf-8">
+<title>pptfill</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="../fixtures/mini-pptx.js"></script>
+</head>
+<body>
+<section class="slide" id="f1">
+  <h2>그림 자리</h2>
+  <img data-ppt="1-1" id="red" alt="빨강" width="200">
+  <img data-ppt="1-2" id="big" alt="큰 파랑">
+  <img data-ppt="3-1" id="svg" alt="배경">
+  <img id="plain" alt="보통 그림" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'/%3E">
+</section>
+<section class="slide" id="f2">
+  <img data-ppt="2-2" id="emf" alt="도형">
+  <img data-ppt="2-3" id="red2" alt="빨강 다시">
+  <img data-ppt="9-1" id="none" alt="없는 그림">
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const $ = (id) => document.getElementById(id);
+const ph = (id) => $(id).nextElementSibling;
+const pptxFile = () => new File([Uint8Array.from(atob(window.MINI_PPTX_B64), (c) => c.charCodeAt(0))], 'mini.pptx');
+const dropFile = (file) => {
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  window.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+};
+
+test('빈 그림 자리는 회색 상자와 안내, 크기는 그림 속성에서', () => {
+  assert($('red').hidden, 'img hidden');
+  assert(ph('red').classList.contains('ch-ppt-ph') && !ph('red').hidden, 'placeholder');
+  assert(ph('red').textContent.includes('원본 PPT를 이 화면에 끌어다 놓으세요'), 'text');
+  assert(ph('red').textContent.includes('PPT 1쪽 그림 1 · 빨강'), 'id');
+  eq(ph('red').style.width, '200px');
+  eq(I().PptFill.imgs.length, 6);
+  assert(!$('plain').hasAttribute('data-ppt') && !$('plain').hidden, 'plain image untouched');
+});
+test('PPTX가 아닌 파일은 알려 주기만 한다', () => {
+  dropFile(new File(['x'], 'memo.txt'));
+  const b = I().PptFill.banner;
+  assert(!b.hidden && b.classList.contains('is-bad'), 'banner bad');
+  assert(b.textContent.includes('PPTX 파일만'), b.textContent);
+});
+test('PPTX를 끌어다 놓으면 번호대로 채우고, 없는 번호·못 여는 형식을 알린다', async () => {
+  dropFile(pptxFile());
+  const r = await I().PptFill.busy;
+  eq(r.filled, 4);
+  eq(r.missing, ['9-1']);
+  eq(r.unsupported, ['2-2']);
+  assert(!$('red').hidden && ph('red').hidden, 'red shown');
+  assert($('red').src.startsWith('data:image/png;base64,'), 'png');
+  assert($('svg').src.startsWith('data:image/svg+xml;base64,'), 'svg');
+  eq($('red2').src, $('red').src);
+  assert(ph('emf').textContent.includes('EMF') && ph('emf').classList.contains('is-bad'), 'emf note');
+  assert(ph('none').textContent.includes('9-1'), 'missing note');
+  const b = I().PptFill.banner;
+  assert(b.textContent.includes('그림 4개를 채웠어요') && b.querySelector('.is-main'), b.textContent);
+  assert(I().PptFill.dirty, 'dirty');
+});
+test('긴 변이 1600px을 넘는 그림은 줄인다', async () => {
+  const img = new Image();
+  img.src = $('big').src;
+  await img.decode();
+  eq(img.naturalWidth, 1600);
+  eq(img.naturalHeight, 200);
+});
+test('손 모드에서 그림 자리를 누르면 그 슬라이드 그림 가운데서 바꾼다', async () => {
+  ClassHTML.go(1);
+  ph('emf').click();
+  await wait(100);
+  const p = I().PptFill.picker;
+  assert(p.classList.contains('is-open'), 'picker open');
+  const items = p.querySelectorAll('.ch-picker-item');
+  eq(items.length, 3);
+  assert(items[1].disabled, 'emf disabled');
+  eq(items[1].getAttribute('aria-pressed'), 'true');
+  items[0].click();
+  eq($('emf').dataset.ppt, '2-1');
+  assert(!$('emf').hidden && $('emf').src.startsWith('data:image/png'), 'replaced');
+  assert(!p.classList.contains('is-open'), 'closed');
+});
+test('펜이면 그림을 눌러도 바꾸기 창이 열리지 않는다', () => {
+  I().Tools.set('pen');
+  $('emf').click();
+  assert(!I().PptFill.picker.classList.contains('is-open'), 'no picker');
+  I().Tools.set('hand');
+});
+test('저장 문서: 원본에 그림과 바뀐 번호만 넣고 엔진이 붙인 것은 없다', () => {
+  const html = I().PptFill.serialize(I().PptFill.buildDoc());
+  assert(html.startsWith('<!doctype html>'), 'doctype');
+  assert((html.match(/src="data:image\/png/g) || []).length >= 3, 'images');
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  for (const bad of ['.ch-toolbar', '.ch-viewport', '.ch-ppt-ph', '.is-active', '[data-key]']) eq(doc.querySelectorAll(bad).length, 0, bad);
+  eq(doc.querySelectorAll('section.slide').length, 2);
+  eq(doc.querySelector('#none').getAttribute('src'), null);
+  eq(doc.querySelector('#emf').getAttribute('data-ppt'), '2-1');   // 바꾼 번호가 남는다
+  assert(doc.querySelector('#emf').getAttribute('src').startsWith('data:image/png'), 'replaced image saved');
+});
+test('오프라인용: 엔진 CSS·JS를 안에 넣고 </script를 막는다', async () => {
+  const realFetch = window.fetch;
+  window.fetch = async (url) => ({ ok: true, text: async () => (String(url).endsWith('.css') ? '.x{color:red}' : 'var a = "<' + '/script>";') });
+  try {
+    const html = await I().PptFill.offlineHtml();
+    assert(html.includes('<style>.x{color:red}</style>'), 'style');
+    assert(html.includes('var a = "<\\/' + 'script>";'), 'escaped');
+    assert(!/<script[^>]+class-html\.js/.test(html) && !/<link[^>]+class-html\.css/.test(html), 'no external engine');
+  } finally { window.fetch = realFetch; }
+});
+test('엔진 파일을 못 받으면 알아듣는 오류', async () => {
+  const realFetch = window.fetch;
+  window.fetch = async () => { throw new TypeError('Failed to fetch'); };
+  try {
+    let msg = '';
+    try { await I().PptFill.offlineHtml(); } catch (err) { msg = err.message; }
+    assert(msg.includes('인터넷 주소(CDN)'), msg);
+  } finally { window.fetch = realFetch; }
+});
+test('설정 창 아래에 파일 묶음', () => {
+  const panel = I().Settings.panel();
+  const text = panel.textContent;
+  assert(text.includes('그림 넣어 저장') && text.includes('오프라인용 저장') && text.includes('빈 곳 1개'), text);
+});
+</script>
+</body>
+</html>

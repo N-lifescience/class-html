@@ -35,7 +35,7 @@ test('기본 설정은 모두 꺼져 있다', () => {
 test('⚙ 설정 버튼과 이름이 있는 스위치 세 개', () => {
   btn('gear').click();
   eq(document.querySelectorAll('.ch-pop .ch-switch').length, 3);
-  for (const input of document.querySelectorAll('.ch-pop input')) {
+  for (const input of document.querySelectorAll('.ch-pop .ch-switch input')) {
     assert(input.closest('label').textContent.trim(), 'accessible label');
     eq(input.checked, false);
   }

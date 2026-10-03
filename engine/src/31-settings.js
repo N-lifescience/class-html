@@ -2,6 +2,7 @@
 const Settings = {
   values: { motionOff: false, printInk: false, palmErase: false },
   button: null,
+  extras: [],   // 다른 모듈이 설정 창 아래에 붙이는 묶음(그림 채우기·저장 등)
   ITEMS: [
     ['motionOff', '움직임 끄기', '슬라이드 전환과 단계 효과를 끕니다'],
     ['printInk', '인쇄에 판서 포함', '지금 반의 판서와 칠판을 함께 인쇄합니다'],
@@ -29,7 +30,8 @@ const Settings = {
           type: 'checkbox', 'data-key': key, checked: this.values[key],
           onchange: (e) => this.set(key, e.target.checked),
         }),
-        h('span', null, h('b', { text: label }), h('small', { text: desc })))));
+        h('span', null, h('b', { text: label }), h('small', { text: desc })))),
+      ...this.extras.map((fn) => fn()));
   },
 
   set(key, value) {

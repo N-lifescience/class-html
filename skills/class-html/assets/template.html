@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko" data-deck="subject-unit-lesson">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>단원 제목</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<style>
+  /* theme.json의 css 줄과 이 수업만의 모양 */
+  body[data-theme="ppt"] { --accent: #C04F15; --tab: #157E7B; --tab-ink: #FFFFFF; }
+  .cols { display: grid; grid-template-columns: 1fr 480px; gap: 36px; align-items: start; }
+</style>
+</head>
+<body data-theme="ppt">
+
+<section class="slide cover" id="cover" data-title="표지">
+  <p class="kicker">교과 · 학년 · 단원</p>
+  <h1>단원 제목을<br>의미 단위로</h1>
+</section>
+
+<section class="slide" id="goal" data-sec="학습 목표" data-title="학습 목표">
+  <h2>학습 목표</h2>
+  <p>한 문장으로 쓴다.</p>
+</section>
+
+<section class="slide" id="concept-1" data-sec="1. 소단원" data-title="개념 1">
+  <h2>발문은 물음으로 끝난다?</h2>
+  <div class="cols">
+    <div>
+      <p>설명은 짧은 평서문으로 쓴다.</p>
+      <p class="step">답이나 결론은 단계로 숨긴다.</p>
+    </div>
+    <figure class="fig"><img data-ppt="3-1" alt="원본 PPT 3쪽 그림 설명" width="480"><figcaption>그림 설명(출처)</figcaption></figure>
+  </div>
+</section>
+
+<section class="slide" id="activity-1" data-sec="1. 소단원" data-title="활동 1">
+  <p class="q" data-n="1">활동 발문을 쓴다.</p>
+  <div class="quiz">
+    <button class="opt" data-why="왜 아닌지">보기</button>
+    <button class="opt" data-ok data-why="맞다. 왜 맞는지">정답 보기</button>
+  </div>
+</section>
+
+</body>
+</html>

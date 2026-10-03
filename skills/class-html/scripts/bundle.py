@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""수업 HTML을 파일 하나로 묶는다. 파이썬 표준 라이브러리만 쓴다.
+
+사용:  python3 bundle.py 수업.html [-o 결과.html] [--max 1600] [--offline [--engine 엔진폴더]]
+  - <img src="media/…">처럼 파일 옆의 그림을 data URI로 넣는다(이미 data:나 http인 것은 그대로).
+  - 긴 변이 --max(기본 1600px)를 넘으면 줄인다: Pillow가 있으면 Pillow, 맥이면 sips. 둘 다 없으면 원래 크기로 넣고 알린다.
+  - --offline: 엔진 CSS·JS도 파일 안에 넣는다(인터넷 없이 열림). --engine을 주면 그 폴더의
+    class-html.css·js를, 없으면 HTML에 적힌 주소에서 받는다.
+"""
+import argparse
+import base64
+import mimetypes
+import re
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+import urllib.request
+from pathlib import Path
+
+TYPES = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.bmp': 'image/bmp'}
+
+
+def image_size(data):
+    """PNG·JPEG·GIF의 (가로, 세로). 모르면 None."""
+    if data[:8] == b'\x89PNG\r\n\x1a\n':
+        return struct.unpack('>II', data[16:24])
+    if data[:6] in (b'GIF87a', b'GIF89a'):
+        return struct.unpack('<HH', data[6:10])
+    if data[:2] == b'\xff\xd8':
+        i = 2
+        while i + 9 < len(data):
+            if data[i] != 0xFF:
+                i += 1
+                continue
+            marker = data[i + 1]
+            length = struct.unpack('>H', data[i + 2:i + 4])[0]
+            if marker in (0xC0, 0xC1, 0xC2):
+                h, w = struct.unpack('>HH', data[i + 5:i + 9])
+                return w, h
+            i += 2 + length
+    return None
+
+
+def shrink(path, data, limit, notes):
+    size = image_size(data)
+    if not size or max(size) <= limit:
+        return data
+    try:
+        from PIL import Image  # 있으면 쓴다
+        import io
+        img = Image.open(io.BytesIO(data))
+        img.thumbnail((limit, limit))
+        out = io.BytesIO()
+        fmt = 'PNG' if path.suffix.lower() == '.png' else 'JPEG'
+        img.save(out, fmt, quality=85, optimize=True)
+        return out.getvalue()
+    except ImportError:
+        pass
+    if shutil.which('sips'):
+        with tempfile.TemporaryDirectory() as tmp:
+            t = Path(tmp) / path.name
+            t.write_bytes(data)
+            subprocess.run(['sips', '-Z', str(limit), str(t)], check=True, capture_output=True)
+            return t.read_bytes()
+    notes.append(f'{path.name}: {size[0]}×{size[1]}px를 줄이지 못했어요(Pillow나 sips가 없음)')
+    return data
+
+
+def inline_images(html, base, limit, notes):
+    def repl(m):
+        head, q, src = m.group(1), m.group(2), m.group(3)
+        if re.match(r'^(data:|https?:|//)', src):
+            return m.group(0)
+        path = (base / src).resolve()
+        if not path.is_file():
+            notes.append(f'그림 파일이 없어요: {src}')
+            return m.group(0)
+        mime = TYPES.get(path.suffix.lower()) or mimetypes.guess_type(path.name)[0] or 'application/octet-stream'
+        data = path.read_bytes()
+        if mime not in ('image/svg+xml',):
+            data = shrink(path, data, limit, notes)
+        return f'{head}{q}data:{mime};base64,{base64.b64encode(data).decode()}{q}'
+    # <img>의 src만 바꾼다(엔진 <script src>는 --offline일 때만 따로 넣는다)
+    return re.sub(r'(<img\b[^>]*?\bsrc=)(["\'])([^"\']+)\2', repl, html)
+
+
+def read_engine(url, engine_dir, name):
+    if engine_dir:
+        return (Path(engine_dir) / name).read_text(encoding='utf-8')
+    with urllib.request.urlopen(url, timeout=30) as r:
+        return r.read().decode('utf-8')
+
+
+def inline_engine(html, engine_dir):
+    link = re.search(r'<link[^>]+href="([^"]*class-html(?:\.min)?\.css)"[^>]*>', html)
+    script = re.search(r'<script[^>]+src="([^"]*class-html(?:\.min)?\.js)"[^>]*>\s*</script>', html)
+    if not link or not script:
+        raise SystemExit('엔진 <link>와 <script>를 찾지 못했어요')
+    css = read_engine(link.group(1), engine_dir, 'class-html.css')
+    js = read_engine(script.group(1), engine_dir, 'class-html.js').replace('</script', '<\\/script')
+    # str.replace는 역참조(\1 등)를 해석하지 않아 엔진 코드가 그대로 들어간다(re.sub와 다름)
+    html = html.replace(link.group(0), f'<style>\n{css}\n</style>', 1)
+    return html.replace(script.group(0), f'<script>\n{js}\n</script>', 1)
+
+
+def main():
+    ap = argparse.ArgumentParser(description='수업 HTML을 파일 하나로 묶는다')
+    ap.add_argument('html')
+    ap.add_argument('-o', '--out')
+    ap.add_argument('--max', type=int, default=1600, help='그림 긴 변 최대 px')
+    ap.add_argument('--offline', action='store_true', help='엔진도 파일 안에 넣는다')
+    ap.add_argument('--engine', help='class-html.css·js가 있는 폴더(없으면 HTML의 주소에서 받는다)')
+    a = ap.parse_args()
+    src = Path(a.html)
+    out = Path(a.out) if a.out else src.with_name(src.stem + '-한파일.html')
+    notes = []
+    html = inline_images(src.read_text(encoding='utf-8'), src.parent, a.max, notes)
+    if a.offline:
+        html = inline_engine(html, a.engine)
+    out.write_text(html, encoding='utf-8')
+    for n in notes:
+        print('주의:', n)
+    print(f'{out} ({len(html.encode("utf-8")) / 1024 / 1024:.2f}MB)')
+
+
+if __name__ == '__main__':
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+    main()

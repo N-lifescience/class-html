@@ -32,7 +32,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1B1D21; }
 body { font-family: var(--ch-font); color: var(--ch-ink); word-break: keep-all; overflow-wrap: break-word; -webkit-text-size-adjust: 100%; }
 .ch-viewport { position: fixed; top: 0; left: var(--ch-reserve-left, 0px); right: var(--ch-reserve-right, 0px); bottom: var(--ch-reserve-bottom, 0px); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .ch-deck { position: relative; width: 1280px; height: 720px; flex: none; transform-origin: center center; touch-action: none; }
-.slide { position: absolute; inset: 0; box-sizing: border-box; padding: 72px 80px 64px; display: none; flex-direction: column; overflow: hidden; background: var(--ch-paper); color: var(--ch-ink); }
+.slide { position: absolute; inset: 0; box-sizing: border-box; padding: 72px 80px 64px; display: none; flex-direction: column; overflow: hidden; background: var(--ch-paper); color: var(--ch-ink); font-size: var(--ch-body); }
 .slide.is-active { display: flex; animation: ch-slide-in .3s var(--ch-ease-out); }
 .slide > * { flex-shrink: 0; }   /* 넘치는 내용이 몰래 찌그러지지 않게: 넘치면 점검에서 잡힌다 */
 .slide::before { content: attr(data-sec); position: absolute; left: 80px; top: 28px; font: 600 15px/1 var(--ch-font); color: var(--ch-mute); letter-spacing: .01em; }
@@ -215,8 +215,8 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 /* 항목 목록: ol.points는 (1) (2), ol.circled는 ① ②. 글자 줄이 번호 뒤로 맞춰진다. */
 @counter-style ch-paren { system: extends decimal; prefix: "("; suffix: ") "; }
 @counter-style ch-circled { system: fixed; symbols: "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" "⑩"; suffix: " "; }
-.slide ol.points { list-style: ch-paren; padding-left: 2.2em; }
-.slide ol.circled { list-style: ch-circled; padding-left: 1.5em; }
+.slide ol.points { list-style: ch-paren; padding-left: 62px; }
+.slide ol.circled { list-style: ch-circled; padding-left: 42px; }
 .slide ol.points > li::marker { font-weight: 800; }
 .slide ol.points ol { margin: 4px 0 0 -.9em; }
 .slide ol.points li { margin-bottom: 6px; }

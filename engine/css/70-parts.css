@@ -43,7 +43,7 @@
 .slide .fig img { display: block; max-width: 100%; border: 1px solid #CFCFCF; cursor: zoom-in; }
 .slide .fig figcaption { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 22px; font-weight: 700; color: var(--ch-ink); }
 .slide .fig figcaption::before { content: "▲"; display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; background: #777; color: #fff; font-size: 11px; }
-.ch-zoom-btn { position: absolute; right: 10px; top: 10px; width: 48px; height: 48px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(22, 24, 29, .72); color: #fff; cursor: pointer; }
+.ch-zoom-btn { position: absolute; right: 10px; top: 10px; z-index: 4; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(22, 24, 29, .72); color: #fff; cursor: pointer; }
 .ch-zoom { position: fixed; inset: 0; z-index: 75; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10, 12, 16, .9); cursor: zoom-out; }
 .ch-zoom.is-open { display: flex; animation: ch-pop .25s var(--ch-ease-out); }
 .ch-zoom img { max-width: 96vw; max-height: 88vh; object-fit: contain; background: #fff; }

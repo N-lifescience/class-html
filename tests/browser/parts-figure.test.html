@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko" data-deck="test-figure">
+<head>
+<meta charset="utf-8">
+<title>figure</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="f1">
+  <h2>정답 상자</h2>
+  <div class="answer" id="ans"><p id="ansText">답은 바다다.</p></div>
+  <figure class="fig" id="fig"><img id="img" alt="파란 네모" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='30'%3E%3Crect width='40' height='30' fill='%232563EB'/%3E%3C/svg%3E" style="width:200px"><figcaption>자체 제작 그림</figcaption></figure>
+  <figure class="fig" id="empty"><img data-ppt="3-1" alt="빈 자리"></figure>
+</section>
+<section class="slide" id="f2">
+  <div class="answer" id="ans2"><p class="step" id="s2a">하나</p><p class="step" id="s2b">둘</p></div>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const $ = (id) => document.getElementById(id);
+const check = (id) => $(id).querySelector('.ch-check');
+
+test('단계가 없는 정답 상자는 내용 전체가 한 단계, 가운데 ✓', () => {
+  const step = $('ans').querySelector(':scope > .step');
+  assert(step && step.contains($('ansText')), 'wrapped');
+  assert(check('ans'), 'check button');
+  eq(I().Nav.counts[0], 1);
+  assert(check('ans').getBoundingClientRect().width >= 56 * I().Stage.scale, 'big enough');
+  assert($('fig').querySelector('.ch-zoom-btn').getBoundingClientRect().width >= 56 * I().Stage.scale - 0.5, 'zoom 56px');
+});
+test('✓를 누르면 열리고 ✓는 사라진다', () => {
+  check('ans').click();
+  assert($('ans').querySelector('.step').classList.contains('is-shown'), 'shown');
+  eq(getComputedStyle(check('ans')).display, 'none');
+});
+test('→ 로도 연다', () => {
+  ClassHTML.go(0);
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  assert($('ans').querySelector('.step').classList.contains('is-shown'), 'shown by nav');
+});
+test('다른 장의 정답 상자 ✓는 무시하고, 단계가 있으면 첫 단계까지 연다', () => {
+  ClassHTML.go(0);
+  I().Answer.reveal($('ans2'));
+  eq(I().Nav.state, { slide: 0, shown: 0 });
+  ClassHTML.go(1);
+  check('ans2').click();
+  assert($('s2a').classList.contains('is-shown') && !$('s2b').classList.contains('is-shown'), 'first step only');
+});
+test('확대 단추를 누르면 크게, 설명 글도 함께, Esc로 닫기', () => {
+  ClassHTML.go(0);
+  $('fig').querySelector('.ch-zoom-btn').click();
+  const z = I().Zoom;
+  assert(z.isOpen, 'open');
+  eq(z.el.querySelector('img').alt, '파란 네모');
+  eq(z.el.querySelector('p').textContent, '자체 제작 그림');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
+  assert(!z.isOpen, 'closed by Esc');
+});
+test('손 모드에서만 그림을 눌러 확대한다(펜이면 판서)', () => {
+  const z = I().Zoom;
+  I().Tools.set('pen');
+  $('img').click();
+  assert(!z.isOpen, 'pen: no zoom');
+  I().Tools.set('hand');
+  $('img').click();
+  assert(z.isOpen, 'hand: zoom');
+  ClassHTML.go(1);
+  assert(!z.isOpen, 'closed on slide change');
+});
+test('비어 있는 그림 자리는 확대하지 않는다', () => {
+  ClassHTML.go(0);
+  $('empty').querySelector('.ch-zoom-btn').click();
+  assert(!I().Zoom.isOpen, 'empty');
+});
+</script>
+</body>
+</html>

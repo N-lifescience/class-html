@@ -446,3 +446,21 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
   .ch-order-bank, .ch-order-out, .ch-order > .ch-fb { display: none !important; }
   .ch-order > ol.order { display: block !important; grid-column: 1 / -1; }
 }
+
+/* ---- 79-plot.css ---- */
+/* 그래프. SVG는 실제 크기(무대 px)로 그려 글자가 20px 아래로 줄지 않는다. */
+.slide figure.plot { margin: 0; }
+.slide.ch-measure { display: flex !important; visibility: hidden !important; animation: none !important; }
+.ch-plot-svg { display: block; overflow: visible; font-family: var(--ch-font); }
+.ch-plot-grid line { stroke: #E3E7EC; stroke-width: 1; }
+.ch-plot-axis { fill: none; stroke: var(--ch-ink); stroke-width: 2; }
+.ch-plot-ticks text { font-size: 20px; fill: var(--ch-mute); }
+.ch-plot-label { font-size: 20px; font-weight: 700; fill: var(--ch-ink); }
+.ch-plot-line { fill: none; stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; }
+.ch-plot-line.is-dash { stroke-dasharray: 10 7; }
+.ch-plot-vline { stroke: var(--ch-ink); stroke-width: 2; stroke-dasharray: 5 5; opacity: .6; }
+.ch-plot-point { stroke: #fff; stroke-width: 3; }
+.ch-plot-plabel { font-size: 20px; font-weight: 700; fill: var(--ch-ink); paint-order: stroke; stroke: #fff; stroke-width: 4px; }
+.ch-plot-legend { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 0 6px; font-size: 20px; font-weight: 700; }
+.ch-plot-legend span::before { content: ""; display: inline-block; width: 28px; margin-right: 8px; vertical-align: middle; border-top: 4px solid var(--c); }
+.ch-plot-legend span.is-dash::before { border-top-style: dashed; }

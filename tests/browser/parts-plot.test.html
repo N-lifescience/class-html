@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ko" data-deck="test-plot">
+<head>
+<meta charset="utf-8">
+<title>plot</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="p0"><h2>앞 장</h2></section>
+<section class="slide" id="p1">
+  <div class="calc" data-const="k = 8.7" data-let="s = k / v">
+    <input type="range" name="v" id="v" min="0.85" max="1.35" step="0.01" value="1">
+    <figure class="plot" id="pl" style="width:640px" data-x="0.85, 1.35" data-y="0, 11" data-xlabel="부피" data-ylabel="압력">
+      <i data-line="k / x" data-label="삼투압"></i>
+      <i data-line="x" data-label="직선" data-dash data-color="#123456"></i>
+      <i data-vline="v"></i>
+      <i data-point="v, s" data-label="지금"></i>
+    </figure>
+  </div>
+  <figure class="plot" id="inv" style="width:400px" data-x="-1, 1" data-y="-5, 5" data-height="240"><i data-line="1 / x"></i></figure>
+  <figure class="plot" id="bad" data-x="3, 1"><i data-line="x +"></i></figure>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const it = (id) => I().Plot.list.find((p) => p.fig.id === id);
+const set = (v) => { const r = document.getElementById('v'); r.value = String(v); r.dispatchEvent(new Event('input', { bubbles: true })); };
+
+test('보이지 않는 장에 있어도 실제 크기로 그린다', () => {
+  eq(I().Nav.state.slide, 0);
+  eq(it('pl').w, 640);
+  eq(it('pl').svg.getAttribute('viewBox'), '0 0 640 340');
+  eq(it('inv').h, 240);
+});
+test('눈금은 1·2·5 간격, 글자는 20px', () => {
+  ClassHTML.go(1);
+  const ys = Array.from(it('pl').svg.querySelectorAll('.ch-plot-ticks text')).map((t) => t.textContent);
+  assert(ys.includes('0') && ys.includes('10'), ys.join(','));
+  assert(ys.includes('0.9') || ys.includes('0.95') || ys.includes('1'), 'x ticks');
+  const t = it('pl').svg.querySelector('.ch-plot-ticks text');
+  eq(getComputedStyle(t).fontSize, '20px');
+});
+test('곡선은 200칸, 값이 없는 곳에서 끊는다', () => {
+  const d = it('pl').layer.querySelector('path').getAttribute('d');
+  eq((d.match(/M/g) || []).length, 1);
+  eq((d.match(/L/g) || []).length, 200);
+  const inv = it('inv').layer.querySelector('path').getAttribute('d');
+  eq((inv.match(/M/g) || []).length, 2);
+});
+test('범례, 점선, 색 지정', () => {
+  const items = Array.from(it('pl').legend.children);
+  eq(items.map((s) => s.textContent), ['삼투압', '직선']);
+  assert(items[1].classList.contains('is-dash'), 'dash legend');
+  const paths = it('pl').layer.querySelectorAll('path');
+  assert(paths[1].classList.contains('is-dash'), 'dash line');
+  assert(paths[1].getAttribute('style').includes('#123456'), 'color');
+});
+test('계산 상자 값이 바뀌면 표시선과 점이 따라 움직인다', () => {
+  const x = () => Number(it('pl').marks.querySelector('line').getAttribute('x1'));
+  const before = x();
+  set(1.2);
+  assert(x() > before, 'vline moved right');
+  const c = it('pl').marks.querySelector('circle');
+  const expectY = it('pl').h - 64 - ((8.7 / 1.2) / 11) * (it('pl').h - 18 - 64);
+  assert(Math.abs(Number(c.getAttribute('cy')) - expectY) < 0.2, 'point y');
+  eq(it('pl').marks.querySelector('text').textContent, '지금');
+});
+test('잘못 쓴 범위와 식은 오류 목록에', () => {
+  const msgs = it('bad').errors.map((e) => e.msg);
+  assert(msgs.some((m) => m.startsWith('data-x')), 'range');
+  assert(msgs.some((m) => m.startsWith('data-line')), 'line');
+});
+</script>
+</body>
+</html>

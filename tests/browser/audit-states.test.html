@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko" data-deck="test-audit-states">
+<head>
+<meta charset="utf-8">
+<title>audit states</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js">test('계산 상자의 슬라이더 끝값·단추 값마다 재고, 재고 나면 되돌린다', () => {
+  const report = ClassHTML.audit();
+  const over = report.errors.filter((e) => e.slide === 1 && e.code === 'slide-overflow');
+  eq(over.length, 1);
+  assert(/슬라이더 v를 최댓값 10|단추 「길게」/.test(over[0].msg), over[0].msg);
+  eq(document.getElementById('v').value, '5');
+  eq(document.getElementById('long').getAttribute('aria-pressed'), 'false');
+  assert(document.querySelector('#s1 [data-show="v > 9"]').classList.contains('ch-hide'), 'restored calc');
+});
+</script>
+<script src="harness.js">test('계산 상자의 슬라이더 끝값·단추 값마다 재고, 재고 나면 되돌린다', () => {
+  const report = ClassHTML.audit();
+  const over = report.errors.filter((e) => e.slide === 1 && e.code === 'slide-overflow');
+  eq(over.length, 1);
+  assert(/슬라이더 v를 최댓값 10|단추 「길게」/.test(over[0].msg), over[0].msg);
+  eq(document.getElementById('v').value, '5');
+  eq(document.getElementById('long').getAttribute('aria-pressed'), 'false');
+  assert(document.querySelector('#s1 [data-show="v > 9"]').classList.contains('ch-hide'), 'restored calc');
+});
+</script>
+</head>
+<body>
+<section class="slide" id="s0">
+  <h2>풀기 전이 더 긴 분류</h2>
+  <div id="spacer"></div>
+  <div class="sort" id="so">
+    <div class="bin" data-bin="a"><h3>가</h3></div>
+    <div class="bin" data-bin="b"><h3>나</h3></div>
+    <span data-bin="a">하나</span><span data-bin="b">둘</span><span data-bin="a">셋</span>
+    <span data-bin="b">넷</span><span data-bin="a">다섯</span><span data-bin="b">여섯</span>
+  </div>
+  <p class="step">마지막 정리</p>
+</section>
+<section class="slide" id="s1">
+  <h2>끝값에서만 길어지는 상태 글</h2>
+  <div class="calc">
+    <input type="range" name="v" id="v" min="0" max="10" value="5">
+    <button data-set="m" data-value="짧게" aria-pressed="true">짧게</button><button data-set="m" data-value="길게" id="long">길게</button>
+    <div data-show="v > 9" style="height:900px">최댓값에서만 나오는 긴 설명</div>
+    <div data-show="m == '길게'" style="height:800px">단추를 누르면 나오는 긴 설명</div>
+  </div>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const slide = () => document.getElementById('s0');
+const room = () => {                                                // 내용 높이를 직접 재서 남는 높이를 구한다
+  const s = slide();
+  const kids = Array.from(s.children).filter((el) => el.getClientRects().length);
+  const top = s.getBoundingClientRect().top;
+  const bottom = Math.max(...kids.map((el) => el.getBoundingClientRect().bottom));
+  return s.clientHeight - parseFloat(getComputedStyle(s).paddingBottom) - (bottom - top) / I().Stage.scale;
+};
+
+test('다 푼 상태에는 들어가지만 풀기 전(카드 더미가 칸 위에 있을 때) 넘치면 오류로 잡는다', () => {
+  const { Sort } = I();
+  ClassHTML.go(0);
+  document.querySelector('#s0 .step').classList.add('is-shown');
+  Sort.printOpen();
+  const solved = room();
+  Sort.printClose();
+  const unsolved = room();
+  assert(solved - unsolved > 30, `solved ${solved} unsolved ${unsolved}`);
+  // 다 푼 상태에서 20px 남게 채운다. 풀기 전에는 넘친다.
+  document.getElementById('spacer').style.height = `${solved - 20}px`;
+  document.querySelector('#s0 .step').classList.remove('is-shown');
+  const report = ClassHTML.audit();
+  const over = report.errors.filter((e) => e.slide === 0 && e.code === 'slide-overflow');
+  eq(over.length, 1);
+  eq(I().Sort.list.find((x) => x.box.id === 'so').pool.hidden, false);   // 점검 뒤에는 풀기 전 상태로 돌아온다
+  eq(document.querySelector('#s0 .step').classList.contains('is-shown'), false);
+});
+test('계산 상자의 슬라이더 끝값·단추 값마다 재고, 재고 나면 되돌린다', () => {
+  const report = ClassHTML.audit();
+  const over = report.errors.filter((e) => e.slide === 1 && e.code === 'slide-overflow');
+  eq(over.length, 1);
+  assert(/슬라이더 v를 최댓값 10|단추 「길게」/.test(over[0].msg), over[0].msg);
+  eq(document.getElementById('v').value, '5');
+  eq(document.getElementById('long').getAttribute('aria-pressed'), 'false');
+  assert(document.querySelector('#s1 [data-show="v > 9"]').classList.contains('ch-hide'), 'restored calc');
+});
+</script>
+</body>
+</html>

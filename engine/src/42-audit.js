@@ -25,13 +25,19 @@ const Audit = {
   run() {
     const errors = [];
     const warnings = [];
-    // 단계 막대 칸마다 다시 재므로 같은 장·같은 내용의 알림은 한 번만 적는다
-    const seen = new Set();
-    const add = (list, level) => (slide, code, msg) => {
-      const k = `${slide}|${code}|${msg}`;
-      if (seen.has(k)) return;
-      seen.add(k);
-      list.push({ level, slide, page: slide == null ? null : slide + 1, code, msg });   // page는 화면 쪽 번호(1부터)
+    // 상태마다·단계 막대 칸마다 다시 재므로 같은 장·같은 내용의 알림은 한 번만 적는다.
+    // 넘침(amount가 있는 알림)은 장마다 하나만 두고 가장 많이 넘친 값으로 바꾼다.
+    const seen = new Map();
+    const add = (list, level) => (slide, code, msg, amount, same) => {
+      const k = amount == null ? `${slide}|${code}|${same || msg}` : `${slide}|${code}`;
+      const old = seen.get(k);
+      if (old) {
+        if (amount != null && amount > old.amount) Object.assign(old, { msg, amount });
+        return;
+      }
+      const item = { level, slide, page: slide == null ? null : slide + 1, code, msg };   // page는 화면 쪽 번호(1부터)
+      seen.set(k, Object.defineProperty(item, 'amount', { value: amount, writable: true }));
+      list.push(item);
     };
     const err = add(errors, 'error');
     const warn = add(warnings, 'warn');
@@ -50,7 +56,9 @@ const Audit = {
     const stepperSnap = Stepper.snapshot();
     root.classList.add('ch-auditing');
     try {
-      const measure = (slide, i) => {
+      // when: 어떤 상태에서 잰 것인지(계산 상자 슬라이더 끝값 등). 알림 끝에 붙인다.
+      const measure = (slide, i, when) => {
+        const tail = when ? ` (${when})` : '';
         Stage.slides.forEach((other) => other.classList.toggle('is-active', other === slide));
         qsa('.step', slide).forEach((el) => el.classList.add('is-shown'));
         const box = slide.getBoundingClientRect();
@@ -64,7 +72,7 @@ const Audit = {
           const lows = qsa('*', slide).filter((x) => x.getClientRects().length && !x.closest('svg'));
           const low = lows.reduce((a, b) => (b.getBoundingClientRect().bottom > (a ? a.getBoundingClientRect().bottom : -Infinity) ? b : a), null);
           const top = low ? low.closest('section.slide > *') : null;
-          err(i, 'slide-overflow', `내용이 ${over}px 넘쳐요${top ? ` (맨 아래: ${this.describe(top)})` : ''}. 여백·그림 크기를 줄이거나 장을 나누세요`);
+          err(i, 'slide-overflow', `내용이 ${over}px 넘쳐요${top ? ` (맨 아래: ${this.describe(top)})` : ''}${tail}. 여백·그림 크기를 줄이거나 장을 나누세요`, over);
         }
         for (const el of qsa('*', slide)) {
           const allowOverflow = !!el.closest('[data-allow-overflow]');
@@ -95,14 +103,14 @@ const Audit = {
           if (!rect.width && !rect.height) continue;
           if (!allowOverflow && (rect.right > box.right + scale || rect.bottom > box.bottom + scale
             || rect.left < box.left - scale || rect.top < box.top - scale)) {
-            err(i, 'out', `${this.describe(el)}이(가) 슬라이드 밖으로 나가요`);
+            err(i, 'out', `${this.describe(el)}이(가) 슬라이드 밖으로 나가요${tail}`, null, this.describe(el));
             reported.push(el);
             continue;
           }
           const cs = getComputedStyle(el);
           if (!allowOverflow && /(hidden|clip|auto|scroll)/.test(`${cs.overflowX} ${cs.overflowY}`)
             && (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1)) {
-            err(i, 'clip', `${this.describe(el)} 안의 내용이 잘려요`);
+            err(i, 'clip', `${this.describe(el)} 안의 내용이 잘려요${tail}`, null, this.describe(el));
             reported.push(el);
             continue;
           }
@@ -111,7 +119,7 @@ const Audit = {
           const hasText = Array.from(el.childNodes).some((node) =>
             node.nodeType === 3 && /\S/.test(node.nodeValue.replace(/\u2060/g, '')));
           if (!hasText) continue;
-          // 어절 보정이 감싼 span.w는 낱말 하나이므로 그 부모를 글 덩어리로 본다
+          // 어절 보정이 감싼 ch-w.w는 낱말 하나이므로 그 부모를 글 덩어리로 본다
           const base = el.classList.contains('w') && el.parentElement ? el.parentElement : el;
           const block = base.closest('p, li, td, th, h1, h2, h3, h4, figcaption, small, .caption, label') || base;
           const size = parseFloat(cs.fontSize);
@@ -122,6 +130,8 @@ const Audit = {
         }
       };
       Stepper.openAll('audit');
+      // 풀기 전(분류 카드 더미가 칸 위에 있을 때)이 더 긴 부품도 있으므로 두 상태를 모두 잰다
+      Stage.slides.forEach((slide, i) => measure(slide, i));
       emit('audit-expand');   // 부품: 다 맞힌 뒤·이유가 나온 뒤처럼 가장 길어지는 상태로 잠깐 바꾼다
       Stage.slides.forEach((slide, i) => measure(slide, i));
       // data-only 내용은 칸마다 다르므로 단계 막대의 칸마다 다시 잰다
@@ -129,6 +139,37 @@ const Audit = {
         if (!st.targets.some((t) => t.hasAttribute('data-only'))) continue;
         for (let k = 0; k < st.max; k++) { st.set(k, 'audit'); measure(st.slide, st.index); }
         st.set(st.max, 'audit');
+      }
+      // 계산 상자: 슬라이더를 끝값으로, 단추는 값마다 옮겨 잰다(상태 글이 길어지는 경우). 재고 나면 되돌린다.
+      for (const item of Calc.list) {
+        const slide = item.box.closest('section.slide');
+        const i = Stage.slides.indexOf(slide);
+        if (i < 0) continue;
+        for (const el of item.inputs.filter((x) => x.type === 'range')) {
+          const keep = el.value;
+          try {
+            for (const [v, end] of [[el.min || '0', '최솟값'], [el.max || '100', '최댓값']]) {
+              el.value = v;
+              Calc.update(item);
+              measure(slide, i, `슬라이더 ${el.name}를 ${end} ${v}로 옮겼을 때`);
+            }
+          } finally { el.value = keep; Calc.update(item); }
+        }
+        const groups = new Map();
+        for (const b of item.sets) groups.set(b.dataset.set, (groups.get(b.dataset.set) || []).concat(b));
+        for (const group of groups.values()) {
+          const keep = group.map((b) => b.getAttribute('aria-pressed'));
+          try {
+            for (const b of group) {
+              for (const x of group) x.setAttribute('aria-pressed', String(x === b));
+              Calc.update(item);
+              measure(slide, i, `단추 「${b.textContent.trim().slice(0, 12)}」를 눌렀을 때`);
+            }
+          } finally {
+            group.forEach((b, k) => b.setAttribute('aria-pressed', keep[k]));
+            Calc.update(item);
+          }
+        }
       }
     } finally {
       emit('audit-restore');

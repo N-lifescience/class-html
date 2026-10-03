@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ko" data-deck="training-class-html">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수업 PPT 말고, 수업 HTML 만들기</title>
+<link rel="stylesheet" href="../engine/class-html.css">
+<script defer src="../engine/class-html.js"></script>
+<style>
+  .slide[data-sec^="1"] { --tab: #0F766E; }
+  .slide[data-sec^="2"] { --tab: #1D4ED8; }
+  .slide[data-sec^="3"] { --tab: #B45309; }
+  .slide[data-sec^="4"] { --tab: #7C3AED; }
+  .slide[data-sec^="5"] { --tab: #BE123C; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
+  .box { padding: 20px 24px; border-radius: 18px; background: var(--ch-soft); }
+  .box h3 { margin-top: 0; }
+  .box p:last-child, .box ul:last-child, .box ol:last-child { margin-bottom: 0; }
+  .bad { color: var(--ch-bad); font-weight: 800; }
+  .good { color: var(--ch-ok); font-weight: 800; }
+  .prompt { padding: 16px 20px; border-left: 6px solid var(--accent); border-radius: 0 14px 14px 0; background: var(--ch-card); box-shadow: 0 0 0 2px var(--ch-line) inset; font-size: 24px; line-height: 1.55; }
+  .meter { display: grid; grid-template-columns: 300px 110px 1fr 70px; align-items: center; gap: 12px; margin: 0 0 10px; font-size: 24px; font-weight: 700; }
+  .meter input { width: 100px; min-height: 48px; font: 700 24px var(--ch-font); text-align: center; }
+  .meter output { text-align: right; }
+  .flowchart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; margin: 10px 0 18px; }
+  .flowchart > div { position: relative; min-height: 150px; padding: 18px; border-radius: 16px; background: var(--ch-soft); text-align: center; font-size: 26px; font-weight: 800; line-height: 1.35; }
+  .flowchart > div small { display: block; margin-top: 8px; font-size: 20px; font-weight: 600; color: var(--ch-mute); }
+  .flowchart > div + div::before { content: "→"; position: absolute; left: -26px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 28px; }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 24px; margin: 0; padding: 0; list-style: none; }
+  .keys li { margin: 0; font-size: 24px; }
+  .keys kbd { display: inline-block; min-width: 36px; margin-right: 10px; padding: 2px 10px; border-radius: 8px; background: var(--ch-ui); color: var(--ch-ui-fg); font: 700 22px var(--ch-mono); text-align: center; }
+  .faq dt { margin-top: 10px; font-size: 26px; font-weight: 800; }
+  .faq dd { margin: 4px 0 0; font-size: 24px; }
+</style>
+</head>
+<body data-theme="ppt" style="--accent:#0F766E">
+
+<section class="slide cover" id="cover" data-title="표지">
+  <p class="kicker">교직원 연수 · 실습형 90~120분</p>
+  <h1>수업 PPT 말고,<br>수업 HTML 만들기</h1>
+  <p>내 수업 PPT와 내가 쓰는 AI로<br>판서와 활동이 들어간 수업 화면을 만듭니다.</p>
+</section>
+
+<section class="slide" id="poll" data-sec="1. 여는 질문" data-title="여는 투표">
+  <h2>PPT로 판서할 때 가장 불편한 것은?</h2>
+  <p>손을 든 수를 적으면 막대가 바로 바뀝니다.</p>
+  <div class="calc" data-let="total = a + b + c + d">
+    <div class="meter">펜 ↔ 마우스 모드 바꾸기 <input type="number" name="a" min="0" max="60" value="0" aria-label="펜 마우스 전환"><div class="bar" data-value="a" data-max="max(total, 1)"></div><output data-expr="a"></output></div>
+    <div class="meter">넘기면 판서가 사라짐 <input type="number" name="b" min="0" max="60" value="0" aria-label="판서 사라짐"><div class="bar" data-value="b" data-max="max(total, 1)"></div><output data-expr="b"></output></div>
+    <div class="meter">반마다 다시 써야 함 <input type="number" name="c" min="0" max="60" value="0" aria-label="반마다 다시"><div class="bar" data-value="c" data-max="max(total, 1)"></div><output data-expr="c"></output></div>
+    <div class="meter">빈 칠판이 따로 없음 <input type="number" name="d" min="0" max="60" value="0" aria-label="빈 칠판"><div class="bar" data-value="d" data-max="max(total, 1)"></div><output data-expr="d"></output></div>
+    <p data-expr="total == 0 ? '손을 든 수를 적어 보세요.' : '모두 ' + total + '명이 답했습니다.'"></p>
+  </div>
+</section>
+
+<section class="slide" id="compare" data-sec="1. 여는 질문" data-title="PPT와 HTML 비교">
+  <h2>같은 수업, 무엇이 다를까요?</h2>
+  <div class="switch" data-stops="시작|PPT로 수업할 때|수업 HTML로 할 때">
+    <ul data-only="1">
+      <li>펜을 들면 다음 장으로 넘기려고 <span class="bad">마우스 모드로 바꿔야</span> 합니다.</li>
+      <li>그래프·지도는 그림이라 <span class="bad">값을 바꿔 볼 수 없습니다.</span></li>
+      <li>3반에 쓴 판서가 4반 수업 화면에 그대로 남습니다.</li>
+    </ul>
+    <ul data-only="2">
+      <li>펜을 든 채로 ◀ ▶, 단추, 슬라이더가 <span class="good">그대로 작동합니다.</span></li>
+      <li>슬라이더를 움직이면 <span class="good">그래프와 그림이 계산해서 바뀝니다.</span></li>
+      <li>판서가 <span class="good">반마다 따로</span> 저장되고, 창을 닫아도 남습니다.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide" id="try-ink" data-sec="2. 판서 체험" data-title="판서 체험">
+  <h2>펜을 든 채로 넘겨 보세요</h2>
+  <div class="cols">
+    <ol>
+      <li>아래 툴바에서 <b>펜</b>을 고릅니다.</li>
+      <li>이 화면에 아무거나 씁니다.</li>
+      <li>펜을 든 채로 <b>▶</b>를 누르고, 다시 <b>◀</b>.</li>
+      <li>판서가 그대로 있나요?</li>
+    </ol>
+    <div class="box">
+      <h3>펜을 든 채로 되는 것</h3>
+      <p>넘기기 ◀ ▶, 활동 단추와 보기,<br>슬라이더, 카드 끌기</p>
+      <p>단추 위에서 <b>톡</b> 누르면 단추,<br><b>쭉</b> 끌면 판서가 됩니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="try-board" data-sec="2. 판서 체험" data-title="칠판과 반">
+  <h2>칠판 모드와 반별 저장</h2>
+  <div class="reveal" data-stops="시작|칠판|반 바꾸기|백업">
+    <div class="box veil">
+      <p data-only="1">툴바의 <b>칠판</b>(또는 C 키)을 누르면 빈 칠판이 열립니다.<br>흰색·모눈·줄·초록 칠판·좌표평면 바탕, 여러 장을 쓸 수 있습니다.<br>같은 자리 단추가 <b>슬라이드</b>로 바뀌고, 누르면 보던 장으로 돌아옵니다.</p>
+      <p data-only="2"><b>반</b> 메뉴에서 「2반」을 추가하고 골라 보세요. 판서가 비어 있습니다.<br>「기본」으로 돌아가면 아까 쓴 판서가 다시 나옵니다.<br>반 목록은 이 PC의 모든 수업 HTML이 함께 씁니다.</p>
+      <p data-only="3">학교 PC가 재부팅 때 저장소를 지운다면<br>반 메뉴의 「판서 백업 파일로 저장」으로 파일을 받아 두고,<br>다음 시간에 「백업 파일 불러오기」를 누릅니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="keys" data-sec="2. 판서 체험" data-title="단축키">
+  <h2>알아 두면 편한 키</h2>
+  <ul class="keys">
+    <li><kbd>→</kbd>다음(단계를 하나씩)</li><li><kbd>←</kbd>이전</li><li><kbd>12</kbd><kbd>⏎</kbd>12쪽으로</li>
+    <li><kbd>P</kbd>펜</li><li><kbd>H</kbd>형광펜</li><li><kbd>E</kbd>지우개</li>
+    <li><kbd>L</kbd>레이저</li><li><kbd>Esc</kbd>손(조작)</li><li><kbd>C</kbd>칠판</li>
+    <li><kbd>T</kbd>목차</li><li><kbd>F</kbd>전체 화면</li><li><kbd>B</kbd>검정 화면</li>
+    <li><kbd>?</kbd>도움말</li><li><kbd>D</kbd>자동 점검</li><li><kbd>Ctrl</kbd><kbd>P</kbd>인쇄</li>
+  </ul>
+  <p style="margin-top:22px">프레젠터 리모컨의 넘기기 단추도 그대로 됩니다.</p>
+</section>
+
+<section class="slide" id="gal-calc" data-sec="3. 교과별 부품" data-title="부품: 계산 상자와 그래프">
+  <h2>값을 바꾸면 계산해서 바뀝니다</h2>
+  <div class="calc cols" style="grid-template-columns: 420px 1fr" data-let="y = a * x0 ^ 2">
+    <div>
+      <p style="margin-bottom:0">a = <output data-expr="a"></output></p>
+      <input type="range" name="a" min="-2" max="2" step="0.5" value="1" aria-label="a">
+      <p style="margin-bottom:0">x = <output data-expr="x0"></output></p>
+      <input type="range" name="x0" min="-3" max="3" step="0.5" value="1" aria-label="x">
+      <p>y = a × x² = <output data-expr="y"></output></p>
+      <p class="caption">과학 시뮬레이션, 수학 함수, 판정 모형에 씁니다.</p>
+    </div>
+    <figure class="plot" data-x="-3, 3" data-y="-10, 10" data-height="360"><i data-line="a * x ^ 2" data-label="y = a x²"></i><i data-point="x0, y"></i></figure>
+  </div>
+</section>
+
+<section class="slide" id="gal-map" data-sec="3. 교과별 부품" data-title="부품: 지도 단계 공개">
+  <h2>지도를 시기별로 하나씩 엽니다</h2>
+  <div class="cols" style="grid-template-columns: 520px 1fr">
+    <figure class="map-reveal fig" id="island" data-stops="시작|북부|남부|동섬" data-approx="근사 · 가상의 섬나라">
+      <img src="assets/island.svg" alt="가상의 섬나라 지도">
+      <svg viewBox="0 0 800 500">
+        <polygon data-from="1" points="120,90 380,60 600,110 640,220 115,232"/>
+        <polygon data-from="2" points="115,232 640,220 610,360 420,420 180,380 110,250"/>
+        <polygon data-from="3" points="655,315 768,315 768,390 655,390"/>
+      </svg>
+    </figure>
+    <div>
+      <p>교과서 지도 그림 위에 근사 영역을 겹쳐<br>처음에는 모두 가립니다.</p>
+      <p>→를 누를 때마다 한 시기씩 열리고<br>새로 더해진 땅에 테두리가 켜집니다.</p>
+      <p class="caption">역사 영토, 지리 분포, 전선의 변화에 씁니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="gal-sort" data-sec="3. 교과별 부품" data-title="부품: 분류 카드">
+  <h2>카드를 끌어 나눕니다</h2>
+  <div class="sort">
+    <div class="bin" data-bin="v"><h3>판서 엔진이 하는 일</h3></div>
+    <div class="bin" data-bin="a"><h3>AI가 하는 일</h3></div>
+    <span data-bin="v" data-why="펜을 든 채로 넘기기는 엔진이 합니다." data-hint="모든 수업 HTML에서 똑같이 동작하는 기능입니다.">펜을 든 채로 넘기기</span>
+    <span data-bin="a" data-why="PPT 내용으로 활동을 설계하는 것은 AI가 합니다." data-hint="수업마다 달라지는 일입니다.">활동 설계</span>
+    <span data-bin="v" data-why="반별 저장은 엔진이 합니다." data-hint="모든 수업에서 같은 기능입니다.">반별 판서 저장</span>
+    <span data-bin="a" data-why="문장을 다듬는 것은 AI가 합니다." data-hint="내용에 관한 일입니다.">문장 다듬기</span>
+    <span data-bin="v" data-why="자동 점검은 엔진이 합니다(D 키)." data-hint="넘친 글자를 찾는 도구입니다.">넘친 글자 점검</span>
+  </div>
+</section>
+
+<section class="slide" id="gal-quiz" data-sec="3. 교과별 부품" data-title="부품: 즉시 확인 문제">
+  <p class="q" data-n="?">수업 HTML의 '활동'으로 칠 수 있는 것은?</p>
+  <div class="quiz">
+    <button class="opt" data-why="누르면 글이 나타나기만 하는 것은 PPT 애니메이션으로도 됩니다.">누르면 정답 글이 나타난다</button>
+    <button class="opt" data-ok data-why="맞습니다. 입력에 따라 화면이 계산해서 달라지면 활동입니다.">슬라이더를 움직이면 그래프가 바뀐다</button>
+    <button class="opt" data-why="동영상 재생은 PPT로도 됩니다.">동영상이 자동으로 재생된다</button>
+  </div>
+  <p class="caption">보기마다 왜 맞고 왜 틀린지 이유가 나옵니다.</p>
+</section>
+
+<section class="slide" id="how" data-sec="4. 만들기" data-title="작동 원리">
+  <h2>어떻게 만들어지나요?</h2>
+  <div class="reveal" data-stops="시작|PPT와 주소|인터뷰|설계표|HTML">
+    <div class="flowchart veil">
+      <div data-at="1">PPT + 저장소 주소<small>내 AI에 올리기</small></div>
+      <div data-at="2">AI의 질문 5개<small>교과·장면·헷갈리는 곳·활동·지킬 것</small></div>
+      <div data-at="3">설계표 확인<small>개념마다 활동 하나</small></div>
+      <div data-at="4">HTML 파일 하나<small>엔진이 판서·저장·점검</small></div>
+    </div>
+    <p data-only="1">AI는 저장소의 지침 한 파일을 읽고 따릅니다.</p>
+    <p data-only="2">AI가 먼저 묻습니다. "알아서"라고 답하면 추천대로 갑니다.</p>
+    <p data-only="3">설계표는 채팅으로만 보여 주고, 학생 화면에는 넣지 않습니다.</p>
+    <p data-only="4">받은 파일을 더블클릭하면 바로 수업할 수 있습니다.</p>
+  </div>
+</section>
+
+<section class="slide" id="practice1" data-sec="4. 만들기" data-title="실습 1: 변환">
+  <h2>실습 1 · 내 PPT 바꾸기 <small>25분</small></h2>
+  <div class="switch" data-stops="시작|ChatGPT|Gemini|Claude">
+    <ol data-only="1">
+      <li>새 대화에 PPT 파일을 올립니다.</li>
+      <li>아래 문장을 붙여 넣습니다.</li>
+      <li>AI의 질문에 답하고, 설계표를 확인합니다.</li>
+      <li>HTML 파일을 내려받습니다(답이 끊기면 '계속').</li>
+    </ol>
+    <ol data-only="2">
+      <li>새 대화에 PPT 파일을 올립니다(PDF로 바꿔 올려도 됩니다).</li>
+      <li>저장소의 <code>guide/class-html-guide.md</code>를 함께 올립니다.</li>
+      <li>아래 문장을 붙여 넣고, 질문에 답합니다.</li>
+      <li>코드를 파일로 받지 못하면 '전체 HTML 코드 블록으로'라고 부탁합니다.</li>
+    </ol>
+    <ol data-only="3">
+      <li>새 대화에 PPT 파일을 올립니다.</li>
+      <li>아래 문장을 붙여 넣습니다. 스킬을 등록했다면 "수업 HTML로 바꿔줘"만 써도 됩니다.</li>
+      <li>질문 창에서 답을 고르고, 설계표를 확인합니다.</li>
+      <li>만들어진 파일을 내려받습니다.</li>
+    </ol>
+    <p class="prompt">https://github.com/N-lifescience/class-html 지침대로<br>이 PPT를 수업 HTML로 바꿔줘</p>
+  </div>
+</section>
+
+<section class="slide" id="practice2" data-sec="4. 만들기" data-title="실습 2: 수업해 보기">
+  <h2>실습 2 · 열어서 수업해 보기 <small>20분</small></h2>
+  <div class="cols">
+    <div class="box">
+      <h3>해 볼 것</h3>
+      <ol>
+        <li>파일을 열고 펜으로 판서하며 넘겨 보기</li>
+        <li>그림이 비어 있으면 원본 PPT를 화면에 끌어다 놓고 ⚙ 「그림 넣어 저장」</li>
+        <li>D 키로 자동 점검 열어 보기</li>
+      </ol>
+    </div>
+    <div>
+      <h3>고쳐 달라고 말하기</h3>
+      <p class="prompt">5쪽은 글이 많아. 두 장으로 나눠 줘.</p>
+      <p class="prompt">7쪽 그래프에 단위를 넣고,<br>농도 슬라이더 범위를 0~10으로 해 줘.</p>
+      <p class="prompt">자동 점검에 나온 오류를 모두 고쳐 줘.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="faq" data-sec="5. 마무리" data-title="막혔을 때">
+  <h2>막혔을 때</h2>
+  <dl class="faq">
+    <dt>AI가 질문 없이 바로 만들어요.</dt><dd>"지침의 인터뷰부터 다시 해 줘"라고 씁니다.</dd>
+    <dt>그림이 회색 상자로 나와요.</dt><dd>원본 PPT를 그 화면에 끌어다 놓고, ⚙ 「그림 넣어 저장」을 누릅니다.</dd>
+    <dt>학교 컴퓨터에서 화면이 깨져요.</dt><dd>인터넷이 막힌 PC라면 ⚙ 「오프라인용 저장」으로 받은 파일을 씁니다.</dd>
+    <dt>판서가 사라졌어요.</dt><dd>반을 확인하고(반 메뉴), 백업 파일이 있으면 불러옵니다.</dd>
+  </dl>
+</section>
+
+<section class="slide" id="copyright" data-sec="5. 마무리" data-title="저작권과 개인정보">
+  <p class="q" data-n="!">교과서 그림이 들어간 수업 HTML,<br>어디까지 써도 될까요? 맞는 것을 모두 고르세요.</p>
+  <div class="quiz" data-multi data-cols="2" data-why="맞습니다. 내 수업에서 쓰고, 공개 게시하지 않으며, 학생 개인정보는 넣지 않습니다.">
+    <button class="opt" data-ok>내 수업 시간에 띄운다</button>
+    <button class="opt">학교 누리집에 올린다</button>
+    <button class="opt" data-ok>판서 백업 파일을 내 PC에 보관한다</button>
+    <button class="opt">학생 이름과 사진을 넣어 공유한다</button>
+  </div>
+</section>
+
+<section class="slide" id="closing" data-sec="5. 마무리" data-title="마무리">
+  <h2>오늘 바꾼 것 하나를 다음 수업에</h2>
+  <p>저장소: <b>github.com/N-lifescience/class-html</b></p>
+  <div class="answer"><p>PPT는 보여 주는 도구,<br>수업 HTML은 <mark>함께 조작하는</mark> 도구입니다.</p></div>
+</section>
+
+</body>
+</html>

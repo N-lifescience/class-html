@@ -21,6 +21,10 @@ const Quiz = {
         wrap.append(...direct);
       }
       opts.forEach((o, i) => {
+        // 보기 글을 한 덩어리로: 이유 줄(flex-wrap) 때문에 긴 글이 번호 아래로 떨어지지 않게
+        const t = h('span', { class: 'ch-opt-t' });
+        t.append(...Array.from(o.childNodes));
+        o.append(t);
         if (o.tagName !== 'BUTTON') { o.setAttribute('role', 'button'); o.setAttribute('data-tap', ''); o.tabIndex = 0; }
         else o.type = 'button';
         if (box.dataset.num !== 'off') o.prepend(h('i', { class: 'ch-opt-n', 'aria-hidden': 'true', text: CIRCLED[i] || String(i + 1) }));

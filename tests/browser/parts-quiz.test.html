@@ -77,6 +77,12 @@ test('여러 개 고르기: 확인하면 맞게·잘못·놓침과 개수', () =
   assert(has('m1', 'is-wrong') && has('m2', 'is-right') && has('m4', 'is-miss') && !has('m3', 'is-wrong'), 'marks');
   eq(q('multi').fb.textContent, '4개 가운데 2개를 맞게 판단했다. 점선은 골라야 하는데 고르지 않은 것이다.');
 });
+test('보기 글은 한 덩어리로 번호 옆에 있다(이유가 붙어도 아래로 떨어지지 않는다)', () => {
+  const t = $('m1').querySelector('.ch-opt-t');
+  assert(t, 'text wrapper');
+  const n = $('m1').querySelector('.ch-opt-n').getBoundingClientRect();
+  assert(Math.abs(t.getBoundingClientRect().top - n.top) < 20, 'same row as number');
+});
 test('여러 개 고르기: 잘못 고른 것·놓친 것 아래에 그 보기의 이유', () => {
   $('m2').dataset.why = '2는 짝수다.';
   for (const id of ['m1', 'm2', 'm3', 'm4']) if (has(id, 'is-pick')) $(id).click();

@@ -18,6 +18,8 @@
     </figure>
   </div>
   <figure class="particles" id="gas" data-height="200" style="width:400px"><i data-kind="기체" data-left="500" data-color="#333"></i></figure>
+  <figure class="particles" id="osm" data-membrane="0.5" data-height="240" style="width:600px"><i data-kind="물" data-left="40" data-right="40" data-pass="1"></i><i data-kind="설탕" data-left="0" data-right="20" data-pass="0" data-size="8"></i></figure>
+  <figure class="particles" id="mix" data-height="200" style="width:400px"><i data-kind="잉크" data-left="0" data-right="20" data-color="#7A4FBF"></i><i data-kind="물" data-left="20" data-right="0"></i></figure>
   <figure class="particles" id="bad"><i data-kind="x" data-left="1 +"></i></figure>
 </section>
 <pre id="results" data-summary="pending"></pre>
@@ -40,10 +42,30 @@ test('막을 못 지나는 설탕은 그대로, 물은 오가며 전체 수는 �
   eq(b.tally[0].left + b.tally[0].right, 60);
   assert(b.parts.every((p) => p.x >= 0 && p.x <= 600 && p.y >= 0 && p.y <= 240), 'inside box');
 });
+test('삼투 모형: 용질(막을 못 지남)이 있는 쪽으로 물이 더 많이 모인다', () => {
+  const o = it('osm');
+  let right = 0;
+  let n = 0;
+  for (let i = 0; i < 3000; i++) {
+    I().Particles.step(o, 0.03);
+    if (i > 1000 && i % 20 === 0) { I().Particles.count(o); right += o.tally[0].right; n += 1; }
+  }
+  I().Particles.count(o);
+  eq(o.tally[1], { left: 0, right: 20 });
+  assert(right / n > 43, `water on solute side ${(right / n).toFixed(1)} (of 80)`);
+});
 test('막이 없으면 한 칸, 입자는 300개까지', () => {
   const g = it('gas');
   eq(g.parts.length, 300);
   assert(g.counts.textContent.includes('300개'), g.counts.textContent);
+});
+test('막이 없어도 오른쪽 개수를 주면 가운데 기준으로 나눠 놓고 센다', () => {
+  const m = it('mix');
+  eq(m.tally, [{ left: 0, right: 20 }, { left: 20, right: 0 }]);
+  assert(m.parts.filter((p) => p.k === 0).every((p) => p.x >= 200), 'ink on the right half');
+  for (let i = 0; i < 600; i++) I().Particles.step(m, 0.03);
+  I().Particles.count(m);
+  assert(m.tally[0].left > 0, 'ink spreads to the left');
 });
 test('계산 상자 값이 바뀌면 처음부터 다시 놓는다', () => {
   const b = it('box');

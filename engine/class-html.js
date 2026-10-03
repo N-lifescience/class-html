@@ -2866,6 +2866,10 @@ const Quiz = {
         wrap.append(...direct);
       }
       opts.forEach((o, i) => {
+        // 보기 글을 한 덩어리로: 이유 줄(flex-wrap) 때문에 긴 글이 번호 아래로 떨어지지 않게
+        const t = h('span', { class: 'ch-opt-t' });
+        t.append(...Array.from(o.childNodes));
+        o.append(t);
         if (o.tagName !== 'BUTTON') { o.setAttribute('role', 'button'); o.setAttribute('data-tap', ''); o.tabIndex = 0; }
         else o.type = 'button';
         if (box.dataset.num !== 'off') o.prepend(h('i', { class: 'ch-opt-n', 'aria-hidden': 'true', text: CIRCLED[i] || String(i + 1) }));
@@ -4268,8 +4272,9 @@ const Particles = {
       const reset = h('button', { type: 'button', class: 'ch-reset', text: '다시' });
       const counts = h('p', { class: 'ch-particles-counts', 'aria-live': 'off' });
       const labels = String(fig.dataset.labels || '왼쪽|오른쪽').split('|');
+      const labelsShown = fig.dataset.labels != null && fig.dataset.labels !== '';   // 이름을 주면 상자 안 위에도 쓴다
       const item = {
-        fig, calc, kinds, errors, canvas, run, reset, counts, labels, n,
+        fig, calc, kinds, errors, canvas, run, reset, counts, labels, labelsShown, n,
         membrane: fig.dataset.membrane != null && fig.dataset.membrane !== '' ? clamp(Number(fig.dataset.membrane), 0.05, 0.95) : null,
         speed: c(fig.dataset.speed, 1, 'data-speed'), h: Math.round(Number(fig.dataset.height) || 280), w: 0,
         parts: [], running: false, raf: 0, last: 0, rnd: seededRandom(`${fig.closest('section.slide')?.dataset.key}#particles${n}`), sig: '',
@@ -4316,16 +4321,23 @@ const Particles = {
   },
 
   // 입자를 처음 개수대로 양쪽에 고르게 흩어 놓는다.
+  // 막이 없을 때 처음에 오른쪽 개수를 준 입자가 있으면 가운데를 기준으로 나눠 놓고 센다(확산의 시작).
+  split(item) {
+    if (item.membrane != null) return item.membrane;
+    return item.kinds.some((k) => this.val(k.right, item) > 0) ? 0.5 : null;
+  },
+
   place(item) {
     const w = item.w || 560;
-    const mx = item.membrane == null ? w : w * item.membrane;
+    const sp = this.split(item);
+    const mx = sp == null ? w : w * sp;
     const parts = [];
     let total = 0;
     for (const [k, kind] of item.kinds.entries()) {
       for (const side of ['left', 'right']) {
         let count = Math.round(this.val(kind[side], item));
         if (!Number.isFinite(count) || count < 0) count = 0;
-        if (item.membrane == null && side === 'right') count = 0;
+        if (sp == null && side === 'right') count = 0;
         count = Math.min(count, PARTICLE_MAX - total);
         total += count;
         const [x0, x1] = side === 'left' ? [0, mx] : [mx, w];
@@ -4348,11 +4360,23 @@ const Particles = {
   },
 
   // dt초만큼 움직인다. 벽에서 튕기고, 막에 닿으면 통과 확률(pass)만큼 지나간다.
+  // 삼투 모형: 막을 못 지나는 입자(pass 0, 용질)는 자기 쪽 막 구멍을 가린다. 그쪽에서 오는 입자의 통과 확률이
+  // (그쪽 입자 가운데 용질의 비율)만큼 줄어, 물은 용질이 많은 쪽으로 더 많이 모인다.
   step(item, dt) {
     const w = item.w || 560;
     const mx = item.membrane == null ? null : w * item.membrane;
     const v = 90 * clamp(this.val(item.speed, item) || 0, 0, 5);
     const pass = item.kinds.map((k) => clamp(this.val(k.pass, item) || 0, 0, 1));
+    const block = [0, 0];
+    if (mx != null) {
+      const all = [0, 0];
+      for (const p of item.parts) {
+        const s = p.x < mx ? 0 : 1;
+        all[s] += 1;
+        if (pass[p.k] === 0) block[s] += 1;
+      }
+      for (const s of [0, 1]) block[s] = all[s] ? block[s] / all[s] : 0;
+    }
     for (const p of item.parts) {
       const r = item.kinds[p.k].size;
       // 조금씩 방향이 흔들린다(브라운 운동)
@@ -4365,7 +4389,7 @@ const Particles = {
       if (nx > w - r) { nx = w - r; p.vx = -Math.abs(p.vx); }
       if (ny < r) { ny = r; p.vy = Math.abs(p.vy); }
       if (ny > item.h - r) { ny = item.h - r; p.vy = -Math.abs(p.vy); }
-      if (mx != null && (p.x - mx) * (nx - mx) < 0 && item.rnd() >= pass[p.k]) {
+      if (mx != null && (p.x - mx) * (nx - mx) < 0 && item.rnd() >= pass[p.k] * (1 - block[p.x < mx ? 0 : 1])) {
         nx = p.x < mx ? mx - r * 0.5 : mx + r * 0.5;   // 막에 막혀 되돌아간다
         p.vx = -p.vx;
       }
@@ -4376,7 +4400,8 @@ const Particles = {
 
   count(item) {
     const w = item.w || 560;
-    const mx = item.membrane == null ? null : w * item.membrane;
+    const sp = this.split(item);
+    const mx = sp == null ? null : w * sp;
     item.tally = item.kinds.map((k, i) => {
       const mine = item.parts.filter((p) => p.k === i);
       const left = mx == null ? mine.length : mine.filter((p) => p.x < mx).length;
@@ -4400,6 +4425,18 @@ const Particles = {
       ctx.moveTo(mx, 0);
       ctx.lineTo(mx, item.h);
       ctx.stroke();
+      ctx.restore();
+    }
+    const sp = this.split(item);
+    if (sp != null && item.labelsShown) {
+      ctx.save();
+      ctx.font = '700 20px Pretendard Variable, Pretendard, Malgun Gothic, sans-serif';
+      ctx.fillStyle = 'rgba(31, 35, 40, .55)';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      ctx.fillText(item.labels[0] || '', 10, 8);
+      ctx.textAlign = 'right';
+      ctx.fillText(item.labels[1] || '', w - 10, 8);
       ctx.restore();
     }
     for (const p of item.parts) {

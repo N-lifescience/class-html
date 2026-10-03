@@ -468,6 +468,7 @@ body .slide.chapter::before { display: none; }
 :where(.slide) .quiz .opt.is-wrong .ch-opt-n { background: var(--ch-bad); color: #fff; }
 :where(.slide) .quiz .opt.is-miss { border-style: dashed; border-color: var(--ch-ok); }
 :where(.slide) .quiz .opt { flex-wrap: wrap; }
+.ch-opt-t { flex: 1 1 0; min-width: 0; }
 :where(.slide) .ch-opt-why { flex-basis: 100%; margin: 2px 0 0 56px; font-size: 20px; font-weight: 500; line-height: 1.4; color: var(--ch-mute); }
 :where(.slide) .ch-check-btn { min-height: 56px; padding: 0 30px; border-color: var(--accent); background: var(--accent); color: #fff; font-size: 24px; }
 

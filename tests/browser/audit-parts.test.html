@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko" data-deck="test-audit-parts">
+<head>
+<meta charset="utf-8">
+<title>audit parts</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="a0">
+  <h2>칸마다 다른 설명</h2>
+  <div class="switch" id="sw" data-stops="시작|짧은 것|긴 것|끝">
+    <p data-only="1">짧다.</p>
+    <div data-only="2" style="height:900px">아주 긴 설명</div>
+    <p data-only="3">끝.</p>
+    <p data-only="7" id="badnum">없는 칸</p>
+  </div>
+</section>
+<section class="slide" id="a1">
+  <div class="reveal" data-stops="시작|가"></div>
+  <div class="reveal" data-stops="시작|나"></div>
+  <p data-at="1" id="orphan">어디에 묶일까</p>
+  <div class="quiz" id="nook"><button class="opt">하나</button><button class="opt">둘</button></div>
+  <div class="sort" id="so"><div class="bin" data-bin="a"><h3>가</h3></div><span data-bin="z" id="lost">카드</span></div>
+</section>
+<section class="slide" id="a2">
+  <figure class="map-reveal" data-stops="시작|하나"><img alt="지도" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'/%3E"><svg viewBox="0 0 10 10"><polygon data-from="4" points="0,0 5,0 5,5"/></svg></figure>
+  <div class="calc"><span data-expr="1 +"></span></div>
+  <input type="range" id="raw" min="0" max="5" value="3">
+  <input type="range" id="raw0" min="0" max="5" value="0">
+</section>
+<section class="slide" id="a3"><h2>설명만</h2></section>
+<section class="slide" id="a4"><h2>설명만</h2></section>
+<section class="slide" id="a5"><h2>설명만</h2></section>
+<section class="slide" id="a6"><h2>설명만</h2></section>
+<section class="slide" id="a7"><h2>설명만</h2></section>
+<section class="slide" id="a8"><h2>설명만</h2></section>
+<section class="slide" id="a9"><h2>설명만</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+let report;
+const errs = (code, slide) => report.errors.filter((e) => e.code === code && (slide == null || e.slide === slide));
+
+test('점검을 돌려도 단계 막대는 보던 칸 그대로', () => {
+  const sw = I().Stepper.all.find((s) => s.el.id === 'sw');
+  sw.set(1, 'input');
+  report = ClassHTML.audit();
+  eq(sw.pos, 1);
+});
+test('칸마다 다시 재서 가운데 칸의 넘침도 잡는다(한 번만)', () => {
+  const over = report.errors.filter((e) => e.slide === 0 && (e.code === 'slide-overflow' || e.code === 'out'));
+  assert(over.length >= 1, JSON.stringify(report.errors));
+  eq(errs('slide-overflow', 0).length, 1);
+});
+test('단계 번호가 칸 수를 넘으면 오류', () => {
+  assert(errs('part', 0).some((e) => e.msg.includes('#badnum') && e.msg.includes('0~3')), 'bad number');
+});
+test('어느 막대인지 모르는 data-at, 정답 없는 문제, 칸 없는 카드', () => {
+  const msgs = errs('part', 1).map((e) => e.msg);
+  assert(msgs.some((m) => m.includes('#orphan') && m.includes('data-for')), 'orphan');
+  assert(msgs.some((m) => m.includes('#nook') && m.includes('data-ok')), 'quiz');
+  assert(msgs.some((m) => m.includes('#lost') && m.includes('data-bin="z"')), 'sort');
+});
+test('지도의 data-from 범위, 계산 식 오류', () => {
+  const msgs = errs('part', 2).map((e) => e.msg);
+  assert(msgs.some((m) => m.includes('data-from은 1~1')), 'map');
+  assert(msgs.some((m) => m.includes('data-expr')), 'calc');
+});
+test('부품 밖 슬라이더가 중간에서 시작하면 경고', () => {
+  const w = report.warnings.filter((x) => x.code === 'not-veiled');
+  eq(w.length, 1);
+  assert(w[0].msg.includes('#raw'), w[0].msg);
+});
+test('활동 장이 3분의 1보다 적으면 경고, 활동 장 수를 알려 준다', () => {
+  eq(report.info.activities, 3);
+  const w = report.warnings.find((x) => x.code === 'few-activities');
+  assert(w && w.msg.includes('3/10'), JSON.stringify(report.warnings));
+});
+</script>
+</body>
+</html>

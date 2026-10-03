@@ -25,8 +25,16 @@ const Audit = {
   run() {
     const errors = [];
     const warnings = [];
-    const err = (slide, code, msg) => errors.push({ level: 'error', slide, code, msg });
-    const warn = (slide, code, msg) => warnings.push({ level: 'warn', slide, code, msg });
+    // 단계 막대 칸마다 다시 재므로 같은 장·같은 내용의 알림은 한 번만 적는다
+    const seen = new Set();
+    const add = (list, level) => (slide, code, msg) => {
+      const k = `${slide}|${code}|${msg}`;
+      if (seen.has(k)) return;
+      seen.add(k);
+      list.push({ level, slide, code, msg });
+    };
+    const err = add(errors, 'error');
+    const warn = add(warnings, 'warn');
     const ids = new Map();
     for (const el of qsa('[id]')) ids.set(el.id, (ids.get(el.id) || 0) + 1);
     for (const [id, count] of ids) if (count > 1) err(null, 'dup-id', `id "${id}"가 ${count}번 쓰였어요`);
@@ -39,9 +47,10 @@ const Audit = {
     }));
     const root = document.documentElement;
     const wasAuditing = root.classList.contains('ch-auditing');
+    const stepperSnap = Stepper.snapshot();
     root.classList.add('ch-auditing');
     try {
-      Stage.slides.forEach((slide, i) => {
+      const measure = (slide, i) => {
         Stage.slides.forEach((other) => other.classList.toggle('is-active', other === slide));
         qsa('.step', slide).forEach((el) => el.classList.add('is-shown'));
         const box = slide.getBoundingClientRect();
@@ -96,8 +105,17 @@ const Audit = {
             warn(i, 'small-text', `${this.describe(block)} 본문이 ${size}px예요 (권장 20px 이상)`);
           }
         }
-      });
+      };
+      Stepper.openAll('audit');
+      Stage.slides.forEach((slide, i) => measure(slide, i));
+      // data-only 내용은 칸마다 다르므로 단계 막대의 칸마다 다시 잰다
+      for (const st of Stepper.all) {
+        if (!st.targets.some((t) => t.hasAttribute('data-only'))) continue;
+        for (let k = 0; k < st.max; k++) { st.set(k, 'audit'); measure(st.slide, st.index); }
+        st.set(st.max, 'audit');
+      }
     } finally {
+      Stepper.restore(stepperSnap, 'audit');
       for (const snapshot of snapshots) {
         snapshot.slide.classList.toggle('is-active', snapshot.active);
         for (const step of snapshot.steps) step.el.classList.toggle('is-shown', step.shown);
@@ -109,8 +127,54 @@ const Audit = {
         for (const a of Stage.deck.getAnimations({ subtree: true })) a.finish();
       }
     }
+    const info = this.checkParts(err, warn);
     return { ok: !errors.length, errors, warnings,
-      info: { slides: Stage.slides.length, aiAdded: qsa('[data-ai]', Stage.deck).length } };
+      info: Object.assign({ slides: Stage.slides.length, aiAdded: qsa('[data-ai]', Stage.deck).length }, info) };
+  },
+
+  // 부품 작성 실수, 단계형 슬라이더의 시작 값, 활동 장 비율(설계서 7.2-5: 3분의 1 이상)
+  checkParts(err, warn) {
+    const at = (el) => { const i = Stage.slides.indexOf(el.closest('section.slide')); return i < 0 ? null : i; };
+    const part = (el, msg) => err(at(el), 'part', `${this.describe(el)}: ${msg}`);
+    for (const el of Stepper.orphans || []) part(el, '어느 단계 막대에 딸린 것인지 몰라요(data-for="단계 막대 id")');
+    for (const st of Stepper.all) {
+      for (const t of st.targets) {
+        const nums = (t.dataset.only != null ? String(t.dataset.only).split(/[\s,]+/) : [t.dataset.at]).map(Number);
+        if (nums.some((v) => !Number.isInteger(v) || v < 0 || v > st.max)) part(t, `단계 번호는 0~${st.max}이어야 해요`);
+      }
+    }
+    for (const item of Calc.list.concat(Plot.list)) for (const e of item.errors) part(e.el, e.msg);
+    for (const box of qsa('.sort', Stage.deck)) {
+      const bins = qsa('.bin[data-bin]', box).map((b) => b.dataset.bin);
+      const cards = qsa('[data-bin]:not(.bin)', box);
+      if (!bins.length || !cards.length) part(box, '칸(.bin[data-bin])과 카드([data-bin])가 모두 있어야 해요');
+      for (const c of cards) if (!bins.includes(c.dataset.bin)) part(c, `data-bin="${c.dataset.bin}"인 칸이 없어요`);
+    }
+    for (const box of qsa('.quiz', Stage.deck)) {
+      if (!box.querySelector('.opt')) part(box, '보기(.opt)가 없어요');
+      else if (!box.querySelector('.opt[data-ok]')) part(box, '정답 보기(data-ok)가 없어요');
+    }
+    for (const fig of qsa('figure.map-reveal', Stage.deck)) {
+      const st = Stepper.all.find((s) => s.el === fig);
+      const froms = qsa('[data-from]', fig).map((p) => Number(p.dataset.from));
+      if (!froms.length) part(fig, '열릴 땅(svg 안 [data-from] 다각형)이 없어요');
+      if (st && froms.some((v) => !Number.isInteger(v) || v < 1 || v > st.max)) part(fig, `data-from은 1~${st.max}이어야 해요`);
+    }
+    for (const ol of qsa('ol.yearline', Stage.deck)) if (!ol.querySelector('li[data-year]')) part(ol, '연도(li[data-year])가 없어요');
+    for (const ol of qsa('ol.order', Stage.deck)) if (ol.querySelectorAll(':scope > li').length < 2) part(ol, '항목이 2개 이상이어야 해요');
+    // 엔진 부품 밖의 슬라이더가 최솟값이 아닌 곳에서 시작하면 단계형인지 확인하게 한다(7.2-9)
+    for (const r of qsa('input[type="range"]', Stage.deck)) {
+      if (r.closest('.calc, .ch-stops, .ch-yearline')) continue;
+      if (Number(r.defaultValue || r.getAttribute('value') || r.min || 0) !== Number(r.min || 0)) {
+        warn(at(r), 'not-veiled', `${this.describe(r)}: 단계를 여는 막대라면 '시작'(최솟값)에서 시작하세요`);
+      }
+    }
+    const ACT = '.reveal, .switch, .map-reveal, .ch-yearline, .sort, .quiz, .ch-order, .calc, .plot, input[type="range"], [data-activity]';
+    const activities = Stage.slides.filter((s) => s.querySelector(ACT)).length;
+    const total = Stage.slides.length;
+    if (total >= 3 && activities * 3 < total) warn(null, 'few-activities', `활동 장이 ${activities}/${total}장이에요. 3분의 1(${Math.ceil(total / 3)}장) 이상이 되게 하세요`);
+    const imgs = qsa('img[data-ppt]', Stage.deck);
+    return { activities, images: imgs.length, emptyImages: imgs.filter((i) => !i.getAttribute('src')).length };
   },
 
   toggle() {
@@ -136,6 +200,6 @@ const Audit = {
         item.slide == null ? h('span', { text: item.msg })
           : h('button', { type: 'button', text: `${item.slide + 1}쪽 · ${item.msg}`,
             onclick: () => Nav.go(item.slide, true) })))) : h('p', { text: '고칠 것이 없어요.' }),
-      h('p', { class: 'ch-audit-info', text: `슬라이드 ${report.info.slides}장 · AI 추가 표시 ${report.info.aiAdded}곳 (점선으로 보임)` }));
+      h('p', { class: 'ch-audit-info', text: `슬라이드 ${report.info.slides}장 · 활동 장 ${report.info.activities}장 · AI 추가 표시 ${report.info.aiAdded}곳 (점선으로 보임)` }));
   },
 };

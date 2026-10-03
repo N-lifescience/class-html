@@ -1,8 +1,8 @@
 /* 계산 상자. 슬라이더 모양은 72-stepper.css와 같다(굵은 손잡이). */
 .ch-hide { display: none !important; }
-.slide .calc input[type="range"] { width: 100%; }
-.slide .calc output { margin: 0; font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.slide .calc .bar { position: relative; height: 26px; border-radius: 13px; background: var(--ch-soft); overflow: hidden; }
-.slide .calc .bar::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--bar-c, var(--accent)); transform: scaleX(var(--f, 0)); transform-origin: 0 50%; transition: transform .2s var(--ch-ease-out); }
-.slide .calc [data-set] { min-height: 56px; }
-.slide .calc [data-set][aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }
+:where(.slide) .calc input[type="range"] { width: 100%; }
+:where(.slide) .calc output { margin: 0; font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+:where(.slide) .calc .bar { position: relative; height: 26px; border-radius: 13px; background: var(--ch-soft); overflow: hidden; }
+:where(.slide) .calc .bar::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--bar-c, var(--accent)); transform: scaleX(var(--f, 0)); transform-origin: 0 50%; transition: transform .2s var(--ch-ease-out); }
+:where(.slide) .calc [data-set] { min-height: 56px; }
+:where(.slide) .calc [data-set][aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }

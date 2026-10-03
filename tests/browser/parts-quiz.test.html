@@ -77,10 +77,23 @@ test('여러 개 고르기: 확인하면 맞게·잘못·놓침과 개수', () =
   assert(has('m1', 'is-wrong') && has('m2', 'is-right') && has('m4', 'is-miss') && !has('m3', 'is-wrong'), 'marks');
   eq(q('multi').fb.textContent, '4개 가운데 2개를 맞게 판단했다. 점선은 골라야 하는데 고르지 않은 것이다.');
 });
-test('다시 고르면 표시가 지워지고, 다 맞으면 문제의 풀이', () => {
+test('여러 개 고르기: 잘못 고른 것·놓친 것 아래에 그 보기의 이유', () => {
+  $('m2').dataset.why = '2는 짝수다.';
+  for (const id of ['m1', 'm2', 'm3', 'm4']) if (has(id, 'is-pick')) $(id).click();
+  $('m1').dataset.why = '1은 홀수다.';
   $('m1').click();
+  q('multi').check.click();
+  eq($('m1').querySelector('.ch-opt-why').textContent, '1은 홀수다.');
+  eq($('m2').querySelector('.ch-opt-why').textContent, '2는 짝수다.');
+  assert(!$('m3').querySelector('.ch-opt-why'), 'correct non-pick has no reason');
+  $('m1').click();
+  assert(!document.querySelector('#multi .ch-opt-why'), 'cleared on change');
+});
+test('다시 고르면 표시가 지워지고, 다 맞으면 문제의 풀이', () => {
+  for (const id of ['m1', 'm3']) if (has(id, 'is-pick')) $(id).click();
+  if (!has('m2', 'is-pick')) $('m2').click();
+  if (!has('m4', 'is-pick')) $('m4').click();
   assert(!has('m4', 'is-miss') && !has('m1', 'is-pick'), 'cleared');
-  $('m4').click();
   q('multi').check.click();
   eq(q('multi').fb.textContent, '2와 4가 짝수다.');
   assert(q('multi').fb.classList.contains('is-ok'), 'ok');

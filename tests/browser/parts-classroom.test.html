@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko" data-deck="test-classroom">
+<head>
+<meta charset="utf-8">
+<title>classroom</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="pointer.js"></script>
+</head>
+<body>
+<section class="slide" id="c1">
+  <div class="picker" id="pk" data-range="1-5"></div>
+  <div class="picker" id="pi" data-items="가|나"></div>
+  <div class="score" id="sc" data-teams="3"></div>
+  <div class="score" id="sn" data-teams="빨강|파랑"></div>
+</section>
+<section class="slide" id="c2">
+  <ul class="checklist" id="cl"><li>보안경</li><li>실험복</li><li>장갑</li></ul>
+  <figure class="hotspots" id="hs" style="width:400px">
+    <img alt="네모" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200'/%3E">
+    <span class="hs" style="--x:20%;--y:30%">왼쪽 위 설명</span>
+    <span class="hs" style="--x:70%;--y:60%" data-label="A">오른쪽 설명</span>
+  </figure>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const $ = (id) => document.getElementById(id);
+const pk = (id) => I().Picker.list.find((p) => p.el.id === id);
+
+test('뽑기: 범위의 수가 겹치지 않게 다 나오고, 다 뽑으면 다시 처음부터', () => {
+  const p = pk('pk');
+  eq(p.items, ['1', '2', '3', '4', '5']);
+  eq(p.face.textContent, '?');
+  const got = [];
+  for (let i = 0; i < 5; i++) got.push(I().Picker.draw(p));
+  eq(got.slice().sort(), ['1', '2', '3', '4', '5']);
+  assert(['1', '2', '3', '4', '5'].includes(I().Picker.draw(p)), 'restart');
+  p.reset.click();
+  eq(p.drawn, []);
+  eq(p.face.textContent, '?');
+});
+test('뽑기: 글자 목록, 다 굴러가면 결과와 뽑은 순서', async () => {
+  const p = pk('pi');
+  p.go.click();
+  await wait(900);
+  assert(['가', '나'].includes(p.face.textContent), p.face.textContent);
+  eq(p.face.textContent, p.drawn[0]);
+  eq(p.log.textContent, `뽑은 순서: ${p.drawn[0]}`);
+});
+test('점수판: 모둠 이름, 더하기·빼기(0 아래로는 안 감), 1등 표시, 모두 0점', () => {
+  const s = I().Score.list.find((x) => x.el.id === 'sc');
+  eq(s.teams.map((t) => t.name), ['1모둠', '2모둠', '3모둠']);
+  const plus = (i) => s.teams[i].card.querySelectorAll('button')[1].click();
+  const minus = (i) => s.teams[i].card.querySelectorAll('button')[0].click();
+  plus(1); plus(1); plus(0); minus(2);
+  eq(s.teams.map((t) => t.n), [1, 2, 0]);
+  assert(s.teams[1].card.classList.contains('is-top') && !s.teams[0].card.classList.contains('is-top'), 'top');
+  s.el.querySelector('.ch-reset').click();
+  eq(s.teams.map((t) => t.num.textContent), ['0', '0', '0']);
+  eq(I().Score.list.find((x) => x.el.id === 'sn').teams.map((t) => t.name), ['빨강', '파랑']);
+});
+test('체크리스트: 누르면 ✓와 개수, 펜으로 톡 눌러도', () => {
+  ClassHTML.go(1);
+  const li = $('cl').children;
+  const count = $('cl').nextElementSibling;
+  eq(count.textContent, '0 / 3');
+  li[0].click();
+  eq(li[0].getAttribute('aria-pressed'), 'true');
+  eq(count.textContent, '1 / 3');
+  I().Tools.set('pen');
+  const r = li[1].getBoundingClientRect();
+  ptr('pointerdown', li[1], 0, 0, { clientX: r.left + 20, clientY: r.top + 10 });
+  eq(I().Ink.gesture && I().Ink.gesture.started, false, 'tap waits');
+  ptr('pointerup', li[1], 0, 0, { clientX: r.left + 20, clientY: r.top + 10 });
+  li[1].click();
+  I().Tools.set('hand');
+  li[2].click();
+  eq(count.textContent, '3 / 3');
+  assert($('cl').classList.contains('is-all'), 'all');
+});
+test('핫스팟: 번호 단추가 그 자리에, 누르면 설명 하나만 열리고 그림을 누르면 닫힌다', () => {
+  const dots = $('hs').querySelectorAll('.ch-hs-dot');
+  eq(Array.from(dots).map((d) => d.textContent), ['1', 'A']);
+  const fig = $('hs').getBoundingClientRect();
+  const d0 = dots[0].getBoundingClientRect();
+  assert(Math.abs(d0.left + d0.width / 2 - (fig.left + fig.width * 0.2)) < 2, 'x position');
+  dots[0].click();
+  eq(getComputedStyle(dots[0].nextElementSibling).display, 'block');
+  dots[1].click();
+  eq(dots[0].getAttribute('aria-expanded'), 'false');
+  eq(dots[1].getAttribute('aria-expanded'), 'true');
+  $('hs').querySelector('img').click();
+  eq(dots[1].getAttribute('aria-expanded'), 'false');
+  assert(dots[0].getBoundingClientRect().width >= 56 * I().Stage.scale - 0.5, '56px');
+});
+</script>
+</body>
+</html>

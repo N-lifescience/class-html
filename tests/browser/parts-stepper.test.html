@@ -37,6 +37,7 @@
     <div data-only="2" id="c2">2월</div>
   </div>
   <div class="reveal" id="dense" data-nav="off" data-stops="시작|1|2|3|4|5|6|7|8"></div>
+  <div class="reveal" id="gridr" data-nav="off" style="display:grid;grid-template-columns:1fr 1fr" data-stops="시작|가"><p class="veil" id="gv"><span data-only="1">가</span></p><p>오른쪽</p></div>
 </section>
 <pre id="results" data-summary="pending"></pre>
 <script>
@@ -166,6 +167,12 @@ test('두 낱말 눈금 이름도 겹치지 않는다(어절 span은 제자리),
   assert(w[1].getBoundingClientRect().left > w[0].getBoundingClientRect().right, 'side by side');
   const lines = s.labels[2].querySelectorAll('.w');
   assert(lines[1].getBoundingClientRect().top > lines[0].getBoundingClientRect().top, 'br makes a new line');
+});
+test('grid로 배치한 단계 막대는 막대를 바깥 뒤에 두고, 가림막은 내용이 숨어도 높이를 지킨다', () => {
+  ClassHTML.go(3);
+  const s = st('gridr');
+  eq(s.el.nextElementSibling, s.input.parentElement);
+  assert(document.getElementById('gv').getBoundingClientRect().height >= 160 * I().Stage.scale - 1, 'veil min height');
 });
 test('눈금이 8개 넘으면 지금 칸과 양 끝만', () => {
   const s = st('dense');

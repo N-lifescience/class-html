@@ -3,16 +3,22 @@
 .ch-order > .ch-fb { grid-column: 1 / -1; }
 .ch-order > ol.order { display: none; }
 .ch-order-bank { display: grid; gap: 10px; }
-.slide .ch-order-item { min-height: 58px; padding: 8px 20px; border: 2px solid #AEB4BC; border-radius: 14px; background: var(--ch-card); font: 700 24px/1.3 var(--ch-font); text-align: left; }
-.slide .ch-order-item:disabled { opacity: .35; cursor: default; }
-.slide .ch-order-out h3 { margin: 0 0 8px; font-size: 24px; color: var(--ch-mute); }
-.slide .ch-order-slots { counter-reset: ch-order; margin: 0 0 10px; padding: 0; list-style: none; display: grid; gap: 8px; }
-.slide .ch-order-slots li { counter-increment: ch-order; position: relative; min-height: 52px; box-sizing: border-box; margin: 0; padding: 8px 16px 8px 56px; border: 2px solid #D5D9DF; border-radius: 12px; font-size: 24px; font-weight: 700; line-height: 1.35; }
-.slide .ch-order-slots li::before { content: counter(ch-order); position: absolute; left: 14px; top: 8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--ch-soft); font-size: 20px; }
-.slide .ch-order-slots li.is-empty { border-style: dashed; }
-.slide .ch-order-slots li.is-right { border-color: var(--ch-ok); background: var(--ch-ok-bg); }
-.slide .ch-order-slots li.is-wrong { border-color: var(--ch-bad); background: var(--ch-bad-bg); }
-.slide .ch-order-why { display: block; margin-top: 4px; font-size: 20px; font-weight: 500; color: var(--ch-mute); }
+:where(.slide) .ch-order-item { min-height: 58px; padding: 8px 20px; border: 2px solid #AEB4BC; border-radius: 14px; background: var(--ch-card); font: 700 24px/1.3 var(--ch-font); text-align: left; }
+:where(.slide) .ch-order-item:disabled { opacity: .35; cursor: default; }
+:where(.slide) .ch-order-out h3 { margin: 0 0 8px; font-size: 24px; color: var(--ch-mute); }
+:where(.slide) .ch-order-slots { counter-reset: ch-order; margin: 0 0 10px; padding: 0; list-style: none; display: grid; gap: 8px; }
+:where(.slide) .ch-order-slots li { counter-increment: ch-order; position: relative; min-height: 52px; box-sizing: border-box; margin: 0; padding: 8px 16px 8px 56px; border: 2px solid #D5D9DF; border-radius: 12px; font-size: 24px; font-weight: 700; line-height: 1.35; }
+:where(.slide) .ch-order-slots li::before { content: counter(ch-order); position: absolute; left: 14px; top: 8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--ch-soft); font-size: 20px; }
+:where(.slide) .ch-order-slots li.is-empty { border-style: dashed; }
+:where(.slide) .ch-order-slots li.is-right { border-color: var(--ch-ok); background: var(--ch-ok-bg); }
+:where(.slide) .ch-order-slots li.is-wrong { border-color: var(--ch-bad); background: var(--ch-bad-bg); }
+:where(.slide) .ch-order-why { display: block; margin-top: 4px; font-size: 20px; font-weight: 500; color: var(--ch-mute); }
+
+/* 다 쌓은 뒤: 섞인 항목은 접고, 결과는 한 줄에 '항목 · 이유' */
+.ch-order.is-done .ch-order-bank { display: none; }
+.ch-order.is-done .ch-order-out { grid-column: 1 / -1; }
+.ch-order.is-done .ch-order-why { display: inline; margin: 0 0 0 14px; }
+.ch-order.is-done .ch-order-why::before { content: "· "; }
 
 @media print {
   .ch-order-bank, .ch-order-out, .ch-order > .ch-fb { display: none !important; }

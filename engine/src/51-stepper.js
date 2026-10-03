@@ -61,6 +61,8 @@ const Stepper = {
     wrap.replaceChildren(st.input, labels);
     if (!wrap.isConnected) {
       if (mount) mount.after(wrap);
+      // 작성자가 단계 막대 자체를 grid·flex로 배치했으면 막대가 칸 하나로 끼지 않게 바로 뒤에 둔다
+      else if (/grid|flex/.test(getComputedStyle(st.el).display)) st.el.after(wrap);
       else st.el.append(wrap);
     }
     st.input.addEventListener('input', () => this.set(st, Number(st.input.value), 'input'));
@@ -79,6 +81,7 @@ const Stepper = {
     const place = this.ownPlace(st.el);
     if (place) place.replaceWith(row);
     else if (mount) mount.before(row);
+    else if (/grid|flex/.test(getComputedStyle(st.el).display)) st.el.before(row);
     else st.el.prepend(row);
     row.after(st.hint);
   },

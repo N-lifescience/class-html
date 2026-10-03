@@ -1,6 +1,7 @@
 // 공통 부품의 시작점과 정답 상자·그림 확대. 부품은 Nav가 단계를 모으기 전에 만든다(99-boot).
 const Parts = {
   init() {
+    TocSlide.init();
     Answer.init();
     Blank.init();
     Zoom.init();
@@ -12,7 +13,13 @@ const Parts = {
     Order.init();
     Calc.init();
     Plot.init();
+    Particles.init();
     PptFill.init();
+    Timer.init();
+    Picker.init();
+    Score.init();
+    Checklist.init();
+    Hotspots.init();
     Stepper.sort();   // 모든 단계 막대를 만든 뒤 문서 순서로 정렬하고 0단계로 둔다(계산 상자는 ch-stepper 이벤트로 다시 계산)
   },
 };
@@ -33,6 +40,26 @@ const Answer = {
 
   // 상자 안 첫 단계까지 연다. 다른 장의 상자는 무시한다.
   reveal(box) { Nav.revealTo(box.querySelector('.step')); },
+};
+
+// 목차 슬라이드: <section class="slide toc">에 data-sec 묶음 목록을 만든다(누르면 그 묶음의 첫 장으로).
+const TocSlide = {
+  init() {
+    for (const slide of qsa('section.slide.toc', Stage.deck)) {
+      const groups = [];
+      Stage.slides.forEach((s, i) => {
+        const sec = s.dataset.sec;
+        if (!sec || s === slide) return;
+        if (!groups.length || groups[groups.length - 1].sec !== sec) groups.push({ sec, i });
+      });
+      if (!groups.length) continue;
+      const ol = h('ol', { class: 'ch-toc-list' }, ...groups.map((g) => h('li', null, h('button', {
+        type: 'button', onclick: (e) => { Nav.go(g.i); e.currentTarget.blur(); },
+      }, h('span', { text: g.sec }), h('small', { text: `${g.i + 1}쪽` })))));
+      if (!slide.querySelector('h1, h2')) slide.prepend(h('h2', { text: '차례' }));
+      slide.append(ol);
+    }
+  },
 };
 
 // 빈칸: <span class="blank">확산</span>. 핵심어를 가렸다가 누르면 연다(다시 누르면 가린다). 펜을 든 채로도 톡 누르면 된다.
@@ -64,7 +91,7 @@ const Zoom = {
     document.body.append(this.el);
     for (const fig of qsa('figure.fig', Stage.deck)) {
       const img = fig.querySelector('img');
-      if (!img) continue;
+      if (!img || fig.dataset.zoom === 'off') continue;   // 단추가 그림 속 글자를 가리면 data-zoom="off"
       const open = () => this.open(img, fig.querySelector('figcaption'));
       img.addEventListener('click', () => { if (Tools.current === 'hand') open(); });
       fig.append(h('button', { type: 'button', class: 'ch-zoom-btn', 'aria-label': '그림 크게 보기',

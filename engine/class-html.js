@@ -1537,7 +1537,7 @@ const Settings = {
 // 어절을 nowrap span으로 감싸고 인라인 요소 사이에 WORD JOINER(U+2060)를 넣는다.
 // 원래 요소와 이벤트는 보존하며, .w 내부를 건너뛰어 다시 적용해도 중첩하지 않는다.
 const KeepWords = {
-  SKIP: 'svg, math, script, style, pre, code, textarea, select, button, canvas, .katex, .w, [data-no-keep], [contenteditable=""], [contenteditable="true"]',
+  SKIP: 'svg, math, script, style, pre, code, textarea, select, button, canvas, .katex, .ch-math, .w, [data-no-keep], [contenteditable=""], [contenteditable="true"]',
 
   apply(root) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -1712,7 +1712,7 @@ const Audit = {
       const k = `${slide}|${code}|${msg}`;
       if (seen.has(k)) return;
       seen.add(k);
-      list.push({ level, slide, code, msg });
+      list.push({ level, slide, page: slide == null ? null : slide + 1, code, msg });   // page는 화면 쪽 번호(1부터)
     };
     const err = add(errors, 'error');
     const warn = add(warnings, 'warn');
@@ -1741,13 +1741,31 @@ const Audit = {
         // 허용 영역은 요소 검사에서도 제외한다. 전체 scroll 값에는 그 영역도 포함된다.
         if (!slide.closest('[data-allow-overflow]') && !slide.querySelector('[data-allow-overflow]')
           && (slide.scrollHeight > slide.clientHeight + 1 || slide.scrollWidth > slide.clientWidth + 1)) {
-          err(i, 'slide-overflow', '내용이 슬라이드보다 커요 (장을 나누세요)');
+          const over = Math.max(slide.scrollHeight - slide.clientHeight, slide.scrollWidth - slide.clientWidth);
+          const lows = qsa('*', slide).filter((x) => x.getClientRects().length && !x.closest('svg'));
+          const low = lows.reduce((a, b) => (b.getBoundingClientRect().bottom > (a ? a.getBoundingClientRect().bottom : -Infinity) ? b : a), null);
+          const top = low ? low.closest('section.slide > *') : null;
+          err(i, 'slide-overflow', `내용이 ${over}px 넘쳐요${top ? ` (맨 아래: ${this.describe(top)})` : ''}. 여백·그림 크기를 줄이거나 장을 나누세요`);
         }
         for (const el of qsa('*', slide)) {
           const allowOverflow = !!el.closest('[data-allow-overflow]');
           // KaTeX의 스크린리더용 MathML 복제는 의도적으로 1px 안에 숨긴다.
           if (el.closest('.katex-mathml')) continue;
           if (el.closest('svg') && el.tagName.toLowerCase() !== 'svg') continue;
+          // SVG 안 글자는 viewBox 배율까지 곱한 실제 크기로 잰다(그림을 줄이면 글자도 준다)
+          if (el.tagName.toLowerCase() === 'svg' && el.querySelector('text')) {
+            const vb = el.viewBox && el.viewBox.baseVal;
+            const r = el.getBoundingClientRect();
+            const k = vb && vb.width ? (r.width / scale) / vb.width : 1;
+            let min = Infinity;
+            let which = null;
+            for (const t of el.querySelectorAll('text')) {
+              if (!t.textContent.trim()) continue;
+              const px = parseFloat(getComputedStyle(t).fontSize) * k;
+              if (px < min) { min = px; which = t; }
+            }
+            if (which && min < 19.5) err(i, 'tiny-text', `<svg> 안 글자 「${which.textContent.trim().slice(0, 12)}」가 실제 ${Math.round(min * 10) / 10}px예요 (최소 20px, 그림 폭이나 font-size를 키우세요)`);
+          }
           // 크기가 0인 빈 그림 자리도 경고한다.
           if (el.matches('img[data-ppt]') && !el.getAttribute('src')) warn(i, 'empty-image', `빈 그림 자리: 원본 PPT ${el.dataset.ppt}`);
           if (el.matches('img:not([alt])')) warn(i, 'no-alt', `${this.describe(el)}에 alt 설명이 없어요`);
@@ -1781,13 +1799,11 @@ const Audit = {
           if (!textBlocks.has(block) || size < textBlocks.get(block)) textBlocks.set(block, size);
         }
         for (const [block, size] of textBlocks) {
-          if (size < 18) err(i, 'tiny-text', `${this.describe(block)} 글자가 ${size}px로 너무 작아요 (최소 18px)`);
-          else if (size < 20 && block.matches('p, li, td, th') && !block.closest('small, .caption, figcaption, .kicker')) {
-            warn(i, 'small-text', `${this.describe(block)} 본문이 ${size}px예요 (권장 20px 이상)`);
-          }
+          if (size < 19.5) err(i, 'tiny-text', `${this.describe(block)} 글자가 ${size}px로 너무 작아요 (최소 20px)`);
         }
       };
       Stepper.openAll('audit');
+      emit('audit-expand');   // 부품: 다 맞힌 뒤·이유가 나온 뒤처럼 가장 길어지는 상태로 잠깐 바꾼다
       Stage.slides.forEach((slide, i) => measure(slide, i));
       // data-only 내용은 칸마다 다르므로 단계 막대의 칸마다 다시 잰다
       for (const st of Stepper.all) {
@@ -1796,6 +1812,7 @@ const Audit = {
         st.set(st.max, 'audit');
       }
     } finally {
+      emit('audit-restore');
       Stepper.restore(stepperSnap, 'audit');
       for (const snapshot of snapshots) {
         snapshot.slide.classList.toggle('is-active', snapshot.active);
@@ -1824,7 +1841,7 @@ const Audit = {
         if (nums.some((v) => !Number.isInteger(v) || v < 0 || v > st.max)) part(t, `단계 번호는 0~${st.max}이어야 해요`);
       }
     }
-    for (const item of Calc.list.concat(Plot.list)) for (const e of item.errors) part(e.el, e.msg);
+    for (const item of Calc.list.concat(Plot.list, Particles.list)) for (const e of item.errors) part(e.el, e.msg);
     for (const box of qsa('.sort', Stage.deck)) {
       const bins = qsa('.bin[data-bin]', box).map((b) => b.dataset.bin);
       const cards = qsa('[data-bin]:not(.bin)', box);
@@ -1850,12 +1867,35 @@ const Audit = {
         warn(at(r), 'not-veiled', `${this.describe(r)}: 단계를 여는 막대라면 '시작'(최솟값)에서 시작하세요`);
       }
     }
-    const ACT = '.reveal, .switch, .map-reveal, .ch-yearline, .sort, .quiz, .ch-order, .calc, .plot, input[type="range"], [data-activity]';
-    const activities = Stage.slides.filter((s) => s.querySelector(ACT)).length;
+    // 활동 = 입력에 따라 화면이 달라지는 부품. 글만 차례로 여는 .reveal·.switch는 그림·도식·계산이 함께 있을 때만 센다.
+    const ACT = '.map-reveal, .ch-yearline, .sort, .quiz, .ch-order, .calc, .plot, .particles, input[type="range"]:not(.ch-stops input), [data-activity]';
+    const visual = (st) => st.el.matches('[data-name]') || !!st.el.closest('.calc')
+      || !!st.el.querySelector('.veil, img, svg, figure, canvas');
+    const activities = Stage.slides.filter((s, i) => s.querySelector(ACT)
+      || (Stepper.bySlide[i] || []).some((st) => (st.el.matches('.reveal, .switch') ? visual(st) : true))).length;
     const total = Stage.slides.length;
     if (total >= 3 && activities * 3 < total) warn(null, 'few-activities', `활동 장이 ${activities}/${total}장이에요. 3분의 1(${Math.ceil(total / 3)}장) 이상이 되게 하세요`);
+    // 표지 그림(.cover-art)이 제목·글을 가리면 경고(넘침과 달리 무대 안에서 겹치는 것)
+    for (const [i, s] of Stage.slides.entries()) {
+      const art = s.querySelector('img.cover-art');
+      if (!art) continue;
+      const shown = s.classList.contains('is-active');
+      if (!shown) s.classList.add('ch-measure');
+      const a = art.getBoundingClientRect();
+      for (const el of qsa('h1, h2, h3, p, .kicker', s)) {
+        if (el.closest('.art-cap') || !el.textContent.trim()) continue;
+        // 상자 폭이 아니라 실제 글자가 놓인 범위로 잰다
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const r = range.getBoundingClientRect();
+        if (r.width && r.right > a.left + 4 && r.left < a.right && r.bottom > a.top && r.top < a.bottom) {
+          warn(i, 'overlap', `${this.describe(el)}이(가) 표지 그림과 겹쳐요(제목 폭을 줄이거나 <br>로 나누세요)`);
+        }
+      }
+      if (!shown) s.classList.remove('ch-measure');
+    }
     const imgs = qsa('img[data-ppt]', Stage.deck);
-    return { activities, images: imgs.length, emptyImages: imgs.filter((i) => !i.getAttribute('src')).length };
+    return { activities, placeholders: imgs.length, emptyPlaceholders: imgs.filter((x) => !x.getAttribute('src')).length };
   },
 
   toggle() {
@@ -1889,6 +1929,7 @@ const Audit = {
 // 공통 부품의 시작점과 정답 상자·그림 확대. 부품은 Nav가 단계를 모으기 전에 만든다(99-boot).
 const Parts = {
   init() {
+    TocSlide.init();
     Answer.init();
     Blank.init();
     Zoom.init();
@@ -1900,7 +1941,13 @@ const Parts = {
     Order.init();
     Calc.init();
     Plot.init();
+    Particles.init();
     PptFill.init();
+    Timer.init();
+    Picker.init();
+    Score.init();
+    Checklist.init();
+    Hotspots.init();
     Stepper.sort();   // 모든 단계 막대를 만든 뒤 문서 순서로 정렬하고 0단계로 둔다(계산 상자는 ch-stepper 이벤트로 다시 계산)
   },
 };
@@ -1921,6 +1968,26 @@ const Answer = {
 
   // 상자 안 첫 단계까지 연다. 다른 장의 상자는 무시한다.
   reveal(box) { Nav.revealTo(box.querySelector('.step')); },
+};
+
+// 목차 슬라이드: <section class="slide toc">에 data-sec 묶음 목록을 만든다(누르면 그 묶음의 첫 장으로).
+const TocSlide = {
+  init() {
+    for (const slide of qsa('section.slide.toc', Stage.deck)) {
+      const groups = [];
+      Stage.slides.forEach((s, i) => {
+        const sec = s.dataset.sec;
+        if (!sec || s === slide) return;
+        if (!groups.length || groups[groups.length - 1].sec !== sec) groups.push({ sec, i });
+      });
+      if (!groups.length) continue;
+      const ol = h('ol', { class: 'ch-toc-list' }, ...groups.map((g) => h('li', null, h('button', {
+        type: 'button', onclick: (e) => { Nav.go(g.i); e.currentTarget.blur(); },
+      }, h('span', { text: g.sec }), h('small', { text: `${g.i + 1}쪽` })))));
+      if (!slide.querySelector('h1, h2')) slide.prepend(h('h2', { text: '차례' }));
+      slide.append(ol);
+    }
+  },
 };
 
 // 빈칸: <span class="blank">확산</span>. 핵심어를 가렸다가 누르면 연다(다시 누르면 가린다). 펜을 든 채로도 톡 누르면 된다.
@@ -1952,7 +2019,7 @@ const Zoom = {
     document.body.append(this.el);
     for (const fig of qsa('figure.fig', Stage.deck)) {
       const img = fig.querySelector('img');
-      if (!img) continue;
+      if (!img || fig.dataset.zoom === 'off') continue;   // 단추가 그림 속 글자를 가리면 data-zoom="off"
       const open = () => this.open(img, fig.querySelector('figcaption'));
       img.addEventListener('click', () => { if (Tools.current === 'hand') open(); });
       fig.append(h('button', { type: 'button', class: 'ch-zoom-btn', 'aria-label': '그림 크게 보기',
@@ -2274,6 +2341,8 @@ const Stepper = {
     wrap.replaceChildren(st.input, labels);
     if (!wrap.isConnected) {
       if (mount) mount.after(wrap);
+      // 작성자가 단계 막대 자체를 grid·flex로 배치했으면 막대가 칸 하나로 끼지 않게 바로 뒤에 둔다
+      else if (/grid|flex/.test(getComputedStyle(st.el).display)) st.el.after(wrap);
       else st.el.append(wrap);
     }
     st.input.addEventListener('input', () => this.set(st, Number(st.input.value), 'input'));
@@ -2292,6 +2361,7 @@ const Stepper = {
     const place = this.ownPlace(st.el);
     if (place) place.replaceWith(row);
     else if (mount) mount.before(row);
+    else if (/grid|flex/.test(getComputedStyle(st.el).display)) st.el.before(row);
     else st.el.prepend(row);
     row.after(st.hint);
   },
@@ -2620,7 +2690,11 @@ const Sort = {
       if (bins.every((b) => b.parentElement === box)) box.style.setProperty('--cols', String(Math.min(bins.length, 4)));
       for (const b of bins) {
         b.setAttribute('data-tap', '');
-        b.addEventListener('click', (e) => { if (item.sel && !e.target.closest('.ch-card')) this.drop(item, item.sel, b); });
+        // 칸 안의 빈 곳이나 이미 놓인 카드를 눌러도 그 칸에 놓는다
+        b.addEventListener('click', (e) => {
+          const card = e.target.closest('.ch-card');
+          if (item.sel && (!card || card.classList.contains('is-done'))) this.drop(item, item.sel, b);
+        });
       }
       for (const c of cards) {
         c.classList.add('ch-card');
@@ -2640,6 +2714,19 @@ const Sort = {
     });
     on('print-before', () => this.printOpen());
     on('print-after', () => this.printClose());
+    // 점검: 다 맞힌 상태(카드가 칸에, 가장 긴 이유)로 재고 되돌린다
+    on('audit-expand', () => {
+      this.printOpen();
+      for (const item of this.list) {
+        item.fbSnap = [item.fb.textContent, item.fb.className];
+        const why = item.cards.map((c) => c.dataset.why || '').reduce((a, b) => (b.length > a.length ? b : a), '');
+        item.fb.textContent = `모두 맞혔다! ${why}`;
+      }
+    });
+    on('audit-restore', () => {
+      for (const item of this.list) if (item.fbSnap) [item.fb.textContent, item.fb.className] = item.fbSnap;
+      this.printClose();
+    });
   },
 
   reset(item) {
@@ -2803,6 +2890,21 @@ const Quiz = {
       }
       this.list.push(item);
     }
+    // 점검: 가장 긴 이유 줄, 여러 개 고르기는 모든 보기의 이유까지 보인 상태로 잰다
+    on('audit-expand', () => {
+      for (const item of this.list) {
+        item.fbSnap = [item.fb.textContent, item.fb.className];
+        const texts = item.opts.map((o) => o.dataset.why || '').concat(item.box.dataset.why || '', item.multi ? `${item.opts.length}개 가운데 ${Math.max(0, item.opts.length - 1)}개를 맞게 판단했다. 점선은 골라야 하는데 고르지 않은 것이다.` : '');
+        item.fb.textContent = texts.reduce((a, b) => (b.length > a.length ? b : a), '');
+        if (item.multi) for (const o of item.opts) if (!o.querySelector(':scope > .ch-opt-why')) { this.why(o, true); o.dataset.auditWhy = '1'; }
+      }
+    });
+    on('audit-restore', () => {
+      for (const item of this.list) {
+        if (item.fbSnap) [item.fb.textContent, item.fb.className] = item.fbSnap;
+        for (const o of item.opts) if (o.dataset.auditWhy) { this.why(o, false); delete o.dataset.auditWhy; }
+      }
+    });
   },
 
   pick(item, o) {
@@ -2816,13 +2918,21 @@ const Quiz = {
   },
 
   toggle(item, o) {
-    for (const x of item.opts) x.classList.remove('is-right', 'is-wrong', 'is-miss');
+    for (const x of item.opts) { x.classList.remove('is-right', 'is-wrong', 'is-miss'); this.why(x, false); }
     const on = o.getAttribute('aria-pressed') !== 'true';
     o.setAttribute('aria-pressed', String(on));
     o.classList.toggle('is-pick', on);
     item.fb.textContent = '';
     item.fb.className = 'ch-fb';
     if (o.tagName === 'BUTTON') o.blur();
+  },
+
+  // 여러 개 고르기에서 잘못 고른 것·놓친 것 아래에 그 보기의 이유(data-why)를 보인다
+  why(o, show) {
+    let w = o.querySelector(':scope > .ch-opt-why');
+    if (!show || !o.dataset.why) { if (w) w.remove(); return; }
+    if (!w) { w = h('small', { class: 'ch-opt-why' }); o.append(w); }
+    w.textContent = o.dataset.why;
   },
 
   check(item) {
@@ -2833,6 +2943,7 @@ const Quiz = {
       o.classList.toggle('is-right', pick && ok);
       o.classList.toggle('is-wrong', pick && !ok);
       o.classList.toggle('is-miss', !pick && ok);
+      this.why(o, pick !== ok);
       if (pick === ok) right += 1;
     }
     const all = right === item.opts.length;
@@ -2883,6 +2994,24 @@ const Order = {
       this.reset(item);
       this.list.push(item);
     });
+    // 점검: 다 쌓아 채점한 상태(칸마다 이유)로 재고 되돌린다
+    on('audit-expand', () => {
+      for (const item of this.list) {
+        item.auditSnap = { seq: item.seq.slice(), solved: item.solved };
+        item.solved = true;   // 점검 중에는 뒤 단계를 열지 않는다
+        item.seq = item.items.slice();
+        this.render(item);
+      }
+    });
+    on('audit-restore', () => {
+      for (const item of this.list) {
+        if (!item.auditSnap) continue;
+        item.seq = item.auditSnap.seq;
+        item.solved = item.auditSnap.solved;
+        this.render(item);
+        item.auditSnap = null;
+      }
+    });
   },
 
   render(item) {
@@ -2894,7 +3023,7 @@ const Order = {
     }));
     for (const x of item.items) x.btn.disabled = item.seq.includes(x);
     if (item.seq.length === n) this.grade(item);
-    else { item.fb.textContent = ''; item.fb.className = 'ch-fb'; }
+    else { item.wrap.classList.remove('is-done'); item.fb.textContent = ''; item.fb.className = 'ch-fb'; }
   },
 
   push(item, x) {
@@ -2917,6 +3046,7 @@ const Order = {
       }
     });
     const all = right === item.items.length;
+    item.wrap.classList.toggle('is-done', true);   // 다 쌓으면 섞인 항목 칸을 접고 결과를 넓게
     item.fb.textContent = all ? '맞다. 순서가 모두 맞다.' : `${item.items.length}개 가운데 ${right}개가 제자리다. 빨간 칸부터 다시 생각해 보자.`;
     item.fb.className = `ch-fb ${all ? 'is-ok' : 'is-bad'}`;
     if (all && !item.solved) {
@@ -3431,7 +3561,7 @@ const Pptx = {
 // <img data-ppt="12-2" alt="…">가 비어 있으면 회색 자리를 보여 준다. 원본 PPTX를 화면에 끌어다 놓거나 ⚙에서 열면 채운다.
 // 손 모드에서 그림(자리)을 누르면 「그림 바꾸기」. ⚙에 「그림 넣어 저장」, 「오프라인용 저장」.
 const IMG_MAX = 1600;
-const IMG_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', svg: 'image/svg+xml' };
+const IMG_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', jfif: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', svg: 'image/svg+xml' };
 
 const Source = {
   html: '',
@@ -3689,7 +3819,27 @@ const PptFill = {
     const inline = doc.createElement('script');
     inline.textContent = js.replace(/<\/script/gi, '<\\/script');
     script.replaceWith(inline);
+    if (MathTex.spans.length) await this.inlineMath(doc, inline, get);
     return this.serialize(doc);
+  },
+
+  // 수식이 있으면 KaTeX 스크립트와 CSS(글꼴은 woff2만 data URI로)도 넣는다. 엔진보다 먼저 두어 엔진이 다시 받지 않게 한다.
+  async inlineMath(doc, before, get) {
+    let css = await get(`${KATEX_URL}katex.min.css`);
+    const js = await get(`${KATEX_URL}katex.min.js`);
+    const fonts = [...new Set([...css.matchAll(/url\(fonts\/([^)]+\.woff2)\)/g)].map((m) => m[1]))];
+    for (const name of fonts) {
+      const res = await fetch(`${KATEX_URL}fonts/${name}`);
+      if (!res.ok) throw new Error(`수식 글꼴을 받지 못했어요(${name})`);
+      const b64 = bytesToBase64(new Uint8Array(await res.arrayBuffer()));
+      css = css.split(`url(fonts/${name}) format("woff2")`).join(`url(data:font/woff2;base64,${b64}) format("woff2")`);
+    }
+    css = css.replace(/,url\(fonts\/[^)]+\) format\("(woff|truetype)"\)/g, '');
+    const style = doc.createElement('style');
+    style.textContent = css;
+    const s = doc.createElement('script');
+    s.textContent = js.replace(/<\/script/gi, '<\\/script');
+    before.before(style, s);
   },
 
   async saveOffline() {
@@ -3713,6 +3863,576 @@ const PptFill = {
   },
 };
 
+/* ---- 62-timer.js ---- */
+// 타이머: 활동 시간을 잰다. <div class="timer" data-sec="300" data-label="모둠 활동"></div>
+// 「시작」·「멈춤」·「다시」 단추, 끝나면 '끝'과 함께 세 번 깜빡인다(1초에 세 번 넘게 번쩍이지 않는다).
+const Timer = {
+  list: [],
+
+  init() {
+    this.list = [];
+    for (const el of qsa('.timer', Stage.deck)) {
+      const total = clamp(Math.round(Number(el.dataset.sec) || 60), 1, 24 * 3600);
+      const face = h('output', { class: 'ch-timer-face', 'aria-live': 'off' });
+      const run = h('button', { type: 'button', class: 'ch-timer-run' });
+      const reset = h('button', { type: 'button', class: 'ch-reset', text: '다시' });
+      const t = { el, total, left: total, face, run, reset, timer: 0, end: 0 };
+      el.replaceChildren(
+        el.dataset.label ? h('span', { class: 'ch-timer-label', text: el.dataset.label }) : null,
+        face, h('span', { class: 'ch-timer-btns' }, run, reset));
+      run.addEventListener('click', (e) => { this.toggle(t); e.currentTarget.blur(); });
+      reset.addEventListener('click', (e) => { this.reset(t); e.currentTarget.blur(); });
+      this.list.push(t);
+      this.render(t);
+    }
+  },
+
+  fmt(sec) {
+    const s = Math.max(0, Math.ceil(sec));
+    const m = Math.floor(s / 60);
+    return `${m}:${String(s % 60).padStart(2, '0')}`;
+  },
+
+  render(t) {
+    t.face.textContent = t.left <= 0 ? '끝' : this.fmt(t.left);
+    t.run.textContent = t.timer ? '멈춤' : t.left < t.total && t.left > 0 ? '이어서' : '시작';
+    t.el.classList.toggle('is-running', !!t.timer);
+    t.el.classList.toggle('is-done', t.left <= 0);
+  },
+
+  toggle(t) {
+    if (t.timer) { this.pause(t); return; }
+    if (t.left <= 0) t.left = t.total;
+    t.end = performance.now() + t.left * 1000;
+    t.timer = setInterval(() => this.tick(t), 250);
+    this.render(t);
+  },
+
+  tick(t) {
+    t.left = (t.end - performance.now()) / 1000;
+    if (t.left <= 0) {
+      t.left = 0;
+      clearInterval(t.timer);
+      t.timer = 0;
+      t.face.setAttribute('aria-live', 'assertive');
+    }
+    this.render(t);
+  },
+
+  pause(t) {
+    clearInterval(t.timer);
+    t.timer = 0;
+    t.left = Math.max(0, (t.end - performance.now()) / 1000);
+    this.render(t);
+  },
+
+  reset(t) {
+    clearInterval(t.timer);
+    t.timer = 0;
+    t.left = t.total;
+    t.face.setAttribute('aria-live', 'off');
+    this.render(t);
+  },
+};
+
+/* ---- 63-classroom.js ---- */
+// 교실 도구: 뽑기(.picker), 모둠 점수판(.score), 체크리스트(ul.checklist), 그림 핫스팟(figure.hotspots).
+// 상태는 그 화면 안에만 둔다(저장하지 않는다). 펜을 든 채로 톡 누르면 작동한다.
+
+// 뽑기: <div class="picker" data-range="1-30"></div> 또는 data-items="가|나|다". 한 번 뽑힌 것은 모두 뽑을 때까지 다시 안 나온다.
+const Picker = {
+  list: [],
+
+  init() {
+    this.list = [];
+    for (const el of qsa('.picker', Stage.deck)) {
+      let items = String(el.dataset.items || '').split('|').map((s) => s.trim()).filter(Boolean);
+      if (!items.length) {
+        const m = /^\s*(-?\d+)\s*-\s*(-?\d+)\s*$/.exec(el.dataset.range || '1-30');
+        const [a, b] = m ? [Number(m[1]), Number(m[2])].sort((x, y) => x - y) : [1, 30];
+        items = Array.from({ length: Math.min(500, b - a + 1) }, (_, i) => String(a + i));
+      }
+      const face = h('output', { class: 'ch-picker-face', text: '?' });
+      const go = h('button', { type: 'button', class: 'ch-picker-go', text: '뽑기' });
+      const reset = h('button', { type: 'button', class: 'ch-reset', text: '다시' });
+      const log = h('p', { class: 'ch-picker-log' });
+      const p = { el, items, left: items.slice(), face, go, reset, log, drawn: [], rolling: 0 };
+      el.replaceChildren(face, h('span', { class: 'ch-row' }, go, reset), log);
+      go.addEventListener('click', (e) => { this.draw(p); e.currentTarget.blur(); });
+      reset.addEventListener('click', (e) => { this.reset(p); e.currentTarget.blur(); });
+      this.list.push(p);
+    }
+  },
+
+  // 0.6초 동안 후보를 빠르게 바꿔 보이고(글자만 바뀐다) 하나를 고른다. 결과는 바로 p.drawn에 들어간다.
+  draw(p) {
+    if (!p.left.length) p.left = p.items.slice();
+    const pick = p.left.splice(Math.floor(Math.random() * p.left.length), 1)[0];
+    p.drawn.push(pick);
+    clearInterval(p.rolling);
+    const motion = !document.documentElement.classList.contains('ch-motion-off');
+    let n = motion ? 8 : 0;
+    const show = () => {
+      if (n-- > 0) { p.face.textContent = p.items[Math.floor(Math.random() * p.items.length)]; return; }
+      clearInterval(p.rolling);
+      p.rolling = 0;
+      p.face.textContent = pick;
+      p.face.classList.remove('is-new');
+      void p.face.offsetWidth;
+      p.face.classList.add('is-new');
+      p.log.textContent = `뽑은 순서: ${p.drawn.join(', ')}`;
+    };
+    if (motion) p.rolling = setInterval(show, 75);
+    show();
+    return pick;
+  },
+
+  reset(p) {
+    clearInterval(p.rolling);
+    p.left = p.items.slice();
+    p.drawn = [];
+    p.face.textContent = '?';
+    p.log.textContent = '';
+  },
+};
+
+// 모둠 점수판: <div class="score" data-teams="1모둠|2모둠|3모둠"></div> (숫자만 쓰면 1모둠~N모둠)
+const Score = {
+  list: [],
+
+  init() {
+    this.list = [];
+    for (const el of qsa('.score', Stage.deck)) {
+      const raw = String(el.dataset.teams || '4');
+      const names = /^\d+$/.test(raw.trim()) ? Array.from({ length: clamp(Number(raw), 1, 12) }, (_, i) => `${i + 1}모둠`)
+        : raw.split('|').map((s) => s.trim()).filter(Boolean).slice(0, 12);
+      const s = { el, teams: names.map((name) => ({ name, n: 0 })), cards: [] };
+      const grid = h('div', { class: 'ch-score-grid', style: `--cols:${Math.min(names.length, 6)}` });
+      s.teams.forEach((t) => {
+        const num = h('output', { class: 'ch-score-n', text: '0' });
+        const card = h('div', { class: 'ch-score-card' }, h('b', { text: t.name }), num,
+          h('span', { class: 'ch-score-btns' },
+            h('button', { type: 'button', 'aria-label': `${t.name} 1점 빼기`, text: '−1', onclick: (e) => { this.add(s, t, -1); e.currentTarget.blur(); } }),
+            h('button', { type: 'button', 'aria-label': `${t.name} 1점 더하기`, text: '+1', onclick: (e) => { this.add(s, t, 1); e.currentTarget.blur(); } })));
+        t.num = num;
+        t.card = card;
+        grid.append(card);
+      });
+      el.replaceChildren(grid, h('button', { type: 'button', class: 'ch-reset', text: '모두 0점', onclick: (e) => { this.reset(s); e.currentTarget.blur(); } }));
+      this.list.push(s);
+      this.render(s);
+    }
+  },
+
+  add(s, t, d) { t.n = Math.max(0, t.n + d); this.render(s); },
+  reset(s) { for (const t of s.teams) t.n = 0; this.render(s); },
+
+  render(s) {
+    const top = Math.max(...s.teams.map((t) => t.n));
+    for (const t of s.teams) {
+      t.num.textContent = String(t.n);
+      t.card.classList.toggle('is-top', top > 0 && t.n === top);
+    }
+  },
+};
+
+// 체크리스트: <ul class="checklist"><li>보안경</li>…</ul>. 누르면 ✓, 아래에 몇 개 했는지.
+const Checklist = {
+  init() {
+    for (const ul of qsa('ul.checklist', Stage.deck)) {
+      const items = qsa(':scope > li', ul);
+      const count = h('p', { class: 'ch-check-count' });
+      const render = () => {
+        const done = items.filter((li) => li.getAttribute('aria-pressed') === 'true').length;
+        count.textContent = `${done} / ${items.length}`;
+        ul.classList.toggle('is-all', done === items.length);
+      };
+      for (const li of items) {
+        li.setAttribute('role', 'button');
+        li.setAttribute('aria-pressed', 'false');
+        li.setAttribute('data-tap', '');
+        li.tabIndex = 0;
+        const flip = () => { li.setAttribute('aria-pressed', String(li.getAttribute('aria-pressed') !== 'true')); render(); };
+        li.addEventListener('click', flip);
+        li.addEventListener('keydown', (e) => {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+          e.stopPropagation();
+          flip();
+        });
+      }
+      ul.after(count);
+      render();
+    }
+  },
+};
+
+// 그림 핫스팟: <figure class="hotspots"><img …><span class="hs" style="--x:30%; --y:40%">설명</span>…</figure>
+// 번호 동그라미를 누르면 그 설명이 열린다(하나만). 다시 누르거나 그림 빈 곳을 누르면 닫힌다.
+const Hotspots = {
+  init() {
+    for (const fig of qsa('figure.hotspots', Stage.deck)) {
+      const spots = qsa(':scope > .hs', fig);
+      spots.forEach((hs, i) => {
+        const tip = h('span', { class: 'ch-hs-tip' }, ...Array.from(hs.childNodes));
+        const dot = h('button', { type: 'button', class: 'ch-hs-dot', 'aria-expanded': 'false', 'aria-label': `설명 ${hs.dataset.label || i + 1}`, text: hs.dataset.label || String(i + 1) });
+        hs.replaceChildren(dot, tip);
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const open = dot.getAttribute('aria-expanded') !== 'true';
+          for (const other of spots) other.firstChild.setAttribute('aria-expanded', 'false');
+          dot.setAttribute('aria-expanded', String(open));
+          dot.blur();
+        });
+      });
+      fig.addEventListener('click', () => { for (const s of spots) s.firstChild.setAttribute('aria-expanded', 'false'); });
+    }
+    on('show', () => { for (const d of qsa('.ch-hs-dot[aria-expanded="true"]', Stage.deck)) d.setAttribute('aria-expanded', 'false'); });
+  },
+};
+
+/* ---- 64-anim.js ---- */
+// 모션 어휘(설계서 5.5): <h2 data-anim="fade-up">, <ul data-stagger><li data-anim="pop">…, <b data-anim="count">86</b>
+// 슬라이드가 보일 때마다 다시 재생한다. ⚙ 「움직임 끄기」면 재생하지 않고 끝 상태로 둔다.
+// fade-up·fade·pop·wipe·type·highlight는 transform·opacity만, draw는 SVG 선 그리기(stroke-dashoffset), count는 숫자 세어 올리기.
+const ANIM_KINDS = ['fade-up', 'fade', 'pop', 'wipe', 'draw', 'count', 'highlight', 'type'];
+const ANIM_STAGGER = 0.06;
+
+const Anim = {
+  els: [],
+
+  init() {
+    this.els = qsa('[data-anim]', Stage.deck).filter((el) => ANIM_KINDS.includes(el.dataset.anim));
+    for (const box of qsa('[data-stagger]', Stage.deck)) {
+      const step = Number(box.dataset.stagger) || ANIM_STAGGER;
+      qsa('[data-anim]', box).forEach((el, i) => { if (!el.dataset.delay) el.style.setProperty('--ch-delay', `${(i * step).toFixed(2)}s`); });
+    }
+    for (const el of this.els) {
+      if (el.dataset.delay) el.style.setProperty('--ch-delay', `${Number(el.dataset.delay) || 0}s`);
+      if (el.dataset.anim === 'draw') {
+        // 선의 길이를 1로 맞춰 길이와 상관없이 같은 시간에 그린다
+        for (const p of [el, ...qsa('path, line, polyline, polygon, circle, ellipse, rect', el)]) if (p.matches('path, line, polyline, polygon, circle, ellipse, rect')) p.setAttribute('pathLength', '1');
+      }
+      if (el.dataset.anim === 'count') {
+        const m = /^(\D*?)(-?[\d,]*\.?\d+)(.*)$/s.exec(el.textContent.replace(/⁠/g, '').trim());
+        if (m) el.chCount = { pre: m[1], to: Number(m[2].replace(/,/g, '')), digits: (m[2].split('.')[1] || '').length, comma: m[2].includes(','), post: m[3] };
+      }
+    }
+    on('show', (slide) => this.play(slide));
+    this.play(Stage.slides[Nav.state.slide]);
+  },
+
+  off() { return document.documentElement.classList.contains('ch-motion-off'); },
+
+  play(slide) {
+    if (!slide) return;
+    const list = this.els.filter((el) => slide.contains(el));
+    for (const el of list) el.classList.remove('ch-anim-on');
+    if (this.off()) { for (const el of list) if (el.chCount) this.setCount(el, 1); return; }
+    void slide.offsetWidth;   // 같은 장을 다시 보여 줄 때도 처음부터
+    for (const el of list) {
+      el.classList.add('ch-anim-on');
+      if (el.chCount) this.count(el);
+    }
+  },
+
+  setCount(el, f) {
+    const c = el.chCount;
+    let v = (c.to * f).toFixed(c.digits);
+    if (c.comma) v = Number(v).toLocaleString('ko-KR', { minimumFractionDigits: c.digits, maximumFractionDigits: c.digits });
+    el.textContent = `${c.pre}${v}${c.post}`;
+  },
+
+  // 0.8초 동안 이즈 아웃으로 세어 올린다(글자만 바뀐다).
+  count(el) {
+    cancelAnimationFrame(el.chRaf);
+    const delay = parseFloat(getComputedStyle(el).getPropertyValue('--ch-delay')) || 0;
+    const t0 = performance.now() + delay * 1000;
+    const tick = (now) => {
+      if (this.off()) { this.setCount(el, 1); return; }
+      const f = clamp((now - t0) / 800, 0, 1);
+      this.setCount(el, 1 - (1 - f) ** 3);
+      if (f < 1) el.chRaf = requestAnimationFrame(tick);
+    };
+    this.setCount(el, 0);
+    el.chRaf = requestAnimationFrame(tick);
+  },
+};
+
+/* ---- 65-math.js ---- */
+// 수식: $…$(줄 안), $$…$$(가운데 한 줄), \( … \), \[ … \]. 수식이 있는 수업에서만 KaTeX를 CDN에서 불러온다.
+// 어절 보정보다 먼저 수식 자리(span.ch-math)를 잡아 두고, KaTeX가 오면 그 자리에 그린다.
+// '$5와 $10'처럼 $ 바로 안쪽이 빈칸이면 수식으로 보지 않는다. 글자 그대로 $를 쓰려면 \$.
+const KATEX_URL = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/';
+const MATH_RE = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|(?<!\\)\$(?=\S)((?:\\\$|[^$\n])+?)(?<=\S)\$(?!\d)/g;
+
+const MathTex = {
+  spans: [],
+  ready: Promise.resolve(),
+
+  init() {
+    this.spans = [];
+    const walker = document.createTreeWalker(Stage.deck, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (n.parentElement && !n.parentElement.closest('script, style, pre, code, textarea, svg, .ch-math, [data-no-math]')
+        && /\$|\\[([]/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT),
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) this.mark(node);
+    if (!this.spans.length) return;
+    this.ready = this.load().then(() => this.render(), (err) => {
+      console.warn('[class-html] 수식 글꼴·스크립트를 불러오지 못했어요', err);
+      for (const s of this.spans) s.classList.add('ch-math-raw');
+    });
+  },
+
+  mark(node) {
+    const text = node.nodeValue;
+    MATH_RE.lastIndex = 0;
+    let m;
+    let last = 0;
+    const frag = document.createDocumentFragment();
+    while ((m = MATH_RE.exec(text))) {
+      if (m.index > last) frag.append(text.slice(last, m.index).replace(/\\\$/g, '$'));
+      const display = m[1] != null || m[2] != null;
+      const tex = (m[1] ?? m[2] ?? m[3] ?? m[4]).replace(/\\\$/g, '\\$');
+      const span = h('span', { class: `ch-math${display ? ' is-display' : ''}`, 'data-tex': tex, text: tex });
+      this.spans.push(span);
+      frag.append(span);
+      last = MATH_RE.lastIndex;
+    }
+    if (last === 0) {   // 이 글에는 수식이 없다
+      if (text.includes('\\$')) node.nodeValue = text.replace(/\\\$/g, '$');
+      return;
+    }
+    if (last < text.length) frag.append(text.slice(last).replace(/\\\$/g, '$'));
+    node.replaceWith(frag);
+  },
+
+  load() {
+    if (window.katex) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      document.head.append(h('link', { rel: 'stylesheet', href: `${KATEX_URL}katex.min.css`, crossorigin: 'anonymous' }));
+      const s = h('script', { src: `${KATEX_URL}katex.min.js`, crossorigin: 'anonymous' });
+      s.addEventListener('load', () => resolve());
+      s.addEventListener('error', () => reject(new Error('katex')));
+      document.head.append(s);
+    });
+  },
+
+  render() {
+    for (const span of this.spans) {
+      try {
+        window.katex.render(span.dataset.tex, span, { displayMode: span.classList.contains('is-display'), throwOnError: false, output: 'htmlAndMathml' });
+      } catch (err) { span.classList.add('ch-math-raw'); }
+    }
+  },
+};
+
+/* ---- 66-particles.js ---- */
+// 입자 상자(과학): 확산·삼투·기체 운동. 입자 종류마다 왼쪽·오른쪽 처음 개수, 막 통과 확률을 정한다.
+// 작성 모양: <figure class="particles" data-membrane="0.5" data-labels="세포 밖|세포 안" data-height="300">
+//   <i data-kind="물" data-left="40" data-right="10" data-pass="1" data-color="#5AA9E6" data-size="4"></i>
+//   <i data-kind="설탕" data-left="20" data-right="0" data-pass="0" data-color="#C04F15" data-size="8"></i></figure>
+// 값은 식이다. .calc 안에 있으면 그 변수를 쓰고, 값이 바뀌면 처음부터 다시 놓는다. 입자는 모두 300개까지.
+const PARTICLE_MAX = 300;
+
+const Particles = {
+  list: [],
+
+  init() {
+    this.list = [];
+    qsa('figure.particles', Stage.deck).forEach((fig, n) => {
+      const calc = Calc.of(fig);
+      const errors = [];
+      const c = (src, def, label) => {
+        const r = Expr.compile(src == null || src === '' ? String(def) : src);
+        if (!r.ok) { errors.push({ el: fig, msg: `${label}: ${r.error}` }); return () => def; }
+        return r.fn;
+      };
+      const kinds = qsa(':scope > i[data-kind]', fig).map((el, k) => {
+        el.hidden = true;
+        return {
+          name: el.dataset.kind, color: el.dataset.color || PLOT_COLORS[k % PLOT_COLORS.length], size: clamp(Number(el.dataset.size) || 6, 2, 16),
+          left: c(el.dataset.left, 20, 'data-left'), right: c(el.dataset.right, 0, 'data-right'), pass: c(el.dataset.pass, 1, 'data-pass'),
+        };
+      });
+      const canvas = h('canvas', { class: 'ch-particles-cv', 'aria-hidden': 'true' });
+      const run = h('button', { type: 'button', class: 'ch-particles-run', text: '▶ 움직이기' });
+      const reset = h('button', { type: 'button', class: 'ch-reset', text: '다시' });
+      const counts = h('p', { class: 'ch-particles-counts', 'aria-live': 'off' });
+      const labels = String(fig.dataset.labels || '왼쪽|오른쪽').split('|');
+      const item = {
+        fig, calc, kinds, errors, canvas, run, reset, counts, labels, n,
+        membrane: fig.dataset.membrane != null && fig.dataset.membrane !== '' ? clamp(Number(fig.dataset.membrane), 0.05, 0.95) : null,
+        speed: c(fig.dataset.speed, 1, 'data-speed'), h: Math.round(Number(fig.dataset.height) || 280), w: 0,
+        parts: [], running: false, raf: 0, last: 0, rnd: seededRandom(`${fig.closest('section.slide')?.dataset.key}#particles${n}`), sig: '',
+      };
+      fig.append(canvas, h('div', { class: 'ch-row' }, run, reset), counts);
+      run.addEventListener('click', (e) => { this.toggle(item); e.currentTarget.blur(); });
+      reset.addEventListener('click', (e) => { this.place(item); this.draw(item); e.currentTarget.blur(); });
+      if (calc) calc.listeners.push(() => this.changed(item));
+      this.list.push(item);
+      this.layout(item);
+      this.place(item);
+      this.draw(item);
+    });
+    on('show', (slide) => {
+      for (const item of this.list) {
+        if (!slide.contains(item.fig)) { this.stop(item); continue; }
+        this.layout(item);
+        this.draw(item);
+        if (!document.documentElement.classList.contains('ch-motion-off')) this.start(item);   // 움직임 끄기면 「움직이기」를 눌러야 움직인다
+      }
+    });
+    on('hide', (slide) => { for (const item of this.list) if (slide.contains(item.fig)) this.stop(item); });
+  },
+
+  scope(item) { return item.calc ? item.calc.scope : {}; },
+  val(fn, item) { try { return Number(fn(this.scope(item))); } catch (err) { return NaN; } },
+
+  layout(item) {
+    const slide = item.fig.closest('section.slide');
+    const hidden = slide && getComputedStyle(slide).display === 'none';
+    if (hidden) slide.classList.add('ch-measure');
+    const w = Math.round(item.fig.clientWidth);
+    if (hidden) slide.classList.remove('ch-measure');
+    if (!w || w === item.w) return;
+    const sx = item.w ? w / item.w : 1;
+    for (const p of item.parts) p.x *= sx;
+    item.w = w;
+    const ratio = Math.max(1, (window.devicePixelRatio || 1) * Stage.scale);
+    item.canvas.width = Math.round(w * ratio);
+    item.canvas.height = Math.round(item.h * ratio);
+    item.canvas.style.width = `${w}px`;
+    item.canvas.style.height = `${item.h}px`;
+    item.canvas.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0);
+  },
+
+  // 입자를 처음 개수대로 양쪽에 고르게 흩어 놓는다.
+  place(item) {
+    const w = item.w || 560;
+    const mx = item.membrane == null ? w : w * item.membrane;
+    const parts = [];
+    let total = 0;
+    for (const [k, kind] of item.kinds.entries()) {
+      for (const side of ['left', 'right']) {
+        let count = Math.round(this.val(kind[side], item));
+        if (!Number.isFinite(count) || count < 0) count = 0;
+        if (item.membrane == null && side === 'right') count = 0;
+        count = Math.min(count, PARTICLE_MAX - total);
+        total += count;
+        const [x0, x1] = side === 'left' ? [0, mx] : [mx, w];
+        for (let i = 0; i < count; i++) {
+          const a = item.rnd() * Math.PI * 2;
+          parts.push({ k, x: x0 + kind.size + item.rnd() * Math.max(1, x1 - x0 - kind.size * 2), y: kind.size + item.rnd() * (item.h - kind.size * 2), vx: Math.cos(a), vy: Math.sin(a) });
+        }
+      }
+    }
+    item.parts = parts;
+    item.sig = this.signature(item);
+    this.count(item);
+  },
+
+  signature(item) { return item.kinds.map((k) => [k.left, k.right].map((f) => this.val(f, item)).join(',')).join(';'); },
+
+  // 계산 상자 값이 바뀌면 개수가 달라졌을 때만 다시 놓는다(통과 확률·속도는 움직이는 중에 바로 반영).
+  changed(item) {
+    if (this.signature(item) !== item.sig) { this.place(item); this.draw(item); }
+  },
+
+  // dt초만큼 움직인다. 벽에서 튕기고, 막에 닿으면 통과 확률(pass)만큼 지나간다.
+  step(item, dt) {
+    const w = item.w || 560;
+    const mx = item.membrane == null ? null : w * item.membrane;
+    const v = 90 * clamp(this.val(item.speed, item) || 0, 0, 5);
+    const pass = item.kinds.map((k) => clamp(this.val(k.pass, item) || 0, 0, 1));
+    for (const p of item.parts) {
+      const r = item.kinds[p.k].size;
+      // 조금씩 방향이 흔들린다(브라운 운동)
+      const a = Math.atan2(p.vy, p.vx) + (item.rnd() - 0.5) * 0.8;
+      p.vx = Math.cos(a);
+      p.vy = Math.sin(a);
+      let nx = p.x + p.vx * v * dt;
+      let ny = p.y + p.vy * v * dt;
+      if (nx < r) { nx = r; p.vx = Math.abs(p.vx); }
+      if (nx > w - r) { nx = w - r; p.vx = -Math.abs(p.vx); }
+      if (ny < r) { ny = r; p.vy = Math.abs(p.vy); }
+      if (ny > item.h - r) { ny = item.h - r; p.vy = -Math.abs(p.vy); }
+      if (mx != null && (p.x - mx) * (nx - mx) < 0 && item.rnd() >= pass[p.k]) {
+        nx = p.x < mx ? mx - r * 0.5 : mx + r * 0.5;   // 막에 막혀 되돌아간다
+        p.vx = -p.vx;
+      }
+      p.x = nx;
+      p.y = ny;
+    }
+  },
+
+  count(item) {
+    const w = item.w || 560;
+    const mx = item.membrane == null ? null : w * item.membrane;
+    item.tally = item.kinds.map((k, i) => {
+      const mine = item.parts.filter((p) => p.k === i);
+      const left = mx == null ? mine.length : mine.filter((p) => p.x < mx).length;
+      return { left, right: mine.length - left };
+    });
+    item.counts.replaceChildren(...item.kinds.map((k, i) => h('span', { class: 'ch-particles-kind', style: `--c:${k.color}` },
+      h('b', { text: k.name }), mx == null ? ` ${item.tally[i].left}개` : ` ${item.labels[0]} ${item.tally[i].left} · ${item.labels[1] || ''} ${item.tally[i].right}`)));
+  },
+
+  draw(item) {
+    const ctx = item.canvas.getContext('2d');
+    const w = item.w || 560;
+    ctx.clearRect(0, 0, w, item.h);
+    if (item.membrane != null) {
+      const mx = w * item.membrane;
+      ctx.save();
+      ctx.strokeStyle = '#8F8F8F';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([10, 8]);
+      ctx.beginPath();
+      ctx.moveTo(mx, 0);
+      ctx.lineTo(mx, item.h);
+      ctx.stroke();
+      ctx.restore();
+    }
+    for (const p of item.parts) {
+      const k = item.kinds[p.k];
+      ctx.fillStyle = k.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, k.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  },
+
+  start(item) {
+    if (item.running) return;
+    item.running = true;
+    item.run.textContent = '❚❚ 멈추기';
+    item.last = performance.now();
+    let tally = 0;
+    const tick = (now) => {
+      if (!item.running) return;
+      const dt = Math.min(0.05, (now - item.last) / 1000);
+      item.last = now;
+      this.step(item, dt);
+      this.draw(item);
+      if ((tally += dt) > 0.25) { tally = 0; this.count(item); }
+      item.raf = requestAnimationFrame(tick);
+    };
+    item.raf = requestAnimationFrame(tick);
+  },
+
+  stop(item) {
+    item.running = false;
+    cancelAnimationFrame(item.raf);
+    item.run.textContent = '▶ 움직이기';
+    this.count(item);
+  },
+
+  toggle(item) { if (item.running) this.stop(item); else this.start(item); },
+};
+
 /* ---- 99-boot.js ---- */
 // 시작 순서. 엔진이 두 번 포함돼도 한 번만 실행한다.
 let readyResolve;
@@ -3721,10 +4441,12 @@ ClassHTML.ready = new Promise((resolve) => { readyResolve = resolve; });
 async function start() {
   Source.capture();   // 엔진이 DOM을 바꾸기 전의 원본(저장할 때 쓴다)
   Stage.init();
+  MathTex.init();   // 어절 보정보다 먼저: $…$ 자리를 잡는다
   Parts.init();   // Nav보다 먼저: 정답 상자 내용을 단계로 묶는다
   Panels.init();   // Nav보다 먼저: 첫 show 이벤트로 목차 현재 위치를 표시
   Nav.init();
   KeepWords.apply(Stage.deck);   // 목차 제목을 뽑은 뒤 어절을 감싼다
+  Anim.init();     // 어절 보정 뒤: 세어 올리기 숫자를 글자로 다시 쓴다
   await Store.init();
   await Session.init();
   Ink.init();      // Session.doc이 있어야 한다
@@ -3732,6 +4454,8 @@ async function start() {
   Board.init();    // 툴바 자리(slots.board)에 버튼을 넣는다
   await Settings.init();
   Print.init();
+  // 수식이 있으면 그려질 때까지(최대 5초) 기다린다. 그래야 ready 뒤 점검이 그린 수식을 잰다.
+  await Promise.race([MathTex.ready, new Promise((r) => setTimeout(r, 5000))]);
   Audit.init();    // ?audit도 모든 준비가 끝난 다음 실행한다
 }
 
@@ -3742,7 +4466,7 @@ function boot() {
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
   ClassHTML.audit = () => Audit.run();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, Answer, Blank, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order, Calc, Plot, Zip, Pptx, Source, PptFill };
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, TocSlide, Answer, Blank, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order, Calc, Plot, Zip, Pptx, Source, PptFill, Timer, Picker, Score, Checklist, Hotspots, Anim, MathTex, Particles };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

@@ -1,0 +1,10 @@
+/* 타이머 */
+:where(.slide) .timer { display: inline-flex; align-items: center; gap: 18px; padding: 10px 14px 10px 22px; border-radius: 18px; background: var(--ch-soft); }
+.ch-timer-label { font-size: 22px; font-weight: 700; color: var(--ch-mute); }
+:where(.slide) .ch-timer-face { margin: 0; min-width: 3.4em; font: 800 56px/1 var(--ch-font); font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: var(--ch-ink); text-align: center; }
+.ch-timer-btns { display: inline-flex; gap: 10px; }
+:where(.slide) .ch-timer-run { min-height: 56px; min-width: 104px; border-color: var(--accent); background: var(--accent); color: #fff; font-size: 24px; }
+:where(.slide) .timer.is-running .ch-timer-run { background: var(--ch-card); color: var(--accent); }
+:where(.slide) .timer.is-done .ch-timer-face { color: var(--ch-bad); animation: ch-timer-flash .6s ease-in-out 3; }
+@keyframes ch-timer-flash { 50% { opacity: .25; } }
+@media print { .ch-timer-btns { display: none !important; } }

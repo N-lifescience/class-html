@@ -1,11 +1,11 @@
 /* 단계 막대: 슬라이더(굵은 손잡이)와 눈금 이름. 색은 --stop-c(기본 --accent). */
 .ch-stops { position: relative; margin: 6px 0 0; padding-bottom: 48px; }
-.ch-stops input[type="range"], .slide .calc input[type="range"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 56px; margin: 0; background: transparent; cursor: pointer; --p: 0%; }
-.ch-stops input[type="range"]::-webkit-slider-runnable-track, .slide .calc input[type="range"]::-webkit-slider-runnable-track { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--stop-c, var(--accent)) var(--p), #D5D9DF var(--p)); }
-.ch-stops input[type="range"]::-webkit-slider-thumb, .slide .calc input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 46px; height: 46px; margin-top: -17px; border-radius: 50%; background: var(--ch-card); border: 7px solid var(--stop-c, var(--accent)); box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
-.ch-stops input[type="range"]::-moz-range-track, .slide .calc input[type="range"]::-moz-range-track { height: 12px; border-radius: 6px; background: #D5D9DF; }
-.ch-stops input[type="range"]::-moz-range-progress, .slide .calc input[type="range"]::-moz-range-progress { height: 12px; border-radius: 6px; background: var(--stop-c, var(--accent)); }
-.ch-stops input[type="range"]::-moz-range-thumb, .slide .calc input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: var(--ch-card); border: 7px solid var(--stop-c, var(--accent)); }
+.ch-stops input[type="range"], :where(.slide) .calc input[type="range"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 56px; margin: 0; background: transparent; cursor: pointer; --p: 0%; }
+.ch-stops input[type="range"]::-webkit-slider-runnable-track, :where(.slide) .calc input[type="range"]::-webkit-slider-runnable-track { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--stop-c, var(--accent)) var(--p), #D5D9DF var(--p)); }
+.ch-stops input[type="range"]::-webkit-slider-thumb, :where(.slide) .calc input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 46px; height: 46px; margin-top: -17px; border-radius: 50%; background: var(--ch-card); border: 7px solid var(--stop-c, var(--accent)); box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
+.ch-stops input[type="range"]::-moz-range-track, :where(.slide) .calc input[type="range"]::-moz-range-track { height: 12px; border-radius: 6px; background: #D5D9DF; }
+.ch-stops input[type="range"]::-moz-range-progress, :where(.slide) .calc input[type="range"]::-moz-range-progress { height: 12px; border-radius: 6px; background: var(--stop-c, var(--accent)); }
+.ch-stops input[type="range"]::-moz-range-thumb, :where(.slide) .calc input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: var(--ch-card); border: 7px solid var(--stop-c, var(--accent)); }
 .ch-stop-labels { position: absolute; left: 23px; right: 23px; bottom: 0; height: 48px; pointer-events: none; }
 .ch-stop-labels > span { position: absolute; top: 2px; transform: translateX(-50%); font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--ch-mute); white-space: pre; text-align: center; }
 .ch-stop-labels > span.is-on { color: var(--ch-ink); }
@@ -13,9 +13,9 @@
 
 /* 단추형(비교 전환) */
 .ch-switch-btns { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 18px; }
-.slide .ch-switch-btn { min-height: 64px; padding: 0 30px; border: 2px solid var(--stop-c, var(--accent)); border-radius: 14px; background: var(--ch-card); color: var(--ch-ink); font: 700 26px/1.2 var(--ch-font); white-space: pre; }
-.slide .ch-switch-btn[aria-pressed="true"] { background: var(--stop-c, var(--accent)); color: #fff; }
-.slide .ch-switch-hint { margin: 0 0 12px; color: var(--ch-mute); font-size: 26px; }
+:where(.slide) .ch-switch-btn { min-height: 64px; padding: 0 30px; border: 2px solid var(--stop-c, var(--accent)); border-radius: 14px; background: var(--ch-card); color: var(--ch-ink); font: 700 26px/1.2 var(--ch-font); white-space: pre; }
+:where(.slide) .ch-switch-btn[aria-pressed="true"] { background: var(--stop-c, var(--accent)); color: #fff; }
+:where(.slide) .ch-switch-hint { margin: 0 0 12px; color: var(--ch-mute); font-size: 26px; }
 
 /* 단계에 묶인 요소: data-at은 자리를 지키며 나타나고, data-only는 그 칸에서만 자리를 차지한다 */
 .ch-at { transition: opacity .3s var(--ch-ease-out), transform .3s var(--ch-ease-out), visibility 0s; }
@@ -26,6 +26,7 @@
 
 /* 0단계 가림막: .veil 영역(또는 지도)을 빗금으로 덮고 안내 글을 띄운다 */
 .ch-stepper .veil { position: relative; }
+.ch-stepper.is-veiled .veil { min-height: 160px; }   /* 안쪽이 모두 data-only로 숨어도 가림막이 보이게 */
 .ch-stepper.is-veiled .veil::after, .ch-veil-self.is-veiled::after { content: attr(data-veil); position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 20px; border: 2px dashed #C3C9D1; border-radius: 10px; background: repeating-linear-gradient(135deg, #E7EAEE 0 22px, #DFE3E8 22px 44px); color: var(--ch-mute); font: 800 28px/1.4 var(--ch-font); text-align: center; }
 .ch-stepper.is-veiled .veil > * { visibility: hidden; }
 

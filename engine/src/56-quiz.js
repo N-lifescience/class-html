@@ -46,6 +46,21 @@ const Quiz = {
       }
       this.list.push(item);
     }
+    // 점검: 가장 긴 이유 줄, 여러 개 고르기는 모든 보기의 이유까지 보인 상태로 잰다
+    on('audit-expand', () => {
+      for (const item of this.list) {
+        item.fbSnap = [item.fb.textContent, item.fb.className];
+        const texts = item.opts.map((o) => o.dataset.why || '').concat(item.box.dataset.why || '', item.multi ? `${item.opts.length}개 가운데 ${Math.max(0, item.opts.length - 1)}개를 맞게 판단했다. 점선은 골라야 하는데 고르지 않은 것이다.` : '');
+        item.fb.textContent = texts.reduce((a, b) => (b.length > a.length ? b : a), '');
+        if (item.multi) for (const o of item.opts) if (!o.querySelector(':scope > .ch-opt-why')) { this.why(o, true); o.dataset.auditWhy = '1'; }
+      }
+    });
+    on('audit-restore', () => {
+      for (const item of this.list) {
+        if (item.fbSnap) [item.fb.textContent, item.fb.className] = item.fbSnap;
+        for (const o of item.opts) if (o.dataset.auditWhy) { this.why(o, false); delete o.dataset.auditWhy; }
+      }
+    });
   },
 
   pick(item, o) {
@@ -59,13 +74,21 @@ const Quiz = {
   },
 
   toggle(item, o) {
-    for (const x of item.opts) x.classList.remove('is-right', 'is-wrong', 'is-miss');
+    for (const x of item.opts) { x.classList.remove('is-right', 'is-wrong', 'is-miss'); this.why(x, false); }
     const on = o.getAttribute('aria-pressed') !== 'true';
     o.setAttribute('aria-pressed', String(on));
     o.classList.toggle('is-pick', on);
     item.fb.textContent = '';
     item.fb.className = 'ch-fb';
     if (o.tagName === 'BUTTON') o.blur();
+  },
+
+  // 여러 개 고르기에서 잘못 고른 것·놓친 것 아래에 그 보기의 이유(data-why)를 보인다
+  why(o, show) {
+    let w = o.querySelector(':scope > .ch-opt-why');
+    if (!show || !o.dataset.why) { if (w) w.remove(); return; }
+    if (!w) { w = h('small', { class: 'ch-opt-why' }); o.append(w); }
+    w.textContent = o.dataset.why;
   },
 
   check(item) {
@@ -76,6 +99,7 @@ const Quiz = {
       o.classList.toggle('is-right', pick && ok);
       o.classList.toggle('is-wrong', pick && !ok);
       o.classList.toggle('is-miss', !pick && ok);
+      this.why(o, pick !== ok);
       if (pick === ok) right += 1;
     }
     const all = right === item.opts.length;

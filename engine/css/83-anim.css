@@ -1,0 +1,23 @@
+/* 모션 어휘. 나타남 0.3초 이즈 아웃(설계서 5.5), 묶음은 --ch-delay로 0.06초씩. */
+.ch-anim-on[data-anim] { animation-duration: .3s; animation-timing-function: var(--ch-ease-out); animation-fill-mode: both; animation-delay: var(--ch-delay, 0s); }
+.ch-anim-on[data-anim="fade-up"] { animation-name: ch-a-fade-up; }
+.ch-anim-on[data-anim="fade"] { animation-name: ch-a-fade; }
+.ch-anim-on[data-anim="pop"] { animation-name: ch-a-pop; }
+@keyframes ch-a-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes ch-a-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ch-a-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+/* wipe·type: 바탕색 가림막이 오른쪽으로 걷힌다(type은 계단식) */
+[data-anim="wipe"], [data-anim="type"] { position: relative; }
+.ch-anim-on[data-anim="wipe"]::after, .ch-anim-on[data-anim="type"]::after { content: ""; position: absolute; inset: -2px; background: var(--ch-paper); transform-origin: 100% 50%; animation: ch-a-wipe .5s var(--ch-ease-out) var(--ch-delay, 0s) both; pointer-events: none; }
+.ch-anim-on[data-anim="type"]::after { animation-duration: .9s; animation-timing-function: steps(18); }
+@keyframes ch-a-wipe { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+/* highlight: 형광 띠가 왼쪽에서 그어진다 */
+[data-anim="highlight"] { position: relative; z-index: 0; background: none; }
+[data-anim="highlight"]::before { content: ""; position: absolute; left: -.1em; right: -.1em; bottom: .05em; height: .45em; z-index: -1; background: var(--ch-hl); transform-origin: 0 50%; }
+.ch-anim-on[data-anim="highlight"]::before { animation: ch-a-hl .4s var(--ch-ease-out) var(--ch-delay, 0s) both; }
+@keyframes ch-a-hl { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* draw: SVG 선을 따라 그린다(pathLength=1) */
+.ch-anim-on[data-anim="draw"] :is(path, line, polyline, polygon, circle, ellipse, rect), .ch-anim-on[data-anim="draw"]:is(path, line, polyline, polygon) { stroke-dasharray: 1; animation: ch-a-draw .8s ease-in-out var(--ch-delay, 0s) both; }
+@keyframes ch-a-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.ch-motion-off [data-anim], .ch-motion-off [data-anim]::before, .ch-motion-off [data-anim]::after { animation: none !important; }
+@media print { [data-anim], [data-anim]::before, [data-anim]::after { animation: none !important; } }

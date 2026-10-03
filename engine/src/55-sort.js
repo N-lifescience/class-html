@@ -52,7 +52,11 @@ const Sort = {
       if (bins.every((b) => b.parentElement === box)) box.style.setProperty('--cols', String(Math.min(bins.length, 4)));
       for (const b of bins) {
         b.setAttribute('data-tap', '');
-        b.addEventListener('click', (e) => { if (item.sel && !e.target.closest('.ch-card')) this.drop(item, item.sel, b); });
+        // 칸 안의 빈 곳이나 이미 놓인 카드를 눌러도 그 칸에 놓는다
+        b.addEventListener('click', (e) => {
+          const card = e.target.closest('.ch-card');
+          if (item.sel && (!card || card.classList.contains('is-done'))) this.drop(item, item.sel, b);
+        });
       }
       for (const c of cards) {
         c.classList.add('ch-card');
@@ -72,6 +76,19 @@ const Sort = {
     });
     on('print-before', () => this.printOpen());
     on('print-after', () => this.printClose());
+    // 점검: 다 맞힌 상태(카드가 칸에, 가장 긴 이유)로 재고 되돌린다
+    on('audit-expand', () => {
+      this.printOpen();
+      for (const item of this.list) {
+        item.fbSnap = [item.fb.textContent, item.fb.className];
+        const why = item.cards.map((c) => c.dataset.why || '').reduce((a, b) => (b.length > a.length ? b : a), '');
+        item.fb.textContent = `모두 맞혔다! ${why}`;
+      }
+    });
+    on('audit-restore', () => {
+      for (const item of this.list) if (item.fbSnap) [item.fb.textContent, item.fb.className] = item.fbSnap;
+      this.printClose();
+    });
   },
 
   reset(item) {

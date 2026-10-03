@@ -1,5 +1,5 @@
 /* 그림 지도 단계 공개. 다각형 선 굵기는 그림 크기와 상관없이 화면 기준(non-scaling-stroke). */
-.slide figure.map-reveal { position: relative; margin: 0; }
+:where(.slide) figure.map-reveal { position: relative; margin: 0; }
 .ch-map-box { position: relative; }
 .ch-map-box > img { display: block; width: 100%; height: auto; border: 1px solid #CFCFCF; box-sizing: border-box; }
 .ch-map-box > svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
@@ -12,7 +12,7 @@
 .map-reveal .ch-lost.is-on { opacity: 1; }
 .ch-approx { position: absolute; left: 8px; bottom: 8px; z-index: 2; padding: 2px 10px; border-radius: 6px; background: rgba(255, 255, 255, .9); color: var(--ch-mute); font-size: 20px; font-weight: 600; }
 .map-reveal.is-veiled .ch-zoom-btn { display: none; }
-.slide .map-reveal figcaption { margin-top: 8px; font-size: 20px; color: var(--ch-mute); }
+:where(.slide) .map-reveal figcaption { margin-top: 8px; font-size: 20px; color: var(--ch-mute); }
 
 @media print {
   .map-reveal .ch-o { opacity: 0 !important; animation: none !important; }

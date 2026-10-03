@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko" data-deck="test-anim">
+<head>
+<meta charset="utf-8">
+<title>anim</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="a0"><h2>앞</h2></section>
+<section class="slide" id="a1">
+  <h2 data-anim="fade-up" id="t">제목</h2>
+  <ul data-stagger><li data-anim="pop" id="l0">하나</li><li data-anim="pop" id="l1">둘</li><li data-anim="pop" id="l2">셋</li></ul>
+  <p>참가자 <b data-anim="count" id="n">1,234명</b>, 비율 <b data-anim="count" id="r">3.5%</b></p>
+  <p><span data-anim="highlight" id="hl">핵심어</span>와 <span data-anim="wipe" id="wp">닦아 내기</span></p>
+  <svg viewBox="0 0 100 20" width="200"><path data-anim="draw" id="pth" d="M0 10H100" stroke="#000"/></svg>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const $ = (id) => document.getElementById(id);
+const anim = (id, pseudo) => getComputedStyle($(id), pseudo || null).animationName;
+
+test('장이 보이면 움직임 이름이 붙는다(나타남·튀어나옴·형광·닦아 내기·선 그리기)', () => {
+  ClassHTML.go(1);
+  eq(anim('t'), 'ch-a-fade-up');
+  eq(anim('l0'), 'ch-a-pop');
+  eq(anim('hl', '::before'), 'ch-a-hl');
+  eq(anim('wp', '::after'), 'ch-a-wipe');
+  eq($('pth').getAttribute('pathLength'), '1');
+  eq(anim('pth'), 'ch-a-draw');
+});
+test('묶음은 0.06초씩 늦게', () => {
+  eq(['l0', 'l1', 'l2'].map((id) => $(id).style.getPropertyValue('--ch-delay')), ['0.00s', '0.06s', '0.12s']);
+});
+test('숫자를 세어 올리고 쉼표·소수·단위를 지킨다', async () => {
+  ClassHTML.go(0); ClassHTML.go(1);
+  await wait(60);
+  await wait(1000);
+  eq($('n').textContent, '1,234명');
+  eq($('r').textContent, '3.5%');
+});
+test('다시 보면 처음부터 다시 재생한다', async () => {
+  ClassHTML.go(0); ClassHTML.go(1);
+  const a = $('t').getAnimations()[0];
+  assert(a && a.currentTime < 200, `restarted ${a && a.currentTime}`);
+});
+test('움직임 끄기면 재생하지 않고 숫자는 바로 끝 값', async () => {
+  await I().Settings.set('motionOff', true);
+  ClassHTML.go(0); ClassHTML.go(1);
+  eq(anim('t'), 'none');
+  eq($('n').textContent, '1,234명');
+  await I().Settings.set('motionOff', false);
+});
+</script>
+</body>
+</html>

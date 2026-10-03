@@ -5,10 +5,12 @@ ClassHTML.ready = new Promise((resolve) => { readyResolve = resolve; });
 async function start() {
   Source.capture();   // 엔진이 DOM을 바꾸기 전의 원본(저장할 때 쓴다)
   Stage.init();
+  MathTex.init();   // 어절 보정보다 먼저: $…$ 자리를 잡는다
   Parts.init();   // Nav보다 먼저: 정답 상자 내용을 단계로 묶는다
   Panels.init();   // Nav보다 먼저: 첫 show 이벤트로 목차 현재 위치를 표시
   Nav.init();
   KeepWords.apply(Stage.deck);   // 목차 제목을 뽑은 뒤 어절을 감싼다
+  Anim.init();     // 어절 보정 뒤: 세어 올리기 숫자를 글자로 다시 쓴다
   await Store.init();
   await Session.init();
   Ink.init();      // Session.doc이 있어야 한다
@@ -16,6 +18,8 @@ async function start() {
   Board.init();    // 툴바 자리(slots.board)에 버튼을 넣는다
   await Settings.init();
   Print.init();
+  // 수식이 있으면 그려질 때까지(최대 5초) 기다린다. 그래야 ready 뒤 점검이 그린 수식을 잰다.
+  await Promise.race([MathTex.ready, new Promise((r) => setTimeout(r, 5000))]);
   Audit.init();    // ?audit도 모든 준비가 끝난 다음 실행한다
 }
 
@@ -26,7 +30,7 @@ function boot() {
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
   ClassHTML.audit = () => Audit.run();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, Answer, Blank, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order, Calc, Plot, Zip, Pptx, Source, PptFill };
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, TocSlide, Answer, Blank, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order, Calc, Plot, Zip, Pptx, Source, PptFill, Timer, Picker, Score, Checklist, Hotspots, Anim, MathTex, Particles };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

@@ -1,9 +1,9 @@
 /* 그림 자리, 끌어다 놓기 안내, 알림 줄, 그림 바꾸기 창 */
-.slide .ch-ppt-ph { display: inline-grid; place-content: center; gap: 6px; box-sizing: border-box; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; padding: 16px; border: 3px dashed #AEB4BC; border-radius: 12px; background: repeating-linear-gradient(135deg, var(--ch-soft) 0 18px, var(--ch-card) 18px 36px); color: var(--ch-mute); text-align: center; vertical-align: top; cursor: pointer; }
-.slide .ch-ppt-ph[hidden] { display: none; }
-.slide .ch-ppt-ph b { font-size: 22px; line-height: 1.35; }
-.slide .ch-ppt-ph small { font-size: 20px; }
-.slide .ch-ppt-ph.is-bad { border-color: var(--ch-bad); color: var(--ch-bad); }
+:where(.slide) .ch-ppt-ph { display: inline-grid; place-content: center; gap: 6px; box-sizing: border-box; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; padding: 16px; border: 3px dashed #AEB4BC; border-radius: 12px; background: repeating-linear-gradient(135deg, var(--ch-soft) 0 18px, var(--ch-card) 18px 36px); color: var(--ch-mute); text-align: center; vertical-align: top; cursor: pointer; }
+:where(.slide) .ch-ppt-ph[hidden] { display: none; }
+:where(.slide) .ch-ppt-ph b { font-size: 22px; line-height: 1.35; }
+:where(.slide) .ch-ppt-ph small { font-size: 20px; }
+:where(.slide) .ch-ppt-ph.is-bad { border-color: var(--ch-bad); color: var(--ch-bad); }
 .ch-dropzone { position: fixed; inset: 12px; z-index: 90; display: none; place-items: center; border: 6px dashed var(--accent); border-radius: 24px; background: rgba(255, 255, 255, .9); color: #1F2328; font: 800 40px/1.3 var(--ch-font); pointer-events: none; }
 .ch-dropzone.is-on { display: grid; }
 .ch-banner { position: fixed; left: 50%; top: 14px; z-index: 80; display: flex; align-items: center; gap: 10px; box-sizing: border-box; max-width: min(920px, 94vw); padding: 10px 12px 10px 20px; border-radius: 14px; background: var(--ch-ui); color: var(--ch-ui-fg); font: 600 16px/1.45 var(--ch-font); box-shadow: 0 12px 34px rgba(0, 0, 0, .35); transform: translateX(-50%); animation: ch-fade-in .3s var(--ch-ease-out); }

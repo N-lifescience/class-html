@@ -2,10 +2,10 @@
 .ch-yearline > ol.yearline { display: none; }
 .ch-yl-head { display: flex; align-items: flex-end; gap: 36px; margin-bottom: 6px; }
 .ch-yl-now { min-width: 300px; font: 800 88px/1 var(--ch-font); letter-spacing: -.03em; color: var(--yl-c, var(--accent)); }
-.slide .ch-yl-list { flex: 1; min-height: 176px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; justify-content: flex-end; }
-.slide .ch-yl-list li { display: flex; align-items: center; gap: 14px; margin: 0 0 6px; font-size: 26px; line-height: 1.35; color: var(--ch-mute); animation: ch-fade-in .3s var(--ch-ease-out); }
-.slide .ch-yl-list li.is-now { color: var(--ch-ink); font-weight: 800; font-size: 28px; }
-.slide .ch-yl-list li b { min-width: 70px; font-family: var(--ch-mono); }
+:where(.slide) .ch-yl-list { flex: 1; min-height: 176px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; justify-content: flex-end; }
+:where(.slide) .ch-yl-list li { display: flex; align-items: center; gap: 14px; margin: 0 0 6px; font-size: 26px; line-height: 1.35; color: var(--ch-mute); animation: ch-fade-in .3s var(--ch-ease-out); }
+:where(.slide) .ch-yl-list li.is-now { color: var(--ch-ink); font-weight: 800; font-size: 28px; }
+:where(.slide) .ch-yl-list li b { min-width: 70px; font-family: var(--ch-mono); }
 .ch-yl-tag { flex: none; padding: 2px 12px; border-radius: 8px; background: var(--c); color: #fff; font-size: 20px; font-weight: 700; }
 .ch-yl-axis { position: relative; height: 112px; margin: 0 23px; }
 .ch-yl-axis::before { content: ""; position: absolute; left: -12px; right: -12px; bottom: 6px; border-top: 4px solid var(--yl-c, #2E5F7F); }

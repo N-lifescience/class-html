@@ -29,6 +29,24 @@ const Order = {
       this.reset(item);
       this.list.push(item);
     });
+    // 점검: 다 쌓아 채점한 상태(칸마다 이유)로 재고 되돌린다
+    on('audit-expand', () => {
+      for (const item of this.list) {
+        item.auditSnap = { seq: item.seq.slice(), solved: item.solved };
+        item.solved = true;   // 점검 중에는 뒤 단계를 열지 않는다
+        item.seq = item.items.slice();
+        this.render(item);
+      }
+    });
+    on('audit-restore', () => {
+      for (const item of this.list) {
+        if (!item.auditSnap) continue;
+        item.seq = item.auditSnap.seq;
+        item.solved = item.auditSnap.solved;
+        this.render(item);
+        item.auditSnap = null;
+      }
+    });
   },
 
   render(item) {
@@ -40,7 +58,7 @@ const Order = {
     }));
     for (const x of item.items) x.btn.disabled = item.seq.includes(x);
     if (item.seq.length === n) this.grade(item);
-    else { item.fb.textContent = ''; item.fb.className = 'ch-fb'; }
+    else { item.wrap.classList.remove('is-done'); item.fb.textContent = ''; item.fb.className = 'ch-fb'; }
   },
 
   push(item, x) {
@@ -63,6 +81,7 @@ const Order = {
       }
     });
     const all = right === item.items.length;
+    item.wrap.classList.toggle('is-done', true);   // 다 쌓으면 섞인 항목 칸을 접고 결과를 넓게
     item.fb.textContent = all ? '맞다. 순서가 모두 맞다.' : `${item.items.length}개 가운데 ${right}개가 제자리다. 빨간 칸부터 다시 생각해 보자.`;
     item.fb.className = `ch-fb ${all ? 'is-ok' : 'is-bad'}`;
     if (all && !item.solved) {

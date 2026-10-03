@@ -1,0 +1,9 @@
+/* 입자 상자 */
+:where(.slide) figure.particles { margin: 0; }
+.ch-particles-cv { display: block; border: 2px solid var(--ch-line); border-radius: 12px; background: var(--ch-card); }
+:where(.slide) .ch-particles-run { min-height: 56px; border-color: var(--accent); background: var(--accent); color: #fff; font-size: 22px; }
+:where(.slide) .ch-particles-counts { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 6px 0 0; font-size: 22px; }
+.ch-particles-kind::before { content: ""; display: inline-block; width: 14px; height: 14px; margin-right: 6px; border-radius: 50%; background: var(--c); vertical-align: middle; }
+.ch-particles-kind b { margin-right: 4px; }
+figure.particles > .ch-row { margin-top: 8px; }
+@media print { figure.particles > .ch-row { display: none !important; } }

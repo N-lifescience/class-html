@@ -2,87 +2,109 @@
    --pill(자료 단추), --qnum(문항 번호), --table-head·--table-side(비교표). 원본 PPT 색을 덱에서 넣는다. */
 
 /* 번호 주제 제목: <h2 data-n="1">빈 체제의 성립</h2> */
-.slide h2[data-n] { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; color: var(--accent); font-size: 40px; }
-.slide h2[data-n]::before { content: attr(data-n); flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 32px; box-shadow: 0 0 0 4px #DCDCDC; }
+:where(.slide) h2[data-n] { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; color: var(--accent); font-size: 40px; }
+:where(.slide) h2[data-n]::before { content: attr(data-n); flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 32px; box-shadow: 0 0 0 4px #DCDCDC; }
 
 /* 항목 목록: ol.points는 (1) (2), ol.circled는 ① ②. 글자 줄이 번호 뒤로 맞춰진다. */
 @counter-style ch-paren { system: extends decimal; prefix: "("; suffix: ") "; }
 @counter-style ch-circled { system: fixed; symbols: "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" "⑩"; suffix: " "; }
-.slide ol.points { list-style: ch-paren; padding-left: 62px; }
-.slide ol.circled { list-style: ch-circled; padding-left: 42px; }
-.slide ol.points > li::marker { font-weight: 800; }
-.slide ol.points ol { margin: 4px 0 0 -.9em; }
-.slide ol.points li { margin-bottom: 6px; }
+:where(.slide) ol.points { list-style: ch-paren; padding-left: 62px; }
+:where(.slide) ol.circled { list-style: ch-circled; padding-left: 42px; }
+:where(.slide) ol.points > li::marker { font-weight: 800; }
+:where(.slide) ol.points ol { margin: 4px 0 0 -.9em; }
+:where(.slide) ol.points li { margin-bottom: 6px; }
 
 /* 문항: <p class="q" data-n="1">…</p> */
-.slide .q { position: relative; margin: 0 0 24px; padding-left: 56px; font-size: 32px; font-weight: 700; line-height: 1.5; }
-.slide .q[data-n]::before { content: attr(data-n); position: absolute; left: 0; top: -.12em; color: var(--qnum, var(--accent)); font-size: 1.4em; font-weight: 800; }
+:where(.slide) .q { position: relative; margin: 0 0 24px; padding-left: 56px; font-size: 32px; font-weight: 700; line-height: 1.5; }
+:where(.slide) .q:not([data-n]) { padding-left: 0; }
+:where(.slide) .q[data-n]::before { content: attr(data-n); position: absolute; left: 0; top: -.12em; color: var(--qnum, var(--accent)); font-size: 1.4em; font-weight: 800; }
 
 /* 정답 상자: 회색 둥근 상자 가운데 ✓ 단추. 누르거나 다음(→)을 누르면 내용이 열린다. .sheet는 남은 자리를 채우는 흰 답안지. */
-.slide .answer { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 170px; box-sizing: border-box; padding: 28px 56px; border-radius: 80px; background: var(--ch-soft); text-align: center; }
-.slide .answer p { margin: 0; font-size: 34px; font-weight: 800; }
-.slide .answer.sheet { flex: 1 1 auto; align-items: stretch; justify-content: flex-start; border-radius: 6px; background: var(--ch-card); box-shadow: 0 0 0 3px #E4E4E4, 0 6px 14px rgba(0, 0, 0, .08); text-align: left; }
-.slide .answer.sheet p { font-size: var(--ch-body, 24px); font-weight: 500; margin-bottom: 10px; }
-.slide .answer .label { display: inline-block; margin-bottom: 14px; padding: 4px 16px; border-radius: 8px; background: var(--label, #2E7D4F); color: #fff; font-size: 20px; font-weight: 700; }
-.slide .ch-check { position: absolute; left: 50%; top: 50%; width: 88px; height: 88px; margin: -44px 0 0 -44px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: #00963A; color: #E3FEB8; box-shadow: 0 4px 10px rgba(0, 0, 0, .25); cursor: pointer; transition: transform .15s var(--ch-ease-out); }
-.slide .ch-check:hover { transform: scale(1.06); }
-.slide .ch-check .ch-icon { width: 52px; height: 52px; stroke-width: 3.2; }
+:where(.slide) .answer { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 170px; box-sizing: border-box; padding: 28px 56px; border-radius: 80px; background: var(--ch-soft); text-align: center; }
+:where(.slide) .answer p { margin: 0; font-size: 34px; font-weight: 800; }
+:where(.slide) .answer.sheet { flex: 1 1 auto; align-items: stretch; justify-content: flex-start; border-radius: 6px; background: var(--ch-card); box-shadow: 0 0 0 3px #E4E4E4, 0 6px 14px rgba(0, 0, 0, .08); text-align: left; }
+:where(.slide) .answer.sheet p { font-size: var(--ch-body, 24px); font-weight: 500; margin-bottom: 10px; }
+:where(.slide) .answer .label { display: inline-block; margin-bottom: 14px; padding: 4px 16px; border-radius: 8px; background: var(--label, #2E7D4F); color: #fff; font-size: 20px; font-weight: 700; }
+:where(.slide) .ch-check { position: absolute; left: 50%; top: 50%; width: 88px; height: 88px; margin: -44px 0 0 -44px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: #00963A; color: #E3FEB8; box-shadow: 0 4px 10px rgba(0, 0, 0, .25); cursor: pointer; transition: transform .15s var(--ch-ease-out); }
+:where(.slide) .ch-check:hover { transform: scale(1.06); }
+:where(.slide) .ch-check .ch-icon { width: 52px; height: 52px; stroke-width: 3.2; }
 .answer:has(.step.is-shown) > .ch-check { display: none; }
 
 /* 그림: <figure class="fig"><img …><figcaption>…</figcaption></figure>. 단추나 그림(손 모드)을 누르면 크게 본다. */
-.slide figure.fig { position: relative; margin: 0; }
-.slide .fig img { display: block; max-width: 100%; border: 1px solid #CFCFCF; cursor: zoom-in; }
-.slide .fig figcaption { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 22px; font-weight: 700; color: var(--ch-ink); }
-.slide .fig figcaption::before { content: "▲"; display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; background: #777; color: #fff; font-size: 11px; }
-.slide .ch-zoom-btn { position: absolute; right: 10px; top: 10px; z-index: 4; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(22, 24, 29, .72); color: #fff; cursor: pointer; }
+:where(.slide) figure.fig { position: relative; width: fit-content; max-width: 100%; margin: 0; }   /* 확대 단추가 그림 모서리에 붙게 */
+:where(.slide) .fig img { display: block; max-width: 100%; border: 1px solid #CFCFCF; cursor: zoom-in; }
+:where(.slide) .fig figcaption { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 22px; font-weight: 700; color: var(--ch-ink); }
+:where(.slide) .fig figcaption::before { content: "▲"; display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; background: #777; color: #fff; font-size: 11px; }
+:where(.slide) .ch-zoom-btn { position: absolute; right: 10px; top: 10px; z-index: 4; width: 56px; height: 56px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(22, 24, 29, .72); color: #fff; cursor: pointer; }
 .ch-zoom { position: fixed; inset: 0; z-index: 75; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10, 12, 16, .9); cursor: zoom-out; }
 .ch-zoom.is-open { display: flex; animation: ch-pop .25s var(--ch-ease-out); }
 .ch-zoom img { max-width: 96vw; max-height: 88vh; object-fit: contain; background: var(--ch-card); }
 .ch-zoom p { margin: 0; color: #fff; font: 700 20px/1.4 var(--ch-font); }
 
 /* 자료 단추(외부 링크): <a class="pill" href="…">사료 보기</a>, 색은 style="--pill:#…" */
-.slide a.pill { display: inline-flex; align-items: center; gap: 6px; margin: 0 4px; padding: 5px 18px; border-radius: 999px; background: var(--pill, #3AB57A); color: #fff; font-size: 20px; font-weight: 700; line-height: 1.3; text-decoration: none; vertical-align: .15em; box-shadow: 0 3px 0 rgba(0, 0, 0, .18); }
-.slide a.pill::after { content: "↗"; font-size: .9em; }
+:where(.slide) a.pill { display: inline-flex; align-items: center; gap: 6px; margin: 0 4px; padding: 5px 18px; border-radius: 999px; background: var(--pill, #3AB57A); color: #fff; font-size: 20px; font-weight: 700; line-height: 1.3; text-decoration: none; vertical-align: .15em; box-shadow: 0 3px 0 rgba(0, 0, 0, .18); }
+:where(.slide) a.pill::after { content: "↗"; font-size: .9em; }
 
 /* 연표: <ol class="timeline"><li data-year="1830">…</li></ol>. 축 위아래로 번갈아 놓인다. */
-.slide ol.timeline { position: relative; display: flex; height: 400px; margin: 8px 0 0; padding: 0 40px 0 64px; list-style: none; }
-.slide ol.timeline::before { content: ""; position: absolute; left: 0; right: 4px; top: 198px; border-top: 4px solid var(--flag, var(--accent)); }
-.slide ol.timeline::after { content: ""; position: absolute; right: 6px; top: 189px; width: 18px; height: 18px; border: solid var(--flag, var(--accent)); border-width: 4px 4px 0 0; transform: rotate(45deg); }
-.slide ol.timeline > li { flex: 1; align-self: flex-end; margin: 0 0 200px; padding: 0 0 18px 18px; border-left: 4px solid var(--flag, var(--accent)); font-size: 36px; font-weight: 800; line-height: 1.45; }
-.slide ol.timeline > li:nth-child(even) { align-self: flex-start; margin: 202px 0 0; padding: 18px 0 0 18px; }
-.slide ol.timeline > li:nth-child(odd)::before, .slide ol.timeline > li:nth-child(even)::after { content: attr(data-year); display: block; width: max-content; margin-left: -18px; padding: 4px 34px 4px 22px; border-radius: 0 999px 999px 0; background: var(--flag, var(--accent)); color: #FFF6C8; font-size: 32px; }
-.slide ol.timeline > li:nth-child(odd)::before { margin-bottom: 14px; }
-.slide ol.timeline > li:nth-child(even)::after { margin-top: 14px; }
+:where(.slide) ol.timeline { position: relative; display: flex; height: 400px; margin: 8px 0 0; padding: 0 40px 0 64px; list-style: none; }
+:where(.slide) ol.timeline::before { content: ""; position: absolute; left: 0; right: 4px; top: 198px; border-top: 4px solid var(--flag, var(--accent)); }
+:where(.slide) ol.timeline::after { content: ""; position: absolute; right: 6px; top: 189px; width: 18px; height: 18px; border: solid var(--flag, var(--accent)); border-width: 4px 4px 0 0; transform: rotate(45deg); }
+:where(.slide) ol.timeline > li { flex: 1; align-self: flex-end; margin: 0 0 200px; padding: 0 0 18px 18px; border-left: 4px solid var(--flag, var(--accent)); font-size: 36px; font-weight: 800; line-height: 1.45; }
+:where(.slide) ol.timeline > li:nth-child(even) { align-self: flex-start; margin: 202px 0 0; padding: 18px 0 0 18px; }
+:where(.slide) ol.timeline > li:nth-child(odd)::before, :where(.slide) ol.timeline > li:nth-child(even)::after { content: attr(data-year); display: block; width: max-content; margin-left: -18px; padding: 4px 34px 4px 22px; border-radius: 0 999px 999px 0; background: var(--flag, var(--accent)); color: #FFF6C8; font-size: 32px; }
+:where(.slide) ol.timeline > li:nth-child(odd)::before { margin-bottom: 14px; }
+:where(.slide) ol.timeline > li:nth-child(even)::after { margin-top: 14px; }
 
 /* 비교표: <table class="compare">, 첫 줄은 thead, 첫 칸은 tbody th */
-.slide table.compare { width: 100%; table-layout: fixed; font-size: var(--ch-body, 24px); line-height: 1.5; }
-.slide table.compare th, .slide table.compare td { padding: 12px 20px; border: 0; border-bottom: 2px solid #C9C9C9; vertical-align: middle; }
-.slide table.compare td + td { border-left: 2px solid #C9C9C9; }
-.slide table.compare thead th { background: var(--table-head, #B6E3A8); text-align: center; font-weight: 800; border-left: 2px solid #fff; }
-.slide table.compare tbody th { width: 3.6em; background: var(--table-side, #D9F0D0); text-align: center; font-weight: 800; }
+:where(.slide) table.compare { width: 100%; table-layout: fixed; font-size: var(--ch-body, 24px); line-height: 1.5; }
+:where(.slide) table.compare th, :where(.slide) table.compare td { padding: 12px 20px; border: 0; border-bottom: 2px solid #C9C9C9; vertical-align: middle; }
+:where(.slide) table.compare td + td { border-left: 2px solid #C9C9C9; }
+:where(.slide) table.compare thead th { background: var(--table-head, color-mix(in srgb, var(--tab, var(--accent)) 28%, var(--ch-card))); text-align: center; font-weight: 800; border-left: 2px solid #fff; }
+:where(.slide) table.compare tbody th { width: 3.6em; background: var(--table-side, color-mix(in srgb, var(--tab, var(--accent)) 12%, var(--ch-card))); text-align: center; font-weight: 800; }
 
 /* 표지 꾸밈: .band는 위쪽 가득 찬 색 띠(--band), .cover-art는 오른쪽 둥근 그림 */
-.slide .band { margin: -72px -80px 40px; padding: 56px 80px 40px; background: var(--band, var(--tab, var(--accent))); }
+:where(.slide) .band { margin: -72px -80px 40px; padding: 56px 80px 40px; background: var(--band, var(--tab, var(--accent))); }
 .slide.cover:has(.cover-art) .band { padding-right: 620px; }
-.slide .cover-art { position: absolute; right: 0; top: 0; z-index: 1; width: 560px; height: 100%; object-fit: cover; clip-path: ellipse(100% 78% at 100% 50%); }
+:where(.slide) .cover-art { position: absolute; right: 0; top: 0; z-index: 1; width: 560px; height: 100%; object-fit: cover; clip-path: ellipse(100% 78% at 100% 50%); }
 [data-theme="ppt"] .slide.cover { justify-content: flex-start; padding-top: 72px; }
 
 @media print {
   .ch-check, .ch-zoom-btn, .ch-zoom { display: none !important; }
 }
 
+/* 장 표지: <section class="slide chapter" data-sec="2. 확산"><p class="kicker">2</p><h1>확산</h1></section> */
+body .slide.chapter { justify-content: center; padding-top: 72px; background: var(--tab, var(--accent)); color: var(--tab-ink, #fff); }
+body .slide.chapter::before { display: none; }
+.slide.chapter h1, .slide.chapter h2 { color: inherit; border: 0; }
+.slide.chapter .kicker { color: inherit; opacity: .85; font-size: 28px; }
+.slide.chapter p { color: inherit; }
+
+/* 목차 슬라이드: <section class="slide toc"></section> (엔진이 data-sec 묶음 목록을 만든다) */
+.ch-toc-list { margin: 0; padding: 0; list-style: none; counter-reset: ch-toc; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; }
+.ch-toc-list li { counter-increment: ch-toc; margin: 0; }
+:where(.slide) .ch-toc-list button { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 64px; padding: 10px 18px; border: 2px solid var(--ch-line); border-radius: 16px; background: var(--ch-card); text-align: left; font: 700 26px/1.3 var(--ch-font); }
+:where(.slide) .ch-toc-list button::before { content: counter(ch-toc, decimal-leading-zero); flex: none; color: var(--accent); font: 800 26px var(--ch-mono); }
+.ch-toc-list button span { flex: 1; }
+:where(.slide) .ch-toc-list button small { font-size: 20px; color: var(--ch-mute); }
+
 /* 빈칸: 글자는 자리를 지키고 색만 감춘다(줄이 바뀌지 않게). 누르면 강조색으로 드러난다. */
-.slide .blank { display: inline-block; min-width: 3em; padding: 0 .25em; border-bottom: 3px solid var(--accent); border-radius: 4px; background: var(--ch-soft); color: transparent; cursor: pointer; }
-.slide .blank .w { color: inherit; }
-.slide .blank[aria-pressed="true"] { background: transparent; color: var(--accent); font-weight: 800; }
+:where(.slide) .blank { display: inline-block; min-width: 3em; padding: 0 .25em; border-bottom: 3px solid var(--accent); border-radius: 4px; background: var(--ch-soft); color: transparent; cursor: pointer; }
+:where(.slide) .blank .w { color: inherit; }
+:where(.slide) .blank[aria-pressed="true"] { background: transparent; color: var(--accent); font-weight: 800; }
 @media print { .slide .blank { color: var(--accent) !important; background: transparent !important; } }
 
 /* 부품 공통: 맞음·틀림 알림 줄, 흔들림, 「다시」 단추 */
 .ch-row { display: flex; align-items: center; gap: 14px; }
-.slide .ch-fb { flex: 1; min-height: 40px; margin: 0; font-size: 26px; font-weight: 700; line-height: 1.45; }
-.slide .ch-fb.is-ok { color: var(--ch-ok); }
-.slide .ch-fb.is-bad { color: var(--ch-bad); }
-.slide .ch-reset { min-height: 56px; padding: 0 22px; border-width: 2px; border-color: #AEB4BC; color: var(--ch-mute); font-size: 22px; }
+:where(.slide) .ch-fb { flex: 1; min-height: 40px; margin: 0; font-size: 26px; font-weight: 700; line-height: 1.45; }
+:where(.slide) .ch-fb.is-ok { color: var(--ch-ok); }
+:where(.slide) .ch-fb.is-bad { color: var(--ch-bad); }
+:where(.slide) .ch-reset { min-height: 56px; padding: 0 22px; border-width: 2px; border-color: #AEB4BC; color: var(--ch-mute); font-size: 22px; }
 .ch-shake { animation: ch-shake .4s; }
 @keyframes ch-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
-.slide .ch-zoom-btn .ch-icon { width: 30px; height: 30px; }
+:where(.slide) .ch-zoom-btn .ch-icon { width: 30px; height: 30px; }
+
+/* 수식: KaTeX가 오기 전과 못 왔을 때는 TeX 글자를 고정폭으로 보인다 */
+.ch-math { white-space: nowrap; }
+.ch-math:not(:has(.katex)), .ch-math.ch-math-raw { font-family: var(--ch-mono); font-size: .9em; }
+.ch-math.is-display { display: block; margin: 12px 0; text-align: center; }
+:where(.slide) .katex { font-size: 1.1em; }

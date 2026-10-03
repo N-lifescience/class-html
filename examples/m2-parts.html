@@ -169,6 +169,22 @@
   </div>
 </section>
 
+<section class="slide" id="particles" data-sec="4. 계산과 그래프" data-title="입자 상자(삼투)">
+  <h2>설탕물 쪽으로 물이 더 많이 갈까?</h2>
+  <div class="calc" style="display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start">
+    <figure class="particles" data-membrane="0.5" data-labels="물|설탕물" data-height="300">
+      <i data-kind="물" data-left="40" data-right="40" data-pass="1" data-color="#5AA9E6" data-size="4"></i>
+      <i data-kind="설탕" data-left="0" data-right="sugar" data-pass="0" data-color="#C04F15" data-size="8"></i>
+    </figure>
+    <div>
+      <p>오른쪽 설탕 <output data-expr="sugar" data-unit="개"></output></p>
+      <input type="range" name="sugar" min="0" max="30" value="15" aria-label="설탕 수">
+      <p>설탕은 반투과성 막을 지나지 못한다.<br>물만 오간다.</p>
+      <p class="caption">입자 수와 움직임은 설명을 위한 모형이다.</p>
+    </div>
+  </div>
+</section>
+
 <section class="slide" id="vote" data-sec="4. 계산과 그래프" data-title="선거권 판정(계산 상자 단추)">
   <h2>누가 투표할 수 있을까?</h2>
   <p>가상의 나라 「바다국」의 선거법: 1920년에는 남자 21세·여자 30세,<br>1930년에는 모두 21세부터 투표할 수 있다.</p>
@@ -187,6 +203,19 @@
   <div class="cols" style="grid-template-columns: 520px 1fr">
     <figure class="fig"><img src="assets/cell.svg" alt="식물 세포 모식도. 세포벽, 세포막, 핵, 액포, 엽록체"><figcaption>식물 세포 모식도(자체 제작)</figcaption></figure>
     <div class="answer"><p>액포</p></div>
+  </div>
+</section>
+
+<section class="slide" id="tools" data-sec="4. 계산과 그래프" data-title="교실 도구">
+  <h2>교실 도구</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1fr">
+    <div>
+      <div class="timer" data-sec="180" data-label="생각할 시간"></div>
+      <div class="picker" data-range="1-30" style="margin-top:20px"></div>
+    </div>
+    <div>
+      <ul class="checklist"><li>보안경을 썼다</li><li>실험복을 입었다</li><li>알코올램프 주변을 치웠다</li></ul>
+    </div>
   </div>
 </section>
 

@@ -1,7 +1,7 @@
 // 어절을 nowrap span으로 감싸고 인라인 요소 사이에 WORD JOINER(U+2060)를 넣는다.
 // 원래 요소와 이벤트는 보존하며, .w 내부를 건너뛰어 다시 적용해도 중첩하지 않는다.
 const KeepWords = {
-  SKIP: 'svg, math, script, style, pre, code, textarea, select, button, canvas, .katex, .w, [data-no-keep], [contenteditable=""], [contenteditable="true"]',
+  SKIP: 'svg, math, script, style, pre, code, textarea, select, button, canvas, .katex, .ch-math, .w, [data-no-keep], [contenteditable=""], [contenteditable="true"]',
 
   apply(root) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {

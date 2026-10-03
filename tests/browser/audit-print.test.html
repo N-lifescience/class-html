@@ -10,7 +10,7 @@
 <body>
 <section class="slide" id="ok1"><h2>정상</h2><p data-ai>AI가 쓴 문장</p></section>
 <section class="slide" id="bad1"><h2>넘침</h2><div id="tall" style="height:900px">아주 긴 상자</div></section>
-<section class="slide" id="bad2"><h2>작은 글씨</h2><p id="tiny" style="font-size:12px">너무 작다</p><div id="tinydiv" style="font-size:12px">카드 안의 작은 글자 여러 낱말</div><p id="dup">하나</p><img data-ppt="3-1" alt="그림"><p data-ai class="step">AI 단계</p></section>
+<section class="slide" id="bad2"><h2>작은 글씨</h2><p id="tiny" style="font-size:12px">너무 작다</p><div id="tinydiv" style="font-size:12px">카드 안의 작은 글자 여러 낱말</div><p id="p19" style="font-size:19px">열아홉 픽셀</p><svg viewBox="0 0 400 100" width="200"><text x="10" y="50" font-size="30">줄어든 글자</text></svg><p id="dup">하나</p><img data-ppt="3-1" alt="그림"><p data-ai class="step">AI 단계</p></section>
 <section class="slide" id="ok2"><h2 id="dup">중복 id</h2></section>
 <pre id="results" data-summary="pending"></pre>
 <script>
@@ -28,8 +28,13 @@ test('중복 id는 오류', () => {
 test('슬라이드보다 큰 내용은 오류', () => {
   assert(ClassHTML.audit().errors.some((e) => e.slide === 1 && (e.code === 'slide-overflow' || e.code === 'out')), 'overflow');
 });
-test('18px보다 작은 글자는 오류', () => {
+test('20px보다 작은 글자는 오류', () => {
   assert(ClassHTML.audit().errors.some((e) => e.slide === 2 && e.code === 'tiny-text'), 'tiny');
+});
+test('19px 글자, 줄인 SVG 안 글자(30 × 0.5 = 15px)도 오류', () => {
+  const errs = ClassHTML.audit().errors.filter((e) => e.slide === 2 && e.code === 'tiny-text');
+  assert(errs.some((e) => e.msg.includes('#p19')), '19px');
+  assert(errs.some((e) => e.msg.includes('줄어든 글자') && e.msg.includes('15px')), JSON.stringify(errs));
 });
 test('빈 그림 자리는 경고', () => {
   assert(ClassHTML.audit().warnings.some((w) => w.code === 'empty-image' && w.slide === 2), 'empty image');
@@ -180,7 +185,7 @@ test('수식의 스크린리더용 숨긴 MathML은 잘림 오류로 보지 않�
   } finally { formula.remove(); }
 });
 
-test('18px 꼬리표는 허용하고 19px 본문은 경고한다', () => {
+test('꼬리표(20px)는 통과하고 19px 본문은 오류(어떤 글자도 20px 미만 금지)', () => {
   const kicker = document.createElement('p');
   kicker.className = 'kicker';
   kicker.textContent = '소단원 꼬리표';
@@ -189,9 +194,10 @@ test('18px 꼬리표는 허용하고 19px 본문은 경고한다', () => {
   body.textContent = '작은 본문';
   document.getElementById('ok1').append(kicker, body);
   try {
-    const warnings = ClassHTML.audit().warnings.filter((item) => item.slide === 0 && item.code === 'small-text');
-    eq(warnings.length, 1);
-    assert(warnings[0].msg.includes('19px'), 'body warning');
+    eq(getComputedStyle(kicker).fontSize, '20px');
+    const errs = ClassHTML.audit().errors.filter((item) => item.slide === 0 && item.code === 'tiny-text');
+    eq(errs.length, 1);
+    assert(errs[0].msg.includes('19px'), 'body error');
   } finally { kicker.remove(); body.remove(); }
 });
 </script>

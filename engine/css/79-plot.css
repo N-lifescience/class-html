@@ -1,5 +1,5 @@
 /* 그래프. SVG는 실제 크기(무대 px)로 그려 글자가 20px 아래로 줄지 않는다. */
-.slide figure.plot { margin: 0; }
+:where(.slide) figure.plot { margin: 0; }
 .slide.ch-measure { display: flex !important; visibility: hidden !important; animation: none !important; }
 .ch-plot-svg { display: block; overflow: visible; font-family: var(--ch-font); }
 .ch-plot-grid line { stroke: #E3E7EC; stroke-width: 1; }

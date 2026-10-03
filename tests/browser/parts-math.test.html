@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ko" data-deck="test-math">
+<head>
+<meta charset="utf-8">
+<title>math</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="m1">
+  <h2>이차함수 $y = ax^2 + bx + c$</h2>
+  <p id="inline">꼭짓점은 $\left(-\frac{b}{2a},\ c - \frac{b^2}{4a}\right)$이다.</p>
+  <p id="display">$$E = mc^2$$</p>
+  <p id="paren">괄호 표기 \(x_1 + x_2\)도 된다.</p>
+  <p id="money">사과는 $5와 $10 사이, 글자 \$3도 그대로.</p>
+  <p id="words">수식 없는 문장의 어절 보정</p>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const $ = (id) => document.getElementById(id);
+test('줄 안·가운데·괄호 수식을 KaTeX로 그린다', () => {
+  assert(document.querySelector('h2 .katex'), 'title math');
+  assert($('inline').querySelector('.katex .mfrac'), 'fraction');
+  assert($('display').querySelector('.katex-display'), 'display');
+  assert($('paren').querySelector('.katex'), 'paren');
+});
+test('$5와 $10은 수식이 아니고 \\$는 글자 $', () => {
+  assert(!$('money').querySelector('.ch-math'), 'no math');
+  assert($('money').textContent.replace(/⁠/g, '').includes('$5와 $10 사이, 글자 $3도'), $('money').textContent);
+});
+test('수식 둘레의 글자는 어절 보정, 수식 안은 건드리지 않는다', () => {
+  assert($('inline').querySelector('.w'), 'words wrapped');
+  assert(!$('inline').querySelector('.ch-math .w'), 'no word spans inside math');
+  eq(ClassHTML.audit().errors.filter((e) => e.code.startsWith('math')).length, 0);
+});
+test('오프라인용 저장에는 KaTeX와 글꼴이 들어간다(가짜 fetch)', async () => {
+  const real = window.fetch;
+  window.fetch = async (url) => {
+    const u = String(url);
+    if (u.endsWith('katex.min.css')) return { ok: true, text: async () => '@font-face{font-family:KaTeX_Main;src:url(fonts/KaTeX_Main-Regular.woff2) format("woff2"),url(fonts/KaTeX_Main-Regular.woff) format("woff"),url(fonts/KaTeX_Main-Regular.ttf) format("truetype")}.katex{x:1}' };
+    if (u.endsWith('katex.min.js')) return { ok: true, text: async () => 'window.katex = window.katex || {};' };
+    if (u.endsWith('.woff2')) return { ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer };
+    return { ok: true, text: async () => (u.endsWith('.css') ? '.engine{}' : 'var engine = 1;') };
+  };
+  try {
+    const html = await ClassHTML._internal.PptFill.offlineHtml();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const css = Array.from(doc.querySelectorAll('head style')).map((x) => x.textContent).find((x) => x.includes('@font-face')) || '';
+    assert(css.includes('url(data:font/woff2;base64,AQID) format("woff2")'), 'font inlined');
+    assert(!css.includes('format("woff")') && !css.includes('.ttf'), 'other formats removed');
+    const scripts = Array.from(doc.querySelectorAll('head script')).map((x) => x.textContent);
+    assert(scripts.findIndex((x) => x.includes('window.katex')) < scripts.findIndex((x) => x.includes('var engine = 1;')), 'katex before engine');
+    assert(!doc.querySelector('link[href*="katex"], script[src*="katex"]'), 'no CDN katex link');
+  } finally { window.fetch = real; }
+});
+</script>
+</body>
+</html>

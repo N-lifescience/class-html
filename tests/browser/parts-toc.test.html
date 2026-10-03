@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko" data-deck="test-toc">
+<head>
+<meta charset="utf-8">
+<title>toc</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body data-theme="ppt">
+<section class="slide cover" id="cover"><h1>표지</h1></section>
+<section class="slide toc" id="toc"></section>
+<section class="slide chapter" id="ch1" data-sec="1. 세포막"><p class="kicker">1</p><h1>세포막</h1></section>
+<section class="slide" id="s1" data-sec="1. 세포막"><h2>구조</h2></section>
+<section class="slide" id="s2" data-sec="2. 확산"><h2>확산</h2></section>
+<section class="slide" id="s3" data-sec="2. 확산"><h2>촉진확산</h2></section>
+<section class="slide" id="s4" data-sec="3. 삼투"><h2>삼투</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+test('목차 슬라이드: 묶음마다 한 줄, 첫 장 번호, 제목 자동', () => {
+  const t = document.getElementById('toc');
+  eq(t.querySelector('h2').textContent.replace(/⁠/g, ''), '차례');
+  const items = Array.from(t.querySelectorAll('.ch-toc-list button'));
+  eq(items.map((b) => b.querySelector('span').textContent.replace(/⁠/g, '')), ['1. 세포막', '2. 확산', '3. 삼투']);
+  eq(items.map((b) => b.querySelector('small').textContent.replace(/⁠/g, '')), ['3쪽', '5쪽', '7쪽']);
+});
+test('누르면 그 묶음의 첫 장으로', () => {
+  document.querySelectorAll('#toc .ch-toc-list button')[1].click();
+  eq(I().Nav.state.slide, 4);
+});
+test('장 표지는 띠 색 바탕', () => {
+  const ch = document.getElementById('ch1');
+  ClassHTML.go(2);
+  assert(getComputedStyle(ch).backgroundColor !== 'rgb(255, 255, 255)', 'colored');
+  eq(getComputedStyle(ch, '::before').display, 'none');
+  eq(ClassHTML.audit().errors.length, 0);
+});
+</script>
+</body>
+</html>

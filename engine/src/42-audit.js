@@ -31,7 +31,7 @@ const Audit = {
       const k = `${slide}|${code}|${msg}`;
       if (seen.has(k)) return;
       seen.add(k);
-      list.push({ level, slide, code, msg });
+      list.push({ level, slide, page: slide == null ? null : slide + 1, code, msg });   // page는 화면 쪽 번호(1부터)
     };
     const err = add(errors, 'error');
     const warn = add(warnings, 'warn');
@@ -60,13 +60,31 @@ const Audit = {
         // 허용 영역은 요소 검사에서도 제외한다. 전체 scroll 값에는 그 영역도 포함된다.
         if (!slide.closest('[data-allow-overflow]') && !slide.querySelector('[data-allow-overflow]')
           && (slide.scrollHeight > slide.clientHeight + 1 || slide.scrollWidth > slide.clientWidth + 1)) {
-          err(i, 'slide-overflow', '내용이 슬라이드보다 커요 (장을 나누세요)');
+          const over = Math.max(slide.scrollHeight - slide.clientHeight, slide.scrollWidth - slide.clientWidth);
+          const lows = qsa('*', slide).filter((x) => x.getClientRects().length && !x.closest('svg'));
+          const low = lows.reduce((a, b) => (b.getBoundingClientRect().bottom > (a ? a.getBoundingClientRect().bottom : -Infinity) ? b : a), null);
+          const top = low ? low.closest('section.slide > *') : null;
+          err(i, 'slide-overflow', `내용이 ${over}px 넘쳐요${top ? ` (맨 아래: ${this.describe(top)})` : ''}. 여백·그림 크기를 줄이거나 장을 나누세요`);
         }
         for (const el of qsa('*', slide)) {
           const allowOverflow = !!el.closest('[data-allow-overflow]');
           // KaTeX의 스크린리더용 MathML 복제는 의도적으로 1px 안에 숨긴다.
           if (el.closest('.katex-mathml')) continue;
           if (el.closest('svg') && el.tagName.toLowerCase() !== 'svg') continue;
+          // SVG 안 글자는 viewBox 배율까지 곱한 실제 크기로 잰다(그림을 줄이면 글자도 준다)
+          if (el.tagName.toLowerCase() === 'svg' && el.querySelector('text')) {
+            const vb = el.viewBox && el.viewBox.baseVal;
+            const r = el.getBoundingClientRect();
+            const k = vb && vb.width ? (r.width / scale) / vb.width : 1;
+            let min = Infinity;
+            let which = null;
+            for (const t of el.querySelectorAll('text')) {
+              if (!t.textContent.trim()) continue;
+              const px = parseFloat(getComputedStyle(t).fontSize) * k;
+              if (px < min) { min = px; which = t; }
+            }
+            if (which && min < 19.5) err(i, 'tiny-text', `<svg> 안 글자 「${which.textContent.trim().slice(0, 12)}」가 실제 ${Math.round(min * 10) / 10}px예요 (최소 20px, 그림 폭이나 font-size를 키우세요)`);
+          }
           // 크기가 0인 빈 그림 자리도 경고한다.
           if (el.matches('img[data-ppt]') && !el.getAttribute('src')) warn(i, 'empty-image', `빈 그림 자리: 원본 PPT ${el.dataset.ppt}`);
           if (el.matches('img:not([alt])')) warn(i, 'no-alt', `${this.describe(el)}에 alt 설명이 없어요`);
@@ -100,13 +118,11 @@ const Audit = {
           if (!textBlocks.has(block) || size < textBlocks.get(block)) textBlocks.set(block, size);
         }
         for (const [block, size] of textBlocks) {
-          if (size < 18) err(i, 'tiny-text', `${this.describe(block)} 글자가 ${size}px로 너무 작아요 (최소 18px)`);
-          else if (size < 20 && block.matches('p, li, td, th') && !block.closest('small, .caption, figcaption, .kicker')) {
-            warn(i, 'small-text', `${this.describe(block)} 본문이 ${size}px예요 (권장 20px 이상)`);
-          }
+          if (size < 19.5) err(i, 'tiny-text', `${this.describe(block)} 글자가 ${size}px로 너무 작아요 (최소 20px)`);
         }
       };
       Stepper.openAll('audit');
+      emit('audit-expand');   // 부품: 다 맞힌 뒤·이유가 나온 뒤처럼 가장 길어지는 상태로 잠깐 바꾼다
       Stage.slides.forEach((slide, i) => measure(slide, i));
       // data-only 내용은 칸마다 다르므로 단계 막대의 칸마다 다시 잰다
       for (const st of Stepper.all) {
@@ -115,6 +131,7 @@ const Audit = {
         st.set(st.max, 'audit');
       }
     } finally {
+      emit('audit-restore');
       Stepper.restore(stepperSnap, 'audit');
       for (const snapshot of snapshots) {
         snapshot.slide.classList.toggle('is-active', snapshot.active);
@@ -143,7 +160,7 @@ const Audit = {
         if (nums.some((v) => !Number.isInteger(v) || v < 0 || v > st.max)) part(t, `단계 번호는 0~${st.max}이어야 해요`);
       }
     }
-    for (const item of Calc.list.concat(Plot.list)) for (const e of item.errors) part(e.el, e.msg);
+    for (const item of Calc.list.concat(Plot.list, Particles.list)) for (const e of item.errors) part(e.el, e.msg);
     for (const box of qsa('.sort', Stage.deck)) {
       const bins = qsa('.bin[data-bin]', box).map((b) => b.dataset.bin);
       const cards = qsa('[data-bin]:not(.bin)', box);
@@ -169,12 +186,35 @@ const Audit = {
         warn(at(r), 'not-veiled', `${this.describe(r)}: 단계를 여는 막대라면 '시작'(최솟값)에서 시작하세요`);
       }
     }
-    const ACT = '.reveal, .switch, .map-reveal, .ch-yearline, .sort, .quiz, .ch-order, .calc, .plot, input[type="range"], [data-activity]';
-    const activities = Stage.slides.filter((s) => s.querySelector(ACT)).length;
+    // 활동 = 입력에 따라 화면이 달라지는 부품. 글만 차례로 여는 .reveal·.switch는 그림·도식·계산이 함께 있을 때만 센다.
+    const ACT = '.map-reveal, .ch-yearline, .sort, .quiz, .ch-order, .calc, .plot, .particles, input[type="range"]:not(.ch-stops input), [data-activity]';
+    const visual = (st) => st.el.matches('[data-name]') || !!st.el.closest('.calc')
+      || !!st.el.querySelector('.veil, img, svg, figure, canvas');
+    const activities = Stage.slides.filter((s, i) => s.querySelector(ACT)
+      || (Stepper.bySlide[i] || []).some((st) => (st.el.matches('.reveal, .switch') ? visual(st) : true))).length;
     const total = Stage.slides.length;
     if (total >= 3 && activities * 3 < total) warn(null, 'few-activities', `활동 장이 ${activities}/${total}장이에요. 3분의 1(${Math.ceil(total / 3)}장) 이상이 되게 하세요`);
+    // 표지 그림(.cover-art)이 제목·글을 가리면 경고(넘침과 달리 무대 안에서 겹치는 것)
+    for (const [i, s] of Stage.slides.entries()) {
+      const art = s.querySelector('img.cover-art');
+      if (!art) continue;
+      const shown = s.classList.contains('is-active');
+      if (!shown) s.classList.add('ch-measure');
+      const a = art.getBoundingClientRect();
+      for (const el of qsa('h1, h2, h3, p, .kicker', s)) {
+        if (el.closest('.art-cap') || !el.textContent.trim()) continue;
+        // 상자 폭이 아니라 실제 글자가 놓인 범위로 잰다
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const r = range.getBoundingClientRect();
+        if (r.width && r.right > a.left + 4 && r.left < a.right && r.bottom > a.top && r.top < a.bottom) {
+          warn(i, 'overlap', `${this.describe(el)}이(가) 표지 그림과 겹쳐요(제목 폭을 줄이거나 <br>로 나누세요)`);
+        }
+      }
+      if (!shown) s.classList.remove('ch-measure');
+    }
     const imgs = qsa('img[data-ppt]', Stage.deck);
-    return { activities, images: imgs.length, emptyImages: imgs.filter((i) => !i.getAttribute('src')).length };
+    return { activities, placeholders: imgs.length, emptyPlaceholders: imgs.filter((x) => !x.getAttribute('src')).length };
   },
 
   toggle() {

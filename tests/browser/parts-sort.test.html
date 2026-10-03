@@ -71,6 +71,12 @@ test('틀린 칸이면 흔들리고 실마리, 카드는 제자리', () => {
   eq(it().fb.textContent, '다시 생각해 보자. 스스로 움직인다.');
   assert(it().fb.classList.contains('is-bad'), 'bad');
 });
+test('이미 놓인 카드를 눌러도 그 칸에 놓인다', () => {
+  tap($('c1'));
+  $('c3').click();   // c3은 식물 칸에 놓여 있다: 식물 칸으로 놓기(틀림)
+  eq($('c1').parentElement, it().pool);
+  assert(it().fb.classList.contains('is-bad'), 'dropped into that bin');
+});
 test('펜을 든 채로 카드를 끌어 칸에 놓으면 판서 없이 옮겨진다', () => {
   I().Tools.set('pen');
   const before = I().Ink.page.length;

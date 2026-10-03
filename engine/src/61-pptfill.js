@@ -2,7 +2,7 @@
 // <img data-ppt="12-2" alt="…">가 비어 있으면 회색 자리를 보여 준다. 원본 PPTX를 화면에 끌어다 놓거나 ⚙에서 열면 채운다.
 // 손 모드에서 그림(자리)을 누르면 「그림 바꾸기」. ⚙에 「그림 넣어 저장」, 「오프라인용 저장」.
 const IMG_MAX = 1600;
-const IMG_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', svg: 'image/svg+xml' };
+const IMG_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', jfif: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', svg: 'image/svg+xml' };
 
 const Source = {
   html: '',
@@ -260,7 +260,27 @@ const PptFill = {
     const inline = doc.createElement('script');
     inline.textContent = js.replace(/<\/script/gi, '<\\/script');
     script.replaceWith(inline);
+    if (MathTex.spans.length) await this.inlineMath(doc, inline, get);
     return this.serialize(doc);
+  },
+
+  // 수식이 있으면 KaTeX 스크립트와 CSS(글꼴은 woff2만 data URI로)도 넣는다. 엔진보다 먼저 두어 엔진이 다시 받지 않게 한다.
+  async inlineMath(doc, before, get) {
+    let css = await get(`${KATEX_URL}katex.min.css`);
+    const js = await get(`${KATEX_URL}katex.min.js`);
+    const fonts = [...new Set([...css.matchAll(/url\(fonts\/([^)]+\.woff2)\)/g)].map((m) => m[1]))];
+    for (const name of fonts) {
+      const res = await fetch(`${KATEX_URL}fonts/${name}`);
+      if (!res.ok) throw new Error(`수식 글꼴을 받지 못했어요(${name})`);
+      const b64 = bytesToBase64(new Uint8Array(await res.arrayBuffer()));
+      css = css.split(`url(fonts/${name}) format("woff2")`).join(`url(data:font/woff2;base64,${b64}) format("woff2")`);
+    }
+    css = css.replace(/,url\(fonts\/[^)]+\) format\("(woff|truetype)"\)/g, '');
+    const style = doc.createElement('style');
+    style.textContent = css;
+    const s = doc.createElement('script');
+    s.textContent = js.replace(/<\/script/gi, '<\\/script');
+    before.before(style, s);
   },
 
   async saveOffline() {

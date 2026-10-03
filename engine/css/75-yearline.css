@@ -15,7 +15,7 @@
 .ch-yl-flag b { display: block; width: max-content; margin: 0 0 4px -10px; padding: 2px 16px 2px 12px; border-radius: 0 999px 999px 0; background: var(--yl-c, #2E5F7F); color: #FFF6C8; font-size: 22px; }
 .ch-yl-flag.is-on { opacity: 1; }
 .ch-yl-stops { margin-top: 2px; }
-.ch-yl-ticks span { font-family: var(--ch-mono); font-size: 20px; }
+.ch-yl-ticks > span { font-family: var(--ch-mono); font-size: 20px; }
 
 @media print {
   .ch-yl-flag { opacity: 1 !important; }

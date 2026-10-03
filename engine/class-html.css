@@ -185,22 +185,23 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 }
 
 /* ---- 60-content.css ---- */
-.slide h1 { margin: 0 0 20px; font-size: 80px; font-weight: 800; line-height: 1.1; letter-spacing: -.03em; }
-.slide h2 { margin: 0 0 28px; font-size: 42px; font-weight: 800; line-height: 1.2; letter-spacing: -.025em; }
-.slide h3 { margin: 0 0 12px; font-size: 27px; font-weight: 700; line-height: 1.3; letter-spacing: -.015em; }
-.slide p, .slide li { margin: 0 0 14px; font-size: var(--ch-body); line-height: 1.6; }
-.slide ul, .slide ol { margin: 0 0 14px; padding-left: 1.2em; }
-.slide mark { background: linear-gradient(transparent 55%, var(--ch-hl) 55%); color: inherit; padding: 0 .1em; }
-.slide .kicker { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; font-size: 18px; font-weight: 700; color: var(--accent); }
-.slide .kicker::before { content: ""; width: 28px; height: 2px; background: currentColor; }
-.slide table { border-collapse: collapse; font-size: 22px; }
-.slide th, .slide td { padding: 10px 16px; border-bottom: 1px solid var(--ch-line); text-align: left; }
-.slide th { font-weight: 700; background: rgba(0, 0, 0, .03); }
-.slide button { font: 600 22px/1 var(--ch-font); padding: 14px 22px; border-radius: 12px; border: 2px solid var(--ch-ink); background: var(--ch-card); color: var(--ch-ink); cursor: pointer; }
-.slide button:active { transform: translateY(1px); }
-.slide input[type="range"] { width: 320px; vertical-align: middle; accent-color: var(--accent); }
-.slide output { margin-left: 8px; font: 700 24px/1 var(--ch-mono); }
-.slide small, .slide .caption { font-size: 18px; color: var(--ch-mute); }
+/* 기본 글 모양. :where(.slide)로 우선순위를 낮춰 수업 HTML이 쓴 클래스(.pts { padding: 0 } 등)가 늘 이긴다. */
+:where(.slide) h1 { margin: 0 0 20px; font-size: 80px; font-weight: 800; line-height: 1.1; letter-spacing: -.03em; }
+:where(.slide) h2 { margin: 0 0 28px; font-size: 42px; font-weight: 800; line-height: 1.2; letter-spacing: -.025em; }
+:where(.slide) h3 { margin: 0 0 12px; font-size: 27px; font-weight: 700; line-height: 1.3; letter-spacing: -.015em; }
+:where(.slide) p, :where(.slide) li { margin: 0 0 14px; font-size: var(--ch-body); line-height: 1.6; }
+:where(.slide) ul, :where(.slide) ol { margin: 0 0 14px; padding-left: 1.2em; }
+:where(.slide) mark { background: linear-gradient(transparent 55%, var(--ch-hl) 55%); color: inherit; padding: 0 .1em; }
+:where(.slide) .kicker { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; font-size: 18px; font-weight: 700; color: var(--accent); }
+:where(.slide) .kicker::before { content: ""; width: 28px; height: 2px; background: currentColor; }
+:where(.slide) table { border-collapse: collapse; font-size: 22px; }
+:where(.slide) th, :where(.slide) td { padding: 10px 16px; border-bottom: 1px solid var(--ch-line); text-align: left; }
+:where(.slide) th { font-weight: 700; background: rgba(0, 0, 0, .03); }
+:where(.slide) button { font: 600 22px/1 var(--ch-font); padding: 14px 22px; border-radius: 12px; border: 2px solid var(--ch-ink); background: var(--ch-card); color: var(--ch-ink); cursor: pointer; }
+:where(.slide) button:active { transform: translateY(1px); }
+:where(.slide) input[type="range"] { width: 320px; vertical-align: middle; accent-color: var(--accent); }
+:where(.slide) output { margin-left: 8px; font: 700 24px/1 var(--ch-mono); }
+:where(.slide) small, :where(.slide) .caption { font-size: 18px; color: var(--ch-mute); }
 .slide.cover { justify-content: center; }
 
 /* ---- 70-parts.css ---- */
@@ -208,7 +209,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
    --pill(자료 단추), --qnum(문항 번호), --table-head·--table-side(비교표). 원본 PPT 색을 덱에서 넣는다. */
 
 /* 번호 주제 제목: <h2 data-n="1">빈 체제의 성립</h2> */
-.slide h2[data-n] { display: flex; align-items: center; gap: 18px; color: var(--accent); font-size: 40px; }
+.slide h2[data-n] { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; color: var(--accent); font-size: 40px; }
 .slide h2[data-n]::before { content: attr(data-n); flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 32px; box-shadow: 0 0 0 4px #DCDCDC; }
 
 /* 항목 목록: ol.points는 (1) (2), ol.circled는 ① ②. 글자 줄이 번호 뒤로 맞춰진다. */
@@ -298,8 +299,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 [data-theme="ppt"] .slide::before { left: 0; top: 0; height: 78px; display: flex; align-items: center; padding: 0 48px 0 36px; border-radius: 0 0 44px 0; background: var(--tab); color: var(--tab-ink); font: 800 32px/1 var(--ch-font); letter-spacing: -.02em; }
 [data-theme="ppt"] .slide:not([data-sec]) { padding-top: 72px; background: var(--ch-paper); }
 [data-theme="ppt"] .slide:not([data-sec])::before { display: none; }
-[data-theme="ppt"] .slide h2:not([data-n]) { width: fit-content; padding-bottom: 8px; border-bottom: 4px solid var(--tab); font-size: 40px; }
-[data-theme="ppt"] .slide p, [data-theme="ppt"] .slide li { line-height: 1.7; }
+:where([data-theme="ppt"] .slide) h2:where(:not([data-n])) { width: fit-content; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 4px solid var(--tab); font-size: 40px; }
 
 [data-theme="grid"] { --ch-paper: #FBFBF8; }
 [data-theme="grid"] .slide { background: linear-gradient(#E6E9EC 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, #E6E9EC 1px, transparent 1px) 0 0 / 32px 32px, var(--ch-paper); }
@@ -311,7 +311,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 }
 [data-theme="chalk"] .slide { background: radial-gradient(ellipse at 30% 20%, #26473A, var(--ch-paper) 70%); }
 [data-theme="chalk"] .slide button, [data-theme="chalk"] .slide .ch-card, [data-theme="chalk"] .slide .quiz .opt { border-color: var(--ch-line); }
-[data-theme="chalk"] .slide th { background: rgba(255, 255, 255, .06); }
+:where([data-theme="chalk"] .slide) th { background: rgba(255, 255, 255, .06); }
 
 /* ---- 72-stepper.css ---- */
 /* 단계 막대: 슬라이더(굵은 손잡이)와 눈금 이름. 색은 --stop-c(기본 --accent). */
@@ -323,9 +323,9 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .ch-stops input[type="range"]::-moz-range-progress, .slide .calc input[type="range"]::-moz-range-progress { height: 12px; border-radius: 6px; background: var(--stop-c, var(--accent)); }
 .ch-stops input[type="range"]::-moz-range-thumb, .slide .calc input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: var(--ch-card); border: 7px solid var(--stop-c, var(--accent)); }
 .ch-stop-labels { position: absolute; left: 23px; right: 23px; bottom: 0; height: 48px; pointer-events: none; }
-.ch-stop-labels span { position: absolute; top: 2px; transform: translateX(-50%); font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--ch-mute); white-space: pre; text-align: center; }
-.ch-stop-labels span.is-on { color: var(--ch-ink); }
-.ch-stop-labels.is-dense span:not(.is-on):not(:first-child):not(:last-child) { visibility: hidden; }
+.ch-stop-labels > span { position: absolute; top: 2px; transform: translateX(-50%); font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--ch-mute); white-space: pre; text-align: center; }
+.ch-stop-labels > span.is-on { color: var(--ch-ink); }
+.ch-stop-labels.is-dense > span:not(.is-on):not(:first-child):not(:last-child) { visibility: hidden; }
 
 /* 단추형(비교 전환) */
 .ch-switch-btns { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 18px; }
@@ -399,7 +399,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .ch-yl-flag b { display: block; width: max-content; margin: 0 0 4px -10px; padding: 2px 16px 2px 12px; border-radius: 0 999px 999px 0; background: var(--yl-c, #2E5F7F); color: #FFF6C8; font-size: 22px; }
 .ch-yl-flag.is-on { opacity: 1; }
 .ch-yl-stops { margin-top: 2px; }
-.ch-yl-ticks span { font-family: var(--ch-mono); font-size: 20px; }
+.ch-yl-ticks > span { font-family: var(--ch-mono); font-size: 20px; }
 
 @media print {
   .ch-yl-flag { opacity: 1 !important; }
@@ -500,7 +500,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .ch-banner { position: fixed; left: 50%; top: 14px; z-index: 80; display: flex; align-items: center; gap: 10px; box-sizing: border-box; max-width: min(920px, 94vw); padding: 10px 12px 10px 20px; border-radius: 14px; background: var(--ch-ui); color: var(--ch-ui-fg); font: 600 16px/1.45 var(--ch-font); box-shadow: 0 12px 34px rgba(0, 0, 0, .35); transform: translateX(-50%); animation: ch-fade-in .3s var(--ch-ease-out); }
 .ch-banner[hidden] { display: none; }
 .ch-banner.is-bad { box-shadow: inset 5px 0 0 #FF6B5B, 0 12px 34px rgba(0, 0, 0, .35); }
-.ch-banner span { flex: 1; }
+.ch-banner > span { flex: 1; }
 .ch-banner button, .ch-picker button { all: unset; box-sizing: border-box; min-height: 44px; padding: 10px 16px; border-radius: 10px; background: var(--ch-ui-2); color: var(--ch-ui-fg); font: 700 15px/1.2 var(--ch-font); cursor: pointer; white-space: nowrap; }
 .ch-banner button.is-main { background: var(--accent); color: #fff; }
 .ch-banner button:focus-visible, .ch-picker button:focus-visible { outline: 2px solid var(--ch-hl); }

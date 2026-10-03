@@ -7,9 +7,9 @@
 .ch-stops input[type="range"]::-moz-range-progress, .slide .calc input[type="range"]::-moz-range-progress { height: 12px; border-radius: 6px; background: var(--stop-c, var(--accent)); }
 .ch-stops input[type="range"]::-moz-range-thumb, .slide .calc input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: var(--ch-card); border: 7px solid var(--stop-c, var(--accent)); }
 .ch-stop-labels { position: absolute; left: 23px; right: 23px; bottom: 0; height: 48px; pointer-events: none; }
-.ch-stop-labels span { position: absolute; top: 2px; transform: translateX(-50%); font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--ch-mute); white-space: pre; text-align: center; }
-.ch-stop-labels span.is-on { color: var(--ch-ink); }
-.ch-stop-labels.is-dense span:not(.is-on):not(:first-child):not(:last-child) { visibility: hidden; }
+.ch-stop-labels > span { position: absolute; top: 2px; transform: translateX(-50%); font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--ch-mute); white-space: pre; text-align: center; }
+.ch-stop-labels > span.is-on { color: var(--ch-ink); }
+.ch-stop-labels.is-dense > span:not(.is-on):not(:first-child):not(:last-child) { visibility: hidden; }
 
 /* 단추형(비교 전환) */
 .ch-switch-btns { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 18px; }

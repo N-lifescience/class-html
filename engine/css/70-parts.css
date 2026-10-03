@@ -2,7 +2,7 @@
    --pill(자료 단추), --qnum(문항 번호), --table-head·--table-side(비교표). 원본 PPT 색을 덱에서 넣는다. */
 
 /* 번호 주제 제목: <h2 data-n="1">빈 체제의 성립</h2> */
-.slide h2[data-n] { display: flex; align-items: center; gap: 18px; color: var(--accent); font-size: 40px; }
+.slide h2[data-n] { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; color: var(--accent); font-size: 40px; }
 .slide h2[data-n]::before { content: attr(data-n); flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 32px; box-shadow: 0 0 0 4px #DCDCDC; }
 
 /* 항목 목록: ol.points는 (1) (2), ol.circled는 ① ②. 글자 줄이 번호 뒤로 맞춰진다. */

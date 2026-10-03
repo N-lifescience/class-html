@@ -32,6 +32,7 @@
 <section class="slide" id="p3">
   <h2>비교 전환</h2>
   <div class="switch" id="sw" data-stops="시작|7월 혁명<br>1830|2월 혁명">
+    <div class="reveal" id="two" data-nav="off" data-stops="시작|개정 전|제1차<br>1832"></div>
     <div data-only="1" id="c1">7월</div>
     <div data-only="2" id="c2">2월</div>
   </div>
@@ -153,6 +154,18 @@ test('펜을 든 채로 슬라이더를 끌면 판서가 아니라 막대가 움
   eq(s.pos, 1);
   eq(I().Ink.page.length, 0);
   I().Tools.set('hand');
+});
+test('두 낱말 눈금 이름도 겹치지 않는다(어절 span은 제자리), 비교 전환 안의 단계 막대도 제 막대를 가진다', () => {
+  ClassHTML.go(3);
+  st('sw').set(1, 'input');
+  const s = st('two');
+  assert(s.input.isConnected && s.labels[0].isConnected, 'nested stepper keeps its bar');
+  const w = s.labels[1].querySelectorAll('.w');
+  eq(w.length, 2);
+  eq(getComputedStyle(w[0]).position, 'static');
+  assert(w[1].getBoundingClientRect().left > w[0].getBoundingClientRect().right, 'side by side');
+  const lines = s.labels[2].querySelectorAll('.w');
+  assert(lines[1].getBoundingClientRect().top > lines[0].getBoundingClientRect().top, 'br makes a new line');
 });
 test('눈금이 8개 넘으면 지금 칸과 양 끝만', () => {
   const s = st('dense');

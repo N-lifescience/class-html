@@ -46,8 +46,14 @@ const Stepper = {
     return list;
   },
 
+  // 작성자가 둔 막대 자리(.ch-stops) 가운데 이 단계 막대의 것만(안에 든 다른 단계 막대의 것은 빼고)
+  ownPlace(el) {
+    const hosts = '.reveal[data-stops], .switch[data-stops], figure.map-reveal, .ch-yearline';
+    return qsa('.ch-stops', el).find((p) => p.parentElement.closest(hosts) === el && !p.querySelector('input')) || null;
+  },
+
   buildRange(st, mount) {
-    const wrap = st.el.querySelector(':scope .ch-stops') || h('div', { class: 'ch-stops' });
+    const wrap = this.ownPlace(st.el) || h('div', { class: 'ch-stops' });
     st.input = h('input', { type: 'range', min: 0, max: st.max, step: 1, value: 0, 'aria-label': st.el.getAttribute('aria-label') || '단계' });
     const labels = h('div', { class: `ch-stop-labels${st.stops.length > 7 ? ' is-dense' : ''}`, 'aria-hidden': 'true' });
     st.labels = st.stops.map((t, i) => h('span', { text: t, style: `left:${st.max ? (i / st.max) * 100 : 0}%` }));
@@ -70,7 +76,7 @@ const Stepper = {
     }));
     row.append(...st.buttons);
     st.hint = h('p', { class: 'ch-switch-hint', text: st.el.dataset.veil });
-    const place = st.el.querySelector(':scope .ch-stops');
+    const place = this.ownPlace(st.el);
     if (place) place.replaceWith(row);
     else if (mount) mount.before(row);
     else st.el.prepend(row);

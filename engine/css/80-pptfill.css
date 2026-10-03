@@ -9,7 +9,7 @@
 .ch-banner { position: fixed; left: 50%; top: 14px; z-index: 80; display: flex; align-items: center; gap: 10px; box-sizing: border-box; max-width: min(920px, 94vw); padding: 10px 12px 10px 20px; border-radius: 14px; background: var(--ch-ui); color: var(--ch-ui-fg); font: 600 16px/1.45 var(--ch-font); box-shadow: 0 12px 34px rgba(0, 0, 0, .35); transform: translateX(-50%); animation: ch-fade-in .3s var(--ch-ease-out); }
 .ch-banner[hidden] { display: none; }
 .ch-banner.is-bad { box-shadow: inset 5px 0 0 #FF6B5B, 0 12px 34px rgba(0, 0, 0, .35); }
-.ch-banner span { flex: 1; }
+.ch-banner > span { flex: 1; }
 .ch-banner button, .ch-picker button { all: unset; box-sizing: border-box; min-height: 44px; padding: 10px 16px; border-radius: 10px; background: var(--ch-ui-2); color: var(--ch-ui-fg); font: 700 15px/1.2 var(--ch-font); cursor: pointer; white-space: nowrap; }
 .ch-banner button.is-main { background: var(--accent); color: #fff; }
 .ch-banner button:focus-visible, .ch-picker button:focus-visible { outline: 2px solid var(--ch-hl); }

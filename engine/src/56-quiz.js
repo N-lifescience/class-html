@@ -52,7 +52,12 @@ const Quiz = {
         item.fbSnap = [item.fb.textContent, item.fb.className];
         const texts = item.opts.map((o) => o.dataset.why || '').concat(item.box.dataset.why || '', item.multi ? `${item.opts.length}개 가운데 ${Math.max(0, item.opts.length - 1)}개를 맞게 판단했다. 점선은 골라야 하는데 고르지 않은 것이다.` : '');
         item.fb.textContent = texts.reduce((a, b) => (b.length > a.length ? b : a), '');
-        if (item.multi) for (const o of item.opts) if (!o.querySelector(':scope > .ch-opt-why')) { this.why(o, true); o.dataset.auditWhy = '1'; }
+        // 여러 개 고르기: 이유는 틀린 보기에만 나온다. 이유가 가장 긴 두 보기를 틀린 상태를 잰다.
+        if (item.multi) {
+          const longest = item.opts.filter((o) => o.dataset.why && !o.querySelector(':scope > .ch-opt-why'))
+            .sort((x, y) => y.dataset.why.length - x.dataset.why.length).slice(0, 2);
+          for (const o of longest) { this.why(o, true); o.dataset.auditWhy = '1'; }
+        }
       }
     });
     on('audit-restore', () => {

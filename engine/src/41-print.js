@@ -14,8 +14,8 @@ const Print = {
     canvas.height = STAGE_H * 2;
     const ctx = canvas.getContext('2d');
     ctx.setTransform(2, 0, 0, 2, 0, 0);
+    // 화면과 같게: 형광펜 획은 불투명하게 그리고 그림 전체의 투명도는 CSS(.ch-print-hl)가 정한다
     for (const pass of ['hl', 'pen']) {
-      ctx.globalAlpha = pass === 'hl' ? 0.4 : 1;
       for (const stroke of strokes) if (stroke.t === pass) Ink.drawStrokeOn(ctx, stroke);
     }
     return h('img', { class: 'ch-print-ink', alt: '', src: canvas.toDataURL('image/png') });

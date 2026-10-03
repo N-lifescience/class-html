@@ -9,6 +9,7 @@ const Session = {
   hist: null,
   timer: 0,
   queue: Promise.resolve(),
+  unsaved: new Map(),   // 저장에 실패한 반 문서: 창을 닫기 전까지는 반을 오가도, 백업에도 남는다
 
   deckKey() {
     const raw = document.documentElement.dataset.deck || document.title || location.pathname;
@@ -34,7 +35,15 @@ const Session = {
 
   key(cls) { return `ink:${this.deck}:${cls}`; },
 
-  async load(cls) { return InkModel.sanitizeDoc(await Store.get(this.key(cls))) || InkModel.emptyDoc(); },
+  async load(cls) {
+    if (this.unsaved.has(cls)) return this.unsaved.get(cls);
+    return InkModel.sanitizeDoc(await Store.get(this.key(cls))) || InkModel.emptyDoc();
+  },
+
+  async save(cls, doc) {
+    if (await Store.set(this.key(cls), doc)) this.unsaved.delete(cls);
+    else this.unsaved.set(cls, doc);
+  },
 
   run(fn) {
     const p = this.queue.then(fn);
@@ -59,7 +68,7 @@ const Session = {
 
   async flush() {
     clearTimeout(this.timer);
-    if (this.doc) await Store.set(this.key(this.current), this.doc);
+    if (this.doc) await this.save(this.current, this.doc);
   },
 
   async saveClasses() { await Store.set('classes', { list: this.classes, current: this.current }); },
@@ -68,10 +77,10 @@ const Session = {
     return this.run(async () => {
       if (!this.classes.includes(cls) || cls === this.current) return;
       const doc = await this.load(cls);
-      const prevKey = this.key(this.current);
+      const prev = this.current;
       const prevDoc = this.doc;
       this.swap(cls, doc);
-      await Store.set(prevKey, prevDoc);   // 읽는 동안 그린 획까지 옛 반에 저장
+      await this.save(prev, prevDoc);   // 읽는 동안 그린 획까지 옛 반에 저장
       await this.saveClasses();
     });
   },
@@ -92,6 +101,7 @@ const Session = {
       this.classes = this.classes.filter((c) => c !== cls);
       // 현재 반이면 먼저 다른 반으로 옮긴 뒤 지운다(대기 중 저장은 swap이 버린다). 그래야 flush가 지운 키를 되살리지 못한다.
       if (cls === this.current) this.swap(this.classes[0], await this.load(this.classes[0]));
+      this.unsaved.delete(cls);
       await Store.del(this.key(cls));
       await this.saveClasses();
       return true;
@@ -121,7 +131,7 @@ const Session = {
       for (const [c, d] of Object.entries(r.classes)) {
         if (!this.classes.includes(c)) this.classes.push(c);
         if (c === this.current) this.swap(c, d);
-        await Store.set(this.key(c), d);
+        await this.save(c, d);
       }
       await this.saveClasses();
       return r;

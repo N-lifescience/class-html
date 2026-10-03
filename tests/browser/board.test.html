@@ -164,6 +164,16 @@ test('초록 칠판에서는 먹색→흰색, 밝은 칠판으로 돌아오면 �
   assert(!document.body.classList.contains('ch-dark-page'), 'light');
 });
 
+test('초록 칠판을 닫으면 밝은 화면으로 돌아오고 흰 펜은 먹색이 된다', async () => {
+  await reset();
+  I().Board.open();
+  I().Board.setBg('green');
+  eq(I().Tools.penColor, '#FFFFFF');
+  I().Board.close();
+  assert(!document.body.classList.contains('ch-dark-page'), 'light after close');
+  eq(I().Tools.penColor, '#1F2328');
+});
+
 test('색 펜은 초록·밝은 바탕을 이동해도 고른 색 유지', async () => {
   await reset();
   I().Tools.penColor = '#D7263D';

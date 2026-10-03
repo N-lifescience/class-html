@@ -10,7 +10,7 @@
 <body>
 <section class="slide" id="ok1"><h2>정상</h2><p data-ai>AI가 쓴 문장</p></section>
 <section class="slide" id="bad1"><h2>넘침</h2><div id="tall" style="height:900px">아주 긴 상자</div></section>
-<section class="slide" id="bad2"><h2>작은 글씨</h2><p id="tiny" style="font-size:12px">너무 작다</p><p id="dup">하나</p><img data-ppt="3-1" alt="그림"><p data-ai class="step">AI 단계</p></section>
+<section class="slide" id="bad2"><h2>작은 글씨</h2><p id="tiny" style="font-size:12px">너무 작다</p><div id="tinydiv" style="font-size:12px">카드 안의 작은 글자 여러 낱말</div><p id="dup">하나</p><img data-ppt="3-1" alt="그림"><p data-ai class="step">AI 단계</p></section>
 <section class="slide" id="ok2"><h2 id="dup">중복 id</h2></section>
 <pre id="results" data-summary="pending"></pre>
 <script>
@@ -37,10 +37,23 @@ test('빈 그림 자리는 경고', () => {
 test('정상 슬라이드에는 오류가 없다', () => {
   assert(!ClassHTML.audit().errors.some((e) => e.slide === 0), 'slide 0 clean');
 });
-test('점검 뒤에는 보던 장과 단계로 돌아온다', () => {
+test('점검 뒤에는 보던 장과 단계로 돌아오고, 수업 훅은 불리지 않으며, 등장 효과가 다시 돌지 않는다', () => {
   ClassHTML.go(2);
+  let calls = 0;
+  ClassHTML.onShow(() => { calls += 1; });
+  ClassHTML.onHide(() => { calls += 1; });
+  const slide = ClassHTML._internal.Stage.slides[2];
+  for (const a of slide.getAnimations()) a.finish();
   ClassHTML.audit();
   eq(ClassHTML._internal.Nav.state, { slide: 2, shown: 0 });
+  eq(calls, 0);
+  assert(slide.classList.contains('is-active'), 'still active');
+  eq(slide.getAnimations().filter((a) => a.playState === 'running').length, 0);
+});
+test('어절로 나뉜 작은 글자는 덩어리 하나로 한 번만 알린다', () => {
+  const tiny = ClassHTML.audit().errors.filter((e) => e.code === 'tiny-text' && e.slide === 2);
+  assert(tiny.every((e) => !e.msg.includes('<span.w>')), 'not per word');
+  eq(tiny.filter((e) => e.msg.includes('#tinydiv')).length, 1);
 });
 test('D 키로 점검 창, AI 추가 표시는 점선, Esc로 닫기', () => {
   key('d');

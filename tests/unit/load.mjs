@@ -1,4 +1,5 @@
 // 엔진 소스 파일들을 하나의 vm 샌드박스에 올려 순수 모듈을 Node에서 시험한다.
+// globals로 브라우저 API 대역(indexedDB, localStorage, setTimeout, console 등)을 넣을 수 있다.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

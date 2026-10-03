@@ -86,8 +86,7 @@ test('가린 화면을 누르면 해제', () => {
 });
 test('키를 누르고 있어도(반복 입력) 깜박이지 않는다', () => {
   key('b');
-  key('b', { repeat: true });
-  key('b', { repeat: true });
+  key('b', { repeat: true });   // 반복 입력 한 번: 가드가 없으면 꺼져 버린다
   eq($('.ch-shade').dataset.mode, 'black');
   key('b');
   eq($('.ch-shade').dataset.mode, '');

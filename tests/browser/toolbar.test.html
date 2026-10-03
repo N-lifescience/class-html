@@ -74,7 +74,7 @@ test('이 장 지우기는 확인 후', () => {
 test('위치 바꾸기: 아래 → 왼쪽, 화면 여백도 옮긴다', () => {
   btn('dock').click();
   eq(document.querySelector('.ch-toolbar').dataset.dock, 'left');
-  eq(document.documentElement.style.getPropertyValue('--ch-reserve-left'), '76px');
+  eq(document.documentElement.style.getPropertyValue('--ch-reserve-left'), '80px');
   eq(document.documentElement.style.getPropertyValue('--ch-reserve-bottom'), '0px');
   btn('dock').click();
   btn('dock').click();

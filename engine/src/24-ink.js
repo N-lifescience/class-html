@@ -49,7 +49,9 @@ const Ink = {
     window.addEventListener('pointerup', (e) => this.up(e), true);
     window.addEventListener('pointercancel', (e) => this.up(e), true);
     // 펜을 든 채로 링크·그림을 끌면 브라우저 끌어 놓기가 포인터를 가로채 획이 끊긴다
-    d.addEventListener('dragstart', (e) => { if (Tools.current !== 'hand') e.preventDefault(); }, true);
+    d.addEventListener('dragstart', (e) => {
+      if (Tools.current !== 'hand' && !(e.target.closest && e.target.closest(ALWAYS_LIVE))) e.preventDefault();
+    }, true);
     d.addEventListener('click', (e) => {
       if (!this.suppressClick) return;
       this.suppressClick = false;

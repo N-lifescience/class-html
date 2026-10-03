@@ -36,3 +36,11 @@ test('round는 소수 첫째 자리', () => {
   assert.equal(InkGeom.round(1.26), 1.3);
   assert.equal(InkGeom.round(-0.04), -0);
 });
+
+test('여러 구간 획, 끝점 너머, 경계값', () => {
+  const L = { w: 4, p: [0, 0, 100, 0, 100, 100] };
+  assert.equal(InkGeom.hit(L, 100, 50, 8), true);           // 2번째 선분
+  assert.equal(InkGeom.hit(L, 50, 50, 8), false);
+  assert.equal(InkGeom.distToSeg(13, 4, 0, 0, 10, 0), 5);   // 끝점 너머(t>1)
+  assert.equal(InkGeom.keep([0, 0], 0.8, 0, 0.8), true);    // 정확히 minDist
+});

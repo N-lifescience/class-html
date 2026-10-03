@@ -627,6 +627,7 @@ const Session = {
   hist: null,
   timer: 0,
   queue: Promise.resolve(),
+  unsaved: new Map(),   // 저장에 실패한 반 문서: 창을 닫기 전까지는 반을 오가도, 백업에도 남는다
 
   deckKey() {
     const raw = document.documentElement.dataset.deck || document.title || location.pathname;
@@ -652,7 +653,15 @@ const Session = {
 
   key(cls) { return `ink:${this.deck}:${cls}`; },
 
-  async load(cls) { return InkModel.sanitizeDoc(await Store.get(this.key(cls))) || InkModel.emptyDoc(); },
+  async load(cls) {
+    if (this.unsaved.has(cls)) return this.unsaved.get(cls);
+    return InkModel.sanitizeDoc(await Store.get(this.key(cls))) || InkModel.emptyDoc();
+  },
+
+  async save(cls, doc) {
+    if (await Store.set(this.key(cls), doc)) this.unsaved.delete(cls);
+    else this.unsaved.set(cls, doc);
+  },
 
   run(fn) {
     const p = this.queue.then(fn);
@@ -677,7 +686,7 @@ const Session = {
 
   async flush() {
     clearTimeout(this.timer);
-    if (this.doc) await Store.set(this.key(this.current), this.doc);
+    if (this.doc) await this.save(this.current, this.doc);
   },
 
   async saveClasses() { await Store.set('classes', { list: this.classes, current: this.current }); },
@@ -686,10 +695,10 @@ const Session = {
     return this.run(async () => {
       if (!this.classes.includes(cls) || cls === this.current) return;
       const doc = await this.load(cls);
-      const prevKey = this.key(this.current);
+      const prev = this.current;
       const prevDoc = this.doc;
       this.swap(cls, doc);
-      await Store.set(prevKey, prevDoc);   // 읽는 동안 그린 획까지 옛 반에 저장
+      await this.save(prev, prevDoc);   // 읽는 동안 그린 획까지 옛 반에 저장
       await this.saveClasses();
     });
   },
@@ -710,6 +719,7 @@ const Session = {
       this.classes = this.classes.filter((c) => c !== cls);
       // 현재 반이면 먼저 다른 반으로 옮긴 뒤 지운다(대기 중 저장은 swap이 버린다). 그래야 flush가 지운 키를 되살리지 못한다.
       if (cls === this.current) this.swap(this.classes[0], await this.load(this.classes[0]));
+      this.unsaved.delete(cls);
       await Store.del(this.key(cls));
       await this.saveClasses();
       return true;
@@ -739,7 +749,7 @@ const Session = {
       for (const [c, d] of Object.entries(r.classes)) {
         if (!this.classes.includes(c)) this.classes.push(c);
         if (c === this.current) this.swap(c, d);
-        await Store.set(this.key(c), d);
+        await this.save(c, d);
       }
       await this.saveClasses();
       return r;
@@ -799,7 +809,9 @@ const Ink = {
     window.addEventListener('pointerup', (e) => this.up(e), true);
     window.addEventListener('pointercancel', (e) => this.up(e), true);
     // 펜을 든 채로 링크·그림을 끌면 브라우저 끌어 놓기가 포인터를 가로채 획이 끊긴다
-    d.addEventListener('dragstart', (e) => { if (Tools.current !== 'hand') e.preventDefault(); }, true);
+    d.addEventListener('dragstart', (e) => {
+      if (Tools.current !== 'hand' && !(e.target.closest && e.target.closest(ALWAYS_LIVE))) e.preventDefault();
+    }, true);
     d.addEventListener('click', (e) => {
       if (!this.suppressClick) return;
       this.suppressClick = false;
@@ -1447,7 +1459,7 @@ const Toolbar = {
     this.handle.dataset.dock = dock;
     this.el.hidden = collapsed;
     this.handle.hidden = !collapsed;
-    const size = collapsed ? '0px' : '76px';
+    const size = collapsed ? '0px' : '80px';   // 툴바 두께 72 + 화면 끝 띄움 8
     const root = document.documentElement.style;
     root.setProperty('--ch-reserve-bottom', dock === 'bottom' ? size : '0px');
     root.setProperty('--ch-reserve-left', dock === 'left' ? size : '0px');
@@ -1522,7 +1534,7 @@ const Settings = {
 // 어절을 nowrap span으로 감싸고 인라인 요소 사이에 WORD JOINER(U+2060)를 넣는다.
 // 원래 요소와 이벤트는 보존하며, .w 내부를 건너뛰어 다시 적용해도 중첩하지 않는다.
 const KeepWords = {
-  SKIP: 'svg, math, script, style, pre, code, textarea, select, button, canvas, .katex, .w, [data-no-keep]',
+  SKIP: 'svg, math, script, style, pre, code, textarea, select, button, canvas, .katex, .w, [data-no-keep], [contenteditable=""], [contenteditable="true"]',
 
   apply(root) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -1609,8 +1621,8 @@ const Print = {
     canvas.height = STAGE_H * 2;
     const ctx = canvas.getContext('2d');
     ctx.setTransform(2, 0, 0, 2, 0, 0);
+    // 화면과 같게: 형광펜 획은 불투명하게 그리고 그림 전체의 투명도는 CSS(.ch-print-hl)가 정한다
     for (const pass of ['hl', 'pen']) {
-      ctx.globalAlpha = pass === 'hl' ? 0.4 : 1;
       for (const stroke of strokes) if (stroke.t === pass) Ink.drawStrokeOn(ctx, stroke);
     }
     return h('img', { class: 'ch-print-ink', alt: '', src: canvas.toDataURL('image/png') });
@@ -1746,7 +1758,9 @@ const Audit = {
           const hasText = Array.from(el.childNodes).some((node) =>
             node.nodeType === 3 && /\S/.test(node.nodeValue.replace(/\u2060/g, '')));
           if (!hasText) continue;
-          const block = el.closest('p, li, td, th, h1, h2, h3, h4, figcaption, small, .caption, label') || el;
+          // 어절 보정이 감싼 span.w는 낱말 하나이므로 그 부모를 글 덩어리로 본다
+          const base = el.classList.contains('w') && el.parentElement ? el.parentElement : el;
+          const block = base.closest('p, li, td, th, h1, h2, h3, h4, figcaption, small, .caption, label') || base;
           const size = parseFloat(cs.fontSize);
           if (!textBlocks.has(block) || size < textBlocks.get(block)) textBlocks.set(block, size);
         }
@@ -1763,6 +1777,11 @@ const Audit = {
         for (const step of snapshot.steps) step.el.classList.toggle('is-shown', step.shown);
       }
       root.classList.toggle('ch-auditing', wasAuditing);
+      // 표시 상태를 되돌릴 때 다시 시작된 슬라이드 등장·단계 전환 효과는 바로 끝낸다(점검할 때마다 깜박이지 않게)
+      if (!wasAuditing && Stage.deck.getAnimations) {
+        void Stage.deck.offsetWidth;
+        for (const a of Stage.deck.getAnimations({ subtree: true })) a.finish();
+      }
     }
     return { ok: !errors.length, errors, warnings,
       info: { slides: Stage.slides.length, aiAdded: qsa('[data-ai]', Stage.deck).length } };

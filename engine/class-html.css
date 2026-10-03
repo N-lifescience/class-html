@@ -160,6 +160,8 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .ch-audit-on [data-ai] { outline: 2px dashed #A855F7; outline-offset: 3px; }
 
 /* ---- 50-print.css ---- */
+/* 인쇄 창이 떠 있는 동안 화면에는 인쇄용 판서 그림을 보이지 않는다 */
+@media screen { .ch-print-ink { display: none !important; } }
 @media print {
   @page { size: 1280px 720px; margin: 0; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -171,8 +173,8 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
   .slide, .slide.is-active { display: flex !important; position: relative; width: 1280px; height: 720px; break-after: page; animation: none !important; visibility: visible !important; }
   .step { opacity: 1 !important; visibility: visible !important; transform: none !important; }
   .ch-print-ink { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; pointer-events: none; z-index: 30; }
-  .ch-print-hl { z-index: 29; mix-blend-mode: multiply; }
-  .ch-print-board[data-bg="green"] .ch-print-hl { mix-blend-mode: screen; }
+  .ch-print-hl { z-index: 29; opacity: .45; mix-blend-mode: multiply; }
+  .ch-print-board[data-bg="green"] .ch-print-hl { opacity: .55; mix-blend-mode: screen; }
   .ch-print-board { padding: 0; }
   .ch-print-board .ch-board { display: block !important; position: absolute; inset: 0; }
 }

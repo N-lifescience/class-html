@@ -106,16 +106,17 @@ test('놓친 pointerup 뒤 같은 포인터로 다시 누르면 새 획', () => 
   eq(page().length, before + 2);
   eq(page()[page().length - 1].p.slice(0, 2), [900, 500]);
 });
-test('펜을 든 채로는 링크·그림의 끌어 놓기가 시작되지 않는다', () => {
+test('펜을 든 채로는 링크·그림의 끌어 놓기가 시작되지 않는다(늘 조작되는 요소는 그대로)', () => {
   const { Tools } = I();
-  const fire = () => {
+  const fire = (id) => {
     const ev = new DragEvent('dragstart', { bubbles: true, cancelable: true });
-    document.getElementById('lnk').dispatchEvent(ev);
+    document.getElementById(id).dispatchEvent(ev);
     return ev.defaultPrevented;
   };
-  eq(fire(), true);
+  eq(fire('lnk'), true);
+  eq(fire('rng'), false);
   Tools.set('hand');
-  eq(fire(), false);
+  eq(fire('lnk'), false);
   Tools.set('pen');
 });
 test('형광펜은 폭 24, 종류 hl', () => {

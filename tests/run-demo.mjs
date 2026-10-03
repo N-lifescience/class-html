@@ -100,7 +100,7 @@ async function runViewport(width, height) {
       for (const type of ['keyDown', 'keyUp']) {
         const text = type === 'keyDown' ? (value === 'Enter' ? '\r' : value.length === 1 ? value : '') : '';
         await send('Input.dispatchKeyEvent', { type, key: value, code, text, unmodifiedText: text,
-          windowsVirtualKeyCode: virtualKey, nativeVirtualKeyCode: virtualKey });
+          windowsVirtualKeyCode: virtualKey });   // nativeVirtualKeyCode는 운영체제마다 뜻이 달라 넣지 않는다(맥에서 27이 - 키)
       }
     };
     const center = async (selector) => {

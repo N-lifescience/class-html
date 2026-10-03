@@ -257,7 +257,7 @@ const Toolbar = {
     this.handle.dataset.dock = dock;
     this.el.hidden = collapsed;
     this.handle.hidden = !collapsed;
-    const size = collapsed ? '0px' : '76px';
+    const size = collapsed ? '0px' : '80px';   // 툴바 두께 72 + 화면 끝 띄움 8
     const root = document.documentElement.style;
     root.setProperty('--ch-reserve-bottom', dock === 'bottom' ? size : '0px');
     root.setProperty('--ch-reserve-left', dock === 'left' ? size : '0px');

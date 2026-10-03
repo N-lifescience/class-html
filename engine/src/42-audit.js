@@ -84,7 +84,9 @@ const Audit = {
           const hasText = Array.from(el.childNodes).some((node) =>
             node.nodeType === 3 && /\S/.test(node.nodeValue.replace(/\u2060/g, '')));
           if (!hasText) continue;
-          const block = el.closest('p, li, td, th, h1, h2, h3, h4, figcaption, small, .caption, label') || el;
+          // 어절 보정이 감싼 span.w는 낱말 하나이므로 그 부모를 글 덩어리로 본다
+          const base = el.classList.contains('w') && el.parentElement ? el.parentElement : el;
+          const block = base.closest('p, li, td, th, h1, h2, h3, h4, figcaption, small, .caption, label') || base;
           const size = parseFloat(cs.fontSize);
           if (!textBlocks.has(block) || size < textBlocks.get(block)) textBlocks.set(block, size);
         }
@@ -101,6 +103,11 @@ const Audit = {
         for (const step of snapshot.steps) step.el.classList.toggle('is-shown', step.shown);
       }
       root.classList.toggle('ch-auditing', wasAuditing);
+      // 표시 상태를 되돌릴 때 다시 시작된 슬라이드 등장·단계 전환 효과는 바로 끝낸다(점검할 때마다 깜박이지 않게)
+      if (!wasAuditing && Stage.deck.getAnimations) {
+        void Stage.deck.offsetWidth;
+        for (const a of Stage.deck.getAnimations({ subtree: true })) a.finish();
+      }
     }
     return { ok: !errors.length, errors, warnings,
       info: { slides: Stage.slides.length, aiAdded: qsa('[data-ai]', Stage.deck).length } };

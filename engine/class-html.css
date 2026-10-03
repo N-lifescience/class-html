@@ -181,7 +181,7 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .slide h1 { margin: 0 0 20px; font-size: 80px; font-weight: 800; line-height: 1.1; letter-spacing: -.03em; }
 .slide h2 { margin: 0 0 28px; font-size: 42px; font-weight: 800; line-height: 1.2; letter-spacing: -.025em; }
 .slide h3 { margin: 0 0 12px; font-size: 27px; font-weight: 700; line-height: 1.3; letter-spacing: -.015em; }
-.slide p, .slide li { margin: 0 0 14px; font-size: 24px; line-height: 1.6; }
+.slide p, .slide li { margin: 0 0 14px; font-size: var(--ch-body, 24px); line-height: 1.6; }
 .slide ul, .slide ol { margin: 0 0 14px; padding-left: 1.2em; }
 .slide mark { background: linear-gradient(transparent 55%, var(--ch-hl) 55%); color: inherit; padding: 0 .1em; }
 .slide .kicker { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; font-size: 18px; font-weight: 700; color: var(--accent); }
@@ -195,3 +195,123 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
 .slide output { margin-left: 8px; font: 700 24px/1 var(--ch-mono); }
 .slide small, .slide .caption { font-size: 18px; color: var(--ch-mute); }
 .slide.cover { justify-content: center; }
+
+/* ---- 70-parts.css ---- */
+/* 공통 부품. 색은 변수로 받는다: --accent(주제 제목·번호), --tab·--tab-ink(장 머리 띠), --flag(연표),
+   --pill(자료 단추), --qnum(문항 번호), --table-head·--table-side(비교표). 원본 PPT 색을 덱에서 넣는다. */
+
+/* 원본 PPT 테마: 흰 바탕, data-sec이 왼쪽 위 색 띠가 된다. 단원 성격마다 [data-sec="…"]{--tab:…}로 색을 바꾼다. */
+[data-theme="ppt"] { --ch-paper: #fff; --ch-body: 28px; --tab: var(--accent); --tab-ink: #fff; }
+[data-theme="ppt"] .slide { padding: 112px 80px 56px; background: linear-gradient(var(--tab), var(--tab)) top / 100% 30px no-repeat, var(--ch-paper); }
+[data-theme="ppt"] .slide::before { left: 0; top: 0; height: 78px; display: flex; align-items: center; padding: 0 48px 0 36px; border-radius: 0 0 44px 0; background: var(--tab); color: var(--tab-ink); font: 800 32px/1 var(--ch-font); letter-spacing: -.02em; }
+[data-theme="ppt"] .slide:not([data-sec]) { padding-top: 72px; background: var(--ch-paper); }
+[data-theme="ppt"] .slide:not([data-sec])::before { display: none; }
+[data-theme="ppt"] .slide h2:not([data-n]) { width: fit-content; padding-bottom: 8px; border-bottom: 4px solid var(--tab); font-size: 34px; }
+[data-theme="ppt"] .slide p, [data-theme="ppt"] .slide li { line-height: 1.7; }
+
+/* 번호 주제 제목: <h2 data-n="1">빈 체제의 성립</h2> */
+.slide h2[data-n] { display: flex; align-items: center; gap: 18px; color: var(--accent); font-size: 40px; }
+.slide h2[data-n]::before { content: attr(data-n); flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 32px; box-shadow: 0 0 0 4px #DCDCDC; }
+
+/* 항목 목록: ol.points는 (1) (2), ol.circled는 ① ②. 글자 줄이 번호 뒤로 맞춰진다. */
+@counter-style ch-paren { system: extends decimal; prefix: "("; suffix: ") "; }
+@counter-style ch-circled { system: fixed; symbols: "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" "⑩"; suffix: " "; }
+.slide ol.points { list-style: ch-paren; padding-left: 2.2em; }
+.slide ol.circled { list-style: ch-circled; padding-left: 1.5em; }
+.slide ol.points > li::marker { font-weight: 800; }
+.slide ol.points ol { margin: 4px 0 0 -.9em; }
+.slide ol.points li { margin-bottom: 6px; }
+
+/* 문항: <p class="q" data-n="1">…</p> */
+.slide .q { position: relative; margin: 0 0 24px; padding-left: 56px; font-size: 32px; font-weight: 700; line-height: 1.5; }
+.slide .q[data-n]::before { content: attr(data-n); position: absolute; left: 0; top: -.12em; color: var(--qnum, var(--accent)); font-size: 1.4em; font-weight: 800; }
+
+/* 정답 상자: 회색 둥근 상자 가운데 ✓ 단추. 누르거나 다음(→)을 누르면 내용이 열린다. .sheet는 남은 자리를 채우는 흰 답안지. */
+.slide .answer { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 170px; box-sizing: border-box; padding: 28px 56px; border-radius: 80px; background: #F0F0F0; text-align: center; }
+.slide .answer p { margin: 0; font-size: 34px; font-weight: 800; }
+.slide .answer.sheet { flex: 1 1 auto; align-items: stretch; justify-content: flex-start; border-radius: 6px; background: #fff; box-shadow: 0 0 0 3px #E4E4E4, 0 6px 14px rgba(0, 0, 0, .08); text-align: left; }
+.slide .answer.sheet p { font-size: var(--ch-body, 24px); font-weight: 500; margin-bottom: 10px; }
+.slide .answer .label { display: inline-block; margin-bottom: 14px; padding: 4px 16px; border-radius: 8px; background: var(--label, #2E7D4F); color: #fff; font-size: 20px; font-weight: 700; }
+.ch-check { position: absolute; left: 50%; top: 50%; width: 88px; height: 88px; margin: -44px 0 0 -44px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 50%; background: #00963A; color: #E3FEB8; box-shadow: 0 4px 10px rgba(0, 0, 0, .25); cursor: pointer; transition: transform .15s var(--ch-ease-out); }
+.ch-check:hover { transform: scale(1.06); }
+.ch-check .ch-icon { width: 52px; height: 52px; stroke-width: 3.2; }
+.answer:has(.step.is-shown) > .ch-check { display: none; }
+
+/* 그림: <figure class="fig"><img …><figcaption>…</figcaption></figure>. 단추나 그림(손 모드)을 누르면 크게 본다. */
+.slide figure.fig { position: relative; margin: 0; }
+.slide .fig img { display: block; max-width: 100%; border: 1px solid #CFCFCF; cursor: zoom-in; }
+.slide .fig figcaption { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 22px; font-weight: 700; color: var(--ch-ink); }
+.slide .fig figcaption::before { content: "▲"; display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; background: #777; color: #fff; font-size: 11px; }
+.ch-zoom-btn { position: absolute; right: 10px; top: 10px; width: 48px; height: 48px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(22, 24, 29, .72); color: #fff; cursor: pointer; }
+.ch-zoom { position: fixed; inset: 0; z-index: 75; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(10, 12, 16, .9); cursor: zoom-out; }
+.ch-zoom.is-open { display: flex; animation: ch-pop .25s var(--ch-ease-out); }
+.ch-zoom img { max-width: 96vw; max-height: 88vh; object-fit: contain; background: #fff; }
+.ch-zoom p { margin: 0; color: #fff; font: 700 20px/1.4 var(--ch-font); }
+
+/* 자료 단추(외부 링크): <a class="pill" href="…">사료 보기</a>, 색은 style="--pill:#…" */
+.slide a.pill { display: inline-flex; align-items: center; gap: 6px; margin: 0 4px; padding: 5px 18px; border-radius: 999px; background: var(--pill, #3AB57A); color: #fff; font-size: 20px; font-weight: 700; line-height: 1.3; text-decoration: none; vertical-align: .15em; box-shadow: 0 3px 0 rgba(0, 0, 0, .18); }
+.slide a.pill::after { content: "↗"; font-size: .9em; }
+
+/* 연표: <ol class="timeline"><li data-year="1830">…</li></ol>. 축 위아래로 번갈아 놓인다. */
+.slide ol.timeline { position: relative; display: flex; height: 400px; margin: 8px 0 0; padding: 0 40px 0 64px; list-style: none; }
+.slide ol.timeline::before { content: ""; position: absolute; left: 0; right: 4px; top: 198px; border-top: 4px solid var(--flag, var(--accent)); }
+.slide ol.timeline::after { content: ""; position: absolute; right: 6px; top: 189px; width: 18px; height: 18px; border: solid var(--flag, var(--accent)); border-width: 4px 4px 0 0; transform: rotate(45deg); }
+.slide ol.timeline > li { flex: 1; align-self: flex-end; margin: 0 0 200px; padding: 0 0 18px 18px; border-left: 4px solid var(--flag, var(--accent)); font-size: 36px; font-weight: 800; line-height: 1.45; }
+.slide ol.timeline > li:nth-child(even) { align-self: flex-start; margin: 202px 0 0; padding: 18px 0 0 18px; }
+.slide ol.timeline > li:nth-child(odd)::before, .slide ol.timeline > li:nth-child(even)::after { content: attr(data-year); display: block; width: max-content; margin-left: -18px; padding: 4px 34px 4px 22px; border-radius: 0 999px 999px 0; background: var(--flag, var(--accent)); color: #FFF6C8; font-size: 32px; }
+.slide ol.timeline > li:nth-child(odd)::before { margin-bottom: 14px; }
+.slide ol.timeline > li:nth-child(even)::after { margin-top: 14px; }
+
+/* 비교표: <table class="compare">, 첫 줄은 thead, 첫 칸은 tbody th */
+.slide table.compare { width: 100%; table-layout: fixed; font-size: var(--ch-body, 24px); line-height: 1.5; }
+.slide table.compare th, .slide table.compare td { padding: 12px 20px; border: 0; border-bottom: 2px solid #C9C9C9; vertical-align: middle; }
+.slide table.compare td + td { border-left: 2px solid #C9C9C9; }
+.slide table.compare thead th { background: var(--table-head, #B6E3A8); text-align: center; font-weight: 800; border-left: 2px solid #fff; }
+.slide table.compare tbody th { width: 3.6em; background: var(--table-side, #D9F0D0); text-align: center; font-weight: 800; }
+
+/* 표지 꾸밈: .band는 위쪽 가득 찬 색 띠(--band), .cover-art는 오른쪽 둥근 그림 */
+.slide .band { margin: -72px -80px 40px; padding: 56px 80px 40px; background: var(--band, var(--tab, var(--accent))); }
+.slide.cover:has(.cover-art) .band { padding-right: 620px; }
+.slide .cover-art { position: absolute; right: 0; top: 0; z-index: 1; width: 560px; height: 100%; object-fit: cover; clip-path: ellipse(100% 78% at 100% 50%); }
+[data-theme="ppt"] .slide.cover { justify-content: flex-start; padding-top: 72px; }
+
+@media print {
+  .ch-check, .ch-zoom-btn, .ch-zoom { display: none !important; }
+}
+
+/* ---- 72-stepper.css ---- */
+/* 단계 막대: 슬라이더(굵은 손잡이)와 눈금 이름. 색은 --stop-c(기본 --accent). */
+.ch-stops { position: relative; margin: 6px 0 0; padding-bottom: 48px; }
+.ch-stops input[type="range"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 56px; margin: 0; background: transparent; cursor: pointer; --p: 0%; }
+.ch-stops input[type="range"]::-webkit-slider-runnable-track { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--stop-c, var(--accent)) var(--p), #D5D9DF var(--p)); }
+.ch-stops input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 46px; height: 46px; margin-top: -17px; border-radius: 50%; background: #fff; border: 7px solid var(--stop-c, var(--accent)); box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
+.ch-stops input[type="range"]::-moz-range-track { height: 12px; border-radius: 6px; background: #D5D9DF; }
+.ch-stops input[type="range"]::-moz-range-progress { height: 12px; border-radius: 6px; background: var(--stop-c, var(--accent)); }
+.ch-stops input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 7px solid var(--stop-c, var(--accent)); }
+.ch-stop-labels { position: absolute; left: 23px; right: 23px; bottom: 0; height: 48px; pointer-events: none; }
+.ch-stop-labels span { position: absolute; top: 2px; transform: translateX(-50%); font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--ch-mute); white-space: pre; text-align: center; }
+.ch-stop-labels span.is-on { color: var(--ch-ink); }
+.ch-stop-labels.is-dense span:not(.is-on):not(:first-child):not(:last-child) { visibility: hidden; }
+
+/* 단추형(비교 전환) */
+.ch-switch-btns { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 18px; }
+.slide .ch-switch-btn { min-height: 64px; padding: 0 30px; border: 2px solid var(--stop-c, var(--accent)); border-radius: 14px; background: #fff; color: var(--ch-ink); font: 700 26px/1.2 var(--ch-font); white-space: pre; }
+.slide .ch-switch-btn[aria-pressed="true"] { background: var(--stop-c, var(--accent)); color: #fff; }
+.slide .ch-switch-hint { margin: 0 0 12px; color: var(--ch-mute); font-size: 26px; }
+
+/* 단계에 묶인 요소: data-at은 자리를 지키며 나타나고, data-only는 그 칸에서만 자리를 차지한다 */
+.ch-at { transition: opacity .3s var(--ch-ease-out), transform .3s var(--ch-ease-out), visibility 0s; }
+.ch-at.ch-off { opacity: 0; visibility: hidden; transform: translateY(12px); transition: opacity .2s var(--ch-ease-in), transform .2s var(--ch-ease-in), visibility 0s linear .2s; }
+.ch-only:not(.ch-off) { animation: ch-fade-in .3s var(--ch-ease-out); }
+.ch-only.ch-off { display: none !important; }
+@keyframes ch-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* 0단계 가림막: .veil 영역(또는 지도)을 빗금으로 덮고 안내 글을 띄운다 */
+.ch-stepper .veil { position: relative; }
+.ch-stepper.is-veiled .veil::after, .ch-veil-self.is-veiled::after { content: attr(data-veil); position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; padding: 20px; border: 2px dashed #C3C9D1; border-radius: 10px; background: repeating-linear-gradient(135deg, #E7EAEE 0 22px, #DFE3E8 22px 44px); color: var(--ch-mute); font: 800 28px/1.4 var(--ch-font); text-align: center; }
+.ch-stepper.is-veiled .veil > * { visibility: hidden; }
+
+@media print {
+  .ch-stops, .ch-switch-btns, .ch-switch-hint { display: none !important; }
+  .ch-at.ch-off { opacity: 1 !important; visibility: visible !important; transform: none !important; }
+}

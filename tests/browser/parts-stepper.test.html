@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ko" data-deck="test-stepper">
+<head>
+<meta charset="utf-8">
+<title>stepper</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="pointer.js"></script>
+</head>
+<body>
+<section class="slide" id="p0"><h2>앞 장</h2></section>
+<section class="slide" id="p1">
+  <h2>단계 막대</h2>
+  <div class="reveal" id="r1" data-stops="시작|하나|둘|셋">
+    <div class="veil" id="v1"><p>가려진 그림</p></div>
+    <p data-at="1" id="at1">하나부터</p>
+    <p data-only="2" id="only2">둘에만</p>
+    <p data-only="1 3" id="only13">하나와 셋</p>
+  </div>
+  <p data-at="2" id="side">바깥 설명(장에 막대가 하나)</p>
+  <p class="step" id="after">막대 뒤 단계</p>
+</section>
+<section class="slide" id="p2">
+  <h2>단계가 앞에</h2>
+  <p class="step" id="before">먼저 열리는 단계</p>
+  <div class="reveal" id="r2" data-stops="하나|둘">
+    <p data-only="1">하나</p>
+  </div>
+  <div class="reveal" id="r3" data-nav="off" data-stops="시작|가|나"></div>
+</section>
+<section class="slide" id="p3">
+  <h2>비교 전환</h2>
+  <div class="switch" id="sw" data-stops="시작|7월 혁명<br>1830|2월 혁명">
+    <div data-only="1" id="c1">7월</div>
+    <div data-only="2" id="c2">2월</div>
+  </div>
+  <div class="reveal" id="dense" data-nav="off" data-stops="시작|1|2|3|4|5|6|7|8"></div>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const st = (id) => I().Stepper.all.find((s) => s.el.id === id);
+const off = (id) => document.getElementById(id).classList.contains('ch-off');
+const shown = (id) => document.getElementById(id).classList.contains('is-shown');
+const key = (k) => document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+const slide = () => I().Nav.state.slide;
+const slideInput = (s, v) => { s.input.value = String(v); s.input.dispatchEvent(new Event('input', { bubbles: true })); };
+
+test('처음에는 0단계: 가림, 슬라이더 0, 시작 표시, 묶인 요소 숨김', () => {
+  const s = st('r1');
+  eq(s.pos, 0);
+  eq(s.stops, ['시작', '하나', '둘', '셋']);
+  assert(s.el.classList.contains('is-veiled'), 'veiled');
+  eq(s.input.value, '0');
+  assert(s.labels[0].classList.contains('is-on'), '시작 on');
+  assert(off('at1') && off('only2') && off('only13') && off('side'), 'targets hidden');
+  eq(document.getElementById('v1').dataset.veil, '막대를 움직여 하나씩 열어 보자');
+  eq(getComputedStyle(document.getElementById('v1'), '::after').content.includes('막대를'), true);
+});
+test('모든 단계 막대가 0단계로 시작한다', () => {
+  for (const s of I().Stepper.all) eq(s.pos, 0, s.el.id);
+});
+test('첫 칸이 시작이 아니면 붙이고, <br>은 줄바꿈', () => {
+  eq(st('r2').stops, ['시작', '하나', '둘']);
+  eq(st('sw').stops[1], '7월 혁명\n1830');
+});
+test('슬라이더를 움직이면 칸에 맞게 보이고 숨는다', () => {
+  ClassHTML.go(1);
+  const s = st('r1');
+  let got = null;
+  s.el.addEventListener('ch-stepper', (e) => { got = e.detail; }, { once: true });
+  slideInput(s, 2);
+  eq(s.pos, 2);
+  assert(!s.el.classList.contains('is-veiled'), 'unveiled');
+  assert(!off('at1') && !off('only2') && off('only13') && !off('side'), 'pos 2 targets');
+  eq(s.el.dataset.pos, '2');
+  eq(got.pos, 2); eq(got.prev, 0); eq(got.label, '둘');
+  slideInput(s, 3);
+  assert(off('only2') && !off('only13'), 'pos 3 targets');
+  eq(s.input.style.getPropertyValue('--p'), '100%');
+});
+test('→ 는 막대를 먼저 한 칸씩 열고 그다음 단계, 그다음 장', () => {
+  ClassHTML.go(1);
+  const s = st('r1');
+  eq(s.pos, 0);
+  key('ArrowRight'); eq(s.pos, 1);
+  key('ArrowRight'); key('ArrowRight'); eq(s.pos, 3);
+  assert(!shown('after'), 'step not yet');
+  key('ArrowRight'); assert(shown('after'), 'step after stepper');
+  key('ArrowRight'); eq(slide(), 2);
+});
+test('단계가 막대보다 앞이면 단계부터, data-nav=off 막대는 건너뛴다', () => {
+  eq(slide(), 2);
+  key('ArrowRight'); assert(shown('before'), 'step first');
+  eq(st('r2').pos, 0);
+  key('ArrowRight'); key('ArrowRight'); eq(st('r2').pos, 2);
+  key('ArrowRight'); eq(slide(), 3, 'off stepper skipped');
+  eq(st('r3').pos, 0);
+});
+test('← 는 뒤에서부터 닫고, 이전 장으로 오면 막대는 끝 칸', () => {
+  key('ArrowLeft'); eq(slide(), 2);
+  eq(st('r2').pos, 2, 'entered from next: max');
+  assert(shown('before'), 'steps all shown');
+  key('ArrowLeft'); eq(st('r2').pos, 1);
+  key('ArrowLeft'); eq(st('r2').pos, 0);
+  key('ArrowLeft'); assert(!shown('before'), 'then step closes');
+  key('ArrowLeft'); eq(slide(), 1);
+  eq(st('r1').pos, 3); assert(shown('after'), 'all open');
+  key('ArrowLeft'); assert(!shown('after'), 'step after stepper closes first');
+  key('ArrowLeft'); eq(st('r1').pos, 2);
+});
+test('다음 장이나 쪽 이동으로 들어오면 0단계', () => {
+  ClassHTML.go(0);
+  key('ArrowRight');
+  eq(slide(), 1); eq(st('r1').pos, 0);
+  assert(st('r1').el.classList.contains('is-veiled'), 'veiled again');
+});
+test('비교 전환: 처음엔 아무것도 안 눌림, 누르면 그 칸', () => {
+  ClassHTML.go(3);
+  const s = st('sw');
+  eq(s.buttons.length, 2);
+  assert(s.buttons.every((b) => b.getAttribute('aria-pressed') === 'false'), 'none pressed');
+  assert(!s.hint.hidden, 'hint');
+  assert(off('c1') && off('c2'), 'all hidden');
+  s.buttons[1].click();
+  eq(s.pos, 2); assert(off('c1') && !off('c2'), 'case 2');
+  eq(s.buttons[1].getAttribute('aria-pressed'), 'true');
+  assert(s.hint.hidden, 'hint hidden');
+  assert(s.buttons[0].getBoundingClientRect().height >= 56 * I().Stage.scale - 0.5, 'button 56px');
+});
+test('펜을 든 채로 비교 전환 단추를 톡 누르면 작동한다', () => {
+  ClassHTML.go(3);
+  I().Tools.set('pen');
+  const b = st('sw').buttons[0];
+  const r = b.getBoundingClientRect();
+  ptr('pointerdown', b, 0, 0, { clientX: r.left + 10, clientY: r.top + 10 });
+  ptr('pointerup', b, 0, 0, { clientX: r.left + 10, clientY: r.top + 10 });
+  b.click();
+  eq(st('sw').pos, 1);
+  eq(I().Ink.page.length, 0, 'no ink');
+  I().Tools.set('hand');
+});
+test('펜을 든 채로 슬라이더를 끌면 판서가 아니라 막대가 움직인다', () => {
+  ClassHTML.go(1);
+  I().Tools.set('pen');
+  const s = st('r1');
+  const r = s.input.getBoundingClientRect();
+  ptr('pointerdown', s.input, 0, 0, { clientX: r.left + 5, clientY: r.top + r.height / 2 });
+  eq(I().Ink.gesture, null, 'no ink gesture on slider');
+  ptr('pointerup', s.input, 0, 0, { clientX: r.left + 5, clientY: r.top + r.height / 2 });
+  slideInput(s, 1);
+  eq(s.pos, 1);
+  eq(I().Ink.page.length, 0);
+  I().Tools.set('hand');
+});
+test('눈금이 8개 넘으면 지금 칸과 양 끝만', () => {
+  const s = st('dense');
+  assert(s.labels[0].parentElement.classList.contains('is-dense'), 'dense');
+  ClassHTML.go(3);
+  slideInput(s, 4);
+  const vis = s.labels.map((l) => getComputedStyle(l).visibility);
+  eq(vis[0], 'visible'); eq(vis[4], 'visible'); eq(vis[8], 'visible'); eq(vis[2], 'hidden');
+});
+test('인쇄 전에는 모두 끝 칸, 인쇄 뒤에는 되돌린다', () => {
+  ClassHTML.go(1);
+  const before = I().Stepper.all.map((s) => s.pos);
+  window.dispatchEvent(new Event('beforeprint'));
+  assert(I().Stepper.all.every((s) => s.pos === s.max), 'all max');
+  window.dispatchEvent(new Event('afterprint'));
+  eq(I().Stepper.all.map((s) => s.pos), before);
+});
+</script>
+</body>
+</html>

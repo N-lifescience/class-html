@@ -4,6 +4,7 @@ const Nav = {
   groups: [],
   counts: [],
   override: null,   // 칠판 모드처럼 넘기기를 가로채는 대상 { next(), prev(), close() }
+  enterAll: false,
   digits: '',
   digitTimer: 0,
   progress: null,
@@ -24,27 +25,48 @@ const Nav = {
     this.render(-1);
   },
 
-  set(next) {
+  // all: 장에 들어올 때 단계 막대를 끝 칸으로 둘지(이전 장으로 돌아올 때)
+  set(next, all) {
     const before = this.state.slide;
     this.state = next;
+    this.enterAll = !!all;
     this.render(before);
   },
 
+  // 지금 장에서 다음에 열릴 단계의 첫 요소, 마지막으로 열린 단계의 첫 요소
+  nextStepEl() { const g = this.groups[this.state.slide][this.state.shown]; return g ? g[0] : null; },
+  lastStepEl() { const g = this.groups[this.state.slide][this.state.shown - 1]; return g ? g[0] : null; },
+
   next() {
     if (this.override) return this.override.next();
-    this.set(Steps.next(this.state, this.counts));
+    if (Stepper.advance(this.state.slide, this.nextStepEl())) return;   // 단계 막대가 먼저면 한 칸 연다
+    this.set(Steps.next(this.state, this.counts), false);
   },
 
   prev() {
     if (this.override) return this.override.prev();
-    this.set(Steps.prev(this.state, this.counts));
+    if (Stepper.retreat(this.state.slide, this.lastStepEl())) return;
+    const next = Steps.prev(this.state, this.counts);
+    this.set(next, next.slide !== this.state.slide);
+  },
+
+  // el이 든 단계까지 연다(지금 장일 때만). 정답 상자 ✓, 분류 완료 등이 쓴다.
+  revealTo(el) {
+    if (!el) return false;
+    const { slide, shown } = this.state;
+    const gi = this.groups[slide].findIndex((g) => g.some((s) => s === el || s.contains(el) || el.contains(s)));
+    if (gi < 0 || shown > gi) return false;
+    this.set({ slide, shown: gi + 1 }, false);
+    return true;
   },
 
   // index는 0부터 센다(화면의 쪽 번호·#주소·숫자+Enter는 1부터). 숫자가 아니면 무시한다.
   go(index, allShown) {
     if (!Number.isFinite(index)) return;
     if (this.override) this.override.close();
-    this.set(Steps.go(Math.round(index), this.counts, !!allShown));
+    const before = this.state.slide;
+    this.set(Steps.go(Math.round(index), this.counts, !!allShown), !!allShown);
+    if (this.state.slide === before) Stepper.enter(before, !!allShown);   // 같은 장으로 가도 단계처럼 처음 상태로
   },
 
   render(before) {
@@ -53,6 +75,7 @@ const Nav = {
     this.groups[slide].forEach((g, gi) => g.forEach((el) => el.classList.toggle('is-shown', gi < shown)));
     this.progress.firstChild.style.transform = `scaleX(${(slide + 1) / Stage.slides.length})`;
     if (before !== slide) {
+      Stepper.enter(slide, this.enterAll);
       if (before >= 0) emit('hide', Stage.slides[before], before);
       emit('show', Stage.slides[slide], slide);
       try { history.replaceState(null, '', `#${slide + 1}`); } catch (err) { /* 잦은 호출을 막는 브라우저가 있다 */ }

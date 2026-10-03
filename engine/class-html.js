@@ -134,6 +134,7 @@ const Nav = {
   groups: [],
   counts: [],
   override: null,   // 칠판 모드처럼 넘기기를 가로채는 대상 { next(), prev(), close() }
+  enterAll: false,
   digits: '',
   digitTimer: 0,
   progress: null,
@@ -154,27 +155,48 @@ const Nav = {
     this.render(-1);
   },
 
-  set(next) {
+  // all: 장에 들어올 때 단계 막대를 끝 칸으로 둘지(이전 장으로 돌아올 때)
+  set(next, all) {
     const before = this.state.slide;
     this.state = next;
+    this.enterAll = !!all;
     this.render(before);
   },
 
+  // 지금 장에서 다음에 열릴 단계의 첫 요소, 마지막으로 열린 단계의 첫 요소
+  nextStepEl() { const g = this.groups[this.state.slide][this.state.shown]; return g ? g[0] : null; },
+  lastStepEl() { const g = this.groups[this.state.slide][this.state.shown - 1]; return g ? g[0] : null; },
+
   next() {
     if (this.override) return this.override.next();
-    this.set(Steps.next(this.state, this.counts));
+    if (Stepper.advance(this.state.slide, this.nextStepEl())) return;   // 단계 막대가 먼저면 한 칸 연다
+    this.set(Steps.next(this.state, this.counts), false);
   },
 
   prev() {
     if (this.override) return this.override.prev();
-    this.set(Steps.prev(this.state, this.counts));
+    if (Stepper.retreat(this.state.slide, this.lastStepEl())) return;
+    const next = Steps.prev(this.state, this.counts);
+    this.set(next, next.slide !== this.state.slide);
+  },
+
+  // el이 든 단계까지 연다(지금 장일 때만). 정답 상자 ✓, 분류 완료 등이 쓴다.
+  revealTo(el) {
+    if (!el) return false;
+    const { slide, shown } = this.state;
+    const gi = this.groups[slide].findIndex((g) => g.some((s) => s === el || s.contains(el) || el.contains(s)));
+    if (gi < 0 || shown > gi) return false;
+    this.set({ slide, shown: gi + 1 }, false);
+    return true;
   },
 
   // index는 0부터 센다(화면의 쪽 번호·#주소·숫자+Enter는 1부터). 숫자가 아니면 무시한다.
   go(index, allShown) {
     if (!Number.isFinite(index)) return;
     if (this.override) this.override.close();
-    this.set(Steps.go(Math.round(index), this.counts, !!allShown));
+    const before = this.state.slide;
+    this.set(Steps.go(Math.round(index), this.counts, !!allShown), !!allShown);
+    if (this.state.slide === before) Stepper.enter(before, !!allShown);   // 같은 장으로 가도 단계처럼 처음 상태로
   },
 
   render(before) {
@@ -183,6 +205,7 @@ const Nav = {
     this.groups[slide].forEach((g, gi) => g.forEach((el) => el.classList.toggle('is-shown', gi < shown)));
     this.progress.firstChild.style.transform = `scaleX(${(slide + 1) / Stage.slides.length})`;
     if (before !== slide) {
+      Stepper.enter(slide, this.enterAll);
       if (before >= 0) emit('hide', Stage.slides[before], before);
       emit('show', Stage.slides[slide], slide);
       try { history.replaceState(null, '', `#${slide + 1}`); } catch (err) { /* 잦은 호출을 막는 브라우저가 있다 */ }
@@ -1190,6 +1213,8 @@ const ICONS = {
   collapse: 'M6 9l6 6 6-6',
   tools: 'M4 20l4.5-1L19 8.5 15.5 5 5 15.5z',
   gear: 'M12 9a3 3 0 1 1 0 6a3 3 0 1 1 0-6M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1',
+  zoom: 'M10.5 4a6.5 6.5 0 1 1 0 13a6.5 6.5 0 1 1 0-13M15.5 15.5L21 21M10.5 7.5v6M7.5 10.5h6',
+  check: 'M5 12.5l4.5 4.5L19 7',
 };
 
 function icon(name) {
@@ -1571,6 +1596,7 @@ const KeepWords = {
 // 모든 슬라이드의 단계를 펼쳐 인쇄한다. 판서는 현재 반의 문서에서 가져온다.
 const Print = {
   added: [],
+  opened: false,
 
   init() {
     window.addEventListener('beforeprint', () => this.before());
@@ -1608,6 +1634,8 @@ const Print = {
 
   before() {
     this.after();
+    this.opened = true;
+    emit('print-before');   // 부품: 단계 막대 끝 칸, 문제 정답 표시 등
     if (!Settings.values.printInk || !Session.doc) return;
     for (const slide of Stage.slides) {
       const strokes = Session.doc.slides[slide.dataset.key];
@@ -1626,6 +1654,8 @@ const Print = {
   after() {
     for (const el of this.added) el.remove();
     this.added = [];
+    if (this.opened) emit('print-after');
+    this.opened = false;
   },
 };
 
@@ -1765,6 +1795,479 @@ const Audit = {
   },
 };
 
+/* ---- 43-parts.js ---- */
+// 공통 부품의 시작점과 정답 상자·그림 확대. 부품은 Nav가 단계를 모으기 전에 만든다(99-boot).
+const Parts = {
+  init() {
+    Answer.init();
+    Zoom.init();
+    Stepper.init();
+    Stepper.sort();   // 모든 단계 막대를 만든 뒤 문서 순서로 정렬하고 0단계로 둔다
+  },
+};
+
+// 정답 상자: <div class="answer">…</div>. 안에 .step이 없으면 내용 전체를 한 단계로 묶고 가운데 ✓ 단추를 단다.
+const Answer = {
+  init() {
+    for (const box of qsa('.answer', Stage.deck)) {
+      if (!box.querySelector('.step')) {
+        const wrap = h('div', { class: 'step' });
+        wrap.append(...box.childNodes);
+        box.append(wrap);
+      }
+      box.append(h('button', { type: 'button', class: 'ch-check', 'aria-label': '정답 보기',
+        onclick: (e) => { this.reveal(box); e.currentTarget.blur(); } }, icon('check')));
+    }
+  },
+
+  // 상자 안 첫 단계까지 연다. 다른 장의 상자는 무시한다.
+  reveal(box) { Nav.revealTo(box.querySelector('.step')); },
+};
+
+// 그림 확대: figure.fig 안 그림. 확대 단추나 손 모드에서 그림을 누르면 크게 본다.
+const Zoom = {
+  el: null,
+
+  init() {
+    this.el = h('div', { class: 'ch-zoom', role: 'dialog', 'aria-label': '그림 크게 보기',
+      onclick: () => this.close() }, h('img', { alt: '' }), h('p'));
+    document.body.append(this.el);
+    for (const fig of qsa('figure.fig', Stage.deck)) {
+      const img = fig.querySelector('img');
+      if (!img) continue;
+      const open = () => this.open(img, fig.querySelector('figcaption'));
+      img.addEventListener('click', () => { if (Tools.current === 'hand') open(); });
+      fig.append(h('button', { type: 'button', class: 'ch-zoom-btn', 'aria-label': '그림 크게 보기',
+        onclick: (e) => { open(); e.currentTarget.blur(); } }, icon('zoom')));
+    }
+    on('panels-close', () => this.close());
+    on('show', () => this.close());
+    on('key', (e) => { if (keyName(e) === 'escape') this.close(); });
+  },
+
+  get isOpen() { return !!this.el && this.el.classList.contains('is-open'); },
+
+  open(img, caption) {
+    if (!img.getAttribute('src')) return;   // 비어 있는 그림 자리
+    const [big, text] = this.el.children;
+    big.src = img.currentSrc || img.src;
+    big.alt = img.alt;
+    text.textContent = caption ? caption.textContent.replace(/⁠/g, '').trim() : img.alt;
+    this.el.classList.add('is-open');
+  },
+
+  close() { if (this.el) this.el.classList.remove('is-open'); },
+};
+
+/* ---- 50-expr.js ---- */
+// 순수 식 해석기: 계산 상자(.calc)와 그래프(.plot)가 쓴다. eval 없이 재귀 하강으로 읽어 함수로 바꾼다.
+// 문법: 수, '글자', + - * / % ^, 비교, && || !, 조건 ? 가 : 나, 함수, 상수 pi e.
+const EXPR_DEPTH = 200;
+
+// 반올림은 절댓값 기준(-2.5 → -3). 1.005 같은 이진수 오차는 지수 표기로 피한다.
+function exprRound(x, n) {
+  const d = Math.trunc(Number(n) || 0);
+  if (!Number.isFinite(x)) return x;
+  const a = Math.abs(x);
+  const r = Math.sign(x) * (/e/.test(String(a)) ? Math.round(a * 10 ** d) / 10 ** d
+    : Number(`${Math.round(Number(`${a}e${d}`))}e${-d}`));
+  return Object.is(r, -0) ? 0 : r;
+}
+
+const EXPR_FUNCS = Object.assign(Object.create(null), {
+  abs: Math.abs, floor: Math.floor, ceil: Math.ceil, sqrt: Math.sqrt, exp: Math.exp, sign: Math.sign,
+  sin: Math.sin, cos: Math.cos, tan: Math.tan, asin: Math.asin, acos: Math.acos, atan: Math.atan,
+  pow: Math.pow, ln: Math.log, log: (x, b) => (b == null ? Math.log10(x) : Math.log(x) / Math.log(b)),
+  min: (...a) => Math.min(...a), max: (...a) => Math.max(...a),
+  round: (x, n) => exprRound(x, n),
+  rad: (d) => (d * Math.PI) / 180, deg: (r) => (r * 180) / Math.PI,
+  clamp: (x, lo, hi) => Math.max(lo, Math.min(hi, x)),
+  if: (c, a, b) => (c ? a : b),
+  fix: (x, n) => Expr.format(Number(x), Math.max(0, Math.min(10, Math.trunc(Number(n) || 0)))),
+});
+const EXPR_CONSTS = Object.assign(Object.create(null), { pi: Math.PI, e: Math.E, true: true, false: false });
+// 객체 기본 속성 이름은 변수로 쓰지 못하게 막는다(엔진은 hasOwnProperty로만 찾지만 실수를 일찍 알린다).
+const EXPR_BAD = new Set(['__proto__', 'constructor', 'prototype', 'toString', 'valueOf', 'hasOwnProperty',
+  'isPrototypeOf', 'propertyIsEnumerable', 'toLocaleString', '__defineGetter__', '__defineSetter__',
+  '__lookupGetter__', '__lookupSetter__']);
+const EXPR_OPS = { '×': '*', '÷': '/', '−': '-', '≤': '<=', '≥': '>=', '≠': '!=' };
+
+const Expr = {
+  tokenize(src) {
+    const out = [];
+    let i = 0;
+    while (i < src.length) {
+      const c = src[i];
+      if (/\s/.test(c)) { i++; continue; }
+      const num = /^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/.exec(src.slice(i));
+      if (num) { out.push({ t: 'num', v: Number(num[0]), at: i }); i += num[0].length; continue; }
+      if (c === '"' || c === "'") {
+        const end = src.indexOf(c, i + 1);
+        if (end < 0) throw this.fail('글자를 닫는 따옴표가 없어요', i);
+        out.push({ t: 'str', v: src.slice(i + 1, end), at: i });
+        i = end + 1;
+        continue;
+      }
+      const id = /^[\p{L}_][\p{L}\p{N}_]*/u.exec(src.slice(i));
+      if (id) { out.push({ t: 'id', v: id[0], at: i }); i += id[0].length; continue; }
+      const two = src.slice(i, i + 2);
+      if (['==', '!=', '<=', '>=', '&&', '||'].includes(two)) { out.push({ t: 'op', v: two, at: i }); i += 2; continue; }
+      if (EXPR_OPS[c]) { out.push({ t: 'op', v: EXPR_OPS[c], at: i }); i++; continue; }
+      if ('+-*/%^!?:(),<>'.includes(c)) { out.push({ t: 'op', v: c, at: i }); i++; continue; }
+      throw this.fail(`'${c}'는 식에 쓸 수 없어요`, i);
+    }
+    out.push({ t: 'end', v: '', at: src.length });
+    return out;
+  },
+
+  fail(msg, at) {
+    const err = new Error(msg);
+    err.at = at;
+    return err;
+  },
+
+  // src → { ok, fn(scope), vars, error, at }
+  compile(src) {
+    const vars = new Set();
+    try {
+      const toks = this.tokenize(String(src == null ? '' : src));
+      let p = 0;
+      let depth = 0;
+      const peek = () => toks[p];
+      const isOp = (v) => toks[p].t === 'op' && toks[p].v === v;
+      const take = (v) => {
+        if (!isOp(v)) throw this.fail(v === ')' ? '괄호가 닫히지 않았어요' : `'${v}'가 필요해요`, peek().at);
+        p++;
+      };
+      const deeper = () => { if (++depth > EXPR_DEPTH) throw this.fail('식이 너무 깊어요', peek().at); };
+      const binary = (next, ops, make) => () => {
+        let left = next();
+        while (peek().t === 'op' && ops.includes(peek().v)) {
+          const op = toks[p++].v;
+          const right = next();
+          left = make(op, left, right);
+        }
+        return left;
+      };
+      const num = (v) => (typeof v === 'number' ? v : Number(v));
+      const loose = (a, b) => {
+        if (typeof a === 'string' && typeof b === 'string') return a === b;
+        const x = num(a);
+        const y = num(b);
+        return Number.isNaN(x) || Number.isNaN(y) ? String(a) === String(b) : x === y;
+      };
+      const expr = () => {
+        deeper();
+        const cond = or();
+        let out = cond;
+        if (isOp('?')) {
+          p++;
+          const a = expr();
+          take(':');
+          const b = expr();
+          out = (s) => (cond(s) ? a(s) : b(s));
+        }
+        depth--;
+        return out;
+      };
+      const unary = () => {
+        deeper();
+        let out;
+        if (isOp('-') || isOp('+') || isOp('!')) {
+          const op = toks[p++].v;
+          const arg = unary();
+          out = op === '-' ? (s) => -num(arg(s)) : op === '+' ? (s) => num(arg(s)) : (s) => !arg(s);
+        } else {
+          const base = primary();
+          if (isOp('^')) {
+            p++;
+            const ex = unary();
+            out = (s) => Math.pow(num(base(s)), num(ex(s)));
+          } else out = base;
+        }
+        depth--;
+        return out;
+      };
+      const mul = binary(unary, ['*', '/', '%'], (op, l, r) => (op === '*' ? (s) => num(l(s)) * num(r(s))
+        : op === '/' ? (s) => num(l(s)) / num(r(s)) : (s) => num(l(s)) % num(r(s))));
+      const add = binary(mul, ['+', '-'], (op, l, r) => (op === '-' ? (s) => num(l(s)) - num(r(s)) : (s) => {
+        const a = l(s);
+        const b = r(s);
+        if (typeof a === 'string' || typeof b === 'string') {
+          return (typeof a === 'string' ? a : this.format(a)) + (typeof b === 'string' ? b : this.format(b));
+        }
+        return num(a) + num(b);
+      }));
+      const cmp = binary(add, ['<', '<=', '>', '>='], (op, l, r) => (s) => {
+        const a = num(l(s));
+        const b = num(r(s));
+        return op === '<' ? a < b : op === '<=' ? a <= b : op === '>' ? a > b : a >= b;
+      });
+      const eq = binary(cmp, ['==', '!='], (op, l, r) => (op === '==' ? (s) => loose(l(s), r(s)) : (s) => !loose(l(s), r(s))));
+      const and = binary(eq, ['&&'], (op, l, r) => (s) => !!(l(s) && r(s)));
+      const or = binary(and, ['||'], (op, l, r) => (s) => !!(l(s) || r(s)));
+      const primary = () => {
+        const tk = peek();
+        if (tk.t === 'num' || tk.t === 'str') { p++; const v = tk.v; return () => v; }
+        if (isOp('(')) { p++; const inner = expr(); take(')'); return inner; }
+        if (tk.t === 'id') {
+          p++;
+          const name = tk.v;
+          if (isOp('(')) {
+            p++;
+            const fn = EXPR_FUNCS[name];
+            if (!fn) throw this.fail(`모르는 함수예요: ${name}`, tk.at);
+            const args = [];
+            if (!isOp(')')) {
+              args.push(expr());
+              while (isOp(',')) { p++; args.push(expr()); }
+            }
+            take(')');
+            return (s) => fn(...args.map((a) => a(s)));
+          }
+          if (EXPR_BAD.has(name)) throw this.fail(`${name}은(는) 이름으로 쓸 수 없어요`, tk.at);
+          if (name in EXPR_CONSTS) { const v = EXPR_CONSTS[name]; return () => v; }
+          if (EXPR_FUNCS[name]) throw this.fail(`${name}은(는) 함수예요. ${name}( )처럼 써 주세요`, tk.at);
+          vars.add(name);
+          return (s) => {
+            if (!Object.prototype.hasOwnProperty.call(s, name)) throw new Error(`모르는 이름이에요: ${name}`);
+            return s[name];
+          };
+        }
+        throw this.fail(tk.t === 'end' ? '식이 덜 끝났어요' : `여기에 '${tk.v}'가 올 수 없어요`, tk.at);
+      };
+      const root = expr();
+      if (peek().t !== 'end') throw this.fail(`'${peek().v}' 앞에서 식이 끝나야 해요`, peek().at);
+      return { ok: true, fn: root, vars: Array.from(vars), error: '', at: -1 };
+    } catch (err) {
+      return { ok: false, fn: null, vars: Array.from(vars), error: err.message, at: Number.isInteger(err.at) ? err.at : -1 };
+    }
+  },
+
+  // 'a = 식; b = 식' → { ok, list: [{ name, fn, src }], error }. 따옴표 안의 ;는 나누지 않는다.
+  lets(src) {
+    const parts = [];
+    let cur = '';
+    let quote = '';
+    for (const c of String(src || '')) {
+      if (quote) { if (c === quote) quote = ''; cur += c; continue; }
+      if (c === '"' || c === "'") quote = c;
+      if (c === ';') { parts.push(cur); cur = ''; continue; }
+      cur += c;
+    }
+    parts.push(cur);
+    const list = [];
+    for (const part of parts) {
+      if (!part.trim()) continue;
+      const m = /^\s*([\p{L}_][\p{L}\p{N}_]*)\s*=(?!=)([\s\S]*)$/u.exec(part);
+      if (!m) return { ok: false, list, error: `'이름 = 식' 꼴이 아니에요: ${part.trim()}` };
+      const name = m[1];
+      if (EXPR_BAD.has(name) || name in EXPR_CONSTS || EXPR_FUNCS[name]) return { ok: false, list, error: `${name}은(는) 이름으로 쓸 수 없어요` };
+      const c = this.compile(m[2]);
+      if (!c.ok) return { ok: false, list, error: `${name}: ${c.error}` };
+      list.push({ name, fn: c.fn, src: m[2].trim(), vars: c.vars });
+    }
+    return { ok: true, list, error: '' };
+  },
+
+  // 화면 표시: digits가 있으면 그 자리까지, 없으면 소수 셋째 자리까지 쓰고 끝의 0을 지운다.
+  format(v, digits) {
+    if (typeof v === 'boolean') return v ? '참' : '거짓';
+    if (typeof v === 'string') return v;
+    const x = Number(v);
+    if (!Number.isFinite(x)) return '?';
+    if (Number.isInteger(digits) && digits >= 0) {
+      const s = exprRound(x, digits).toFixed(digits);
+      return /^-0(\.0*)?$/.test(s) ? s.slice(1) : s;
+    }
+    const a = Math.abs(x);
+    if (a !== 0 && (a >= 1e9 || a < 1e-3)) {
+      const [m, ex] = x.toExponential(2).split('e');
+      const sup = { '-': '⁻', '+': '', 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
+      return `${m.replace(/\.?0+$/, '')}×10${Array.from(ex).map((c) => sup[c]).join('')}`;
+    }
+    const r = exprRound(x, 3);
+    return String(Object.is(r, -0) ? 0 : r);
+  },
+};
+
+/* ---- 51-stepper.js ---- */
+// 단계 막대 공통: 0단계(전부 가림)에서 시작해 한 칸씩 연다. 슬라이더나 단추로 움직이고, → ←로도 움직인다.
+// 작성 모양: <div class="reveal" data-stops="시작|1단계|2단계"> … [data-at="1"] … [data-only="2"] … .veil … </div>
+//           <div class="switch" data-stops="시작|가|나"> … </div> (단추형)
+const Stepper = {
+  all: [],
+  bySlide: [],
+
+  init() {
+    this.all = [];
+    this.bySlide = Stage.slides.map(() => []);
+    for (const el of qsa('.reveal[data-stops]', Stage.deck)) this.create(el, { ui: 'range' });
+    for (const el of qsa('.switch[data-stops]', Stage.deck)) this.create(el, { ui: 'buttons' });
+  },
+
+  // 다른 부품(지도, 연표)도 이 함수로 단계 막대를 만든다. 부품 init이 모두 끝나면 Parts가 sort()를 부른다.
+  create(el, opts) {
+    const o = opts || {};
+    const slide = el.closest('section.slide');
+    const index = Stage.slides.indexOf(slide);
+    if (index < 0) return null;
+    const stops = this.parseStops(o.stops || el.dataset.stops);
+    const st = {
+      el, slide, index, stops, pos: -1, max: stops.length - 1, ui: o.ui || 'range',
+      nav: el.dataset.nav !== 'off', listeners: [], input: null, labels: [], buttons: [], hint: null,
+      set: (pos, src) => this.set(st, pos, src),
+      onChange: (fn) => st.listeners.push(fn),
+    };
+    el.classList.add('ch-stepper');
+    if (!el.dataset.veil) el.dataset.veil = st.ui === 'buttons' ? '단추를 눌러 보자' : '막대를 움직여 하나씩 열어 보자';
+    // 가림막 글은 CSS attr()로 띄우므로 .veil 요소마다 옮겨 적는다
+    for (const v of qsa('.veil', el)) if (!v.dataset.veil) v.dataset.veil = el.dataset.veil;
+    if (st.ui === 'range') this.buildRange(st, o.mount);
+    else if (st.ui === 'buttons') this.buildButtons(st, o.mount);
+    st.targets = [];
+    this.all.push(st);
+    this.bySlide[index].push(st);
+    if (o.onChange) st.listeners.push(o.onChange);
+    return st;
+  },
+
+  // '시작|가|나' → ['시작', '가', '나']. <br>과 줄바꿈은 눈금 이름 안의 줄바꿈. 첫 칸이 '시작'이 아니면 붙인다.
+  parseStops(text) {
+    const list = String(text || '').split('|').map((s) => s.replace(/<br\s*\/?>/gi, '\n').trim()).filter((s) => s);
+    if (list[0] !== '시작') list.unshift('시작');
+    return list;
+  },
+
+  buildRange(st, mount) {
+    const wrap = st.el.querySelector(':scope .ch-stops') || h('div', { class: 'ch-stops' });
+    st.input = h('input', { type: 'range', min: 0, max: st.max, step: 1, value: 0, 'aria-label': st.el.getAttribute('aria-label') || '단계' });
+    const labels = h('div', { class: `ch-stop-labels${st.stops.length > 7 ? ' is-dense' : ''}`, 'aria-hidden': 'true' });
+    st.labels = st.stops.map((t, i) => h('span', { text: t, style: `left:${st.max ? (i / st.max) * 100 : 0}%` }));
+    labels.append(...st.labels);
+    wrap.replaceChildren(st.input, labels);
+    if (!wrap.isConnected) {
+      if (mount) mount.after(wrap);
+      else st.el.append(wrap);
+    }
+    st.input.addEventListener('input', () => this.set(st, Number(st.input.value), 'input'));
+    // 손을 뗀 뒤에는 Space·→가 다시 넘기기로 가도록 포커스를 놓는다
+    st.input.addEventListener('change', () => st.input.blur());
+  },
+
+  buildButtons(st, mount) {
+    const row = h('div', { class: 'ch-switch-btns', role: 'group', 'aria-label': st.el.getAttribute('aria-label') || '고르기' });
+    st.buttons = st.stops.slice(1).map((t, i) => h('button', {
+      type: 'button', class: 'ch-switch-btn', text: t, 'aria-pressed': 'false',
+      onclick: (e) => { this.set(st, i + 1, 'input'); e.currentTarget.blur(); },
+    }));
+    row.append(...st.buttons);
+    st.hint = h('p', { class: 'ch-switch-hint', text: st.el.dataset.veil });
+    const place = st.el.querySelector(':scope .ch-stops');
+    if (place) place.replaceWith(row);
+    else if (mount) mount.before(row);
+    else st.el.prepend(row);
+    row.after(st.hint);
+  },
+
+  // data-at·data-only 요소를 단계 막대에 묶는다: data-for → 가장 가까운 단계 막대 → 그 장의 유일한 단계 막대.
+  bindTargets() {
+    for (const st of this.all) st.targets = [];
+    this.orphans = [];
+    for (const el of qsa('[data-at], [data-only]', Stage.deck)) {
+      const slide = el.closest('section.slide');
+      const index = Stage.slides.indexOf(slide);
+      if (index < 0) continue;
+      const list = this.bySlide[index];
+      let st = null;
+      if (el.dataset.for) st = list.find((s) => s.el.id === el.dataset.for) || null;
+      else {
+        const host = el.closest('.ch-stepper');
+        st = host ? list.find((s) => s.el === host) : null;
+        if (!st && list.length === 1) st = list[0];
+      }
+      if (!st) { this.orphans.push(el); continue; }
+      el.classList.add(el.hasAttribute('data-only') ? 'ch-only' : 'ch-at');
+      st.targets.push(el);
+    }
+  },
+
+  // 문서 순서로 정렬하고 처음 상태(0단계)를 그린다.
+  sort() {
+    const order = (a, b) => (a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+    for (const list of this.bySlide) list.sort(order);
+    this.bindTargets();
+    for (const st of this.all) this.set(st, 0, 'init');
+  },
+
+  set(st, pos, src) {
+    const next = clamp(Math.round(Number(pos) || 0), 0, st.max);
+    if (next === st.pos && src !== 'init') return;
+    const prev = st.pos;
+    st.pos = next;
+    st.el.dataset.pos = String(next);
+    st.el.classList.toggle('is-veiled', next === 0);
+    if (st.input) {
+      st.input.value = String(next);
+      st.input.style.setProperty('--p', `${st.max ? (next / st.max) * 100 : 0}%`);
+      st.input.setAttribute('aria-valuetext', st.stops[next].replace(/\n/g, ' '));
+    }
+    st.labels.forEach((s, i) => s.classList.toggle('is-on', i === next));
+    st.buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(i + 1 === next)));
+    if (st.hint) st.hint.hidden = next !== 0;
+    for (const el of st.targets) {
+      const off = el.hasAttribute('data-only')
+        ? !String(el.dataset.only).split(/[\s,]+/).map(Number).includes(next)
+        : next < Number(el.dataset.at);
+      el.classList.toggle('ch-off', off);
+    }
+    for (const fn of st.listeners) {
+      try { fn(next, prev, src); } catch (err) { console.error('[class-html] stepper', err); }
+    }
+    st.el.dispatchEvent(new CustomEvent('ch-stepper', { bubbles: true, detail: { pos: next, prev, label: st.stops[next], src } }));
+  },
+
+  shown(st) { return !st.el.closest('.step:not(.is-shown)'); },
+
+  // → : 같은 장에서 다음 미공개 단계(beforeEl)보다 앞에 있는 단계 막대를 한 칸 연다. 열었으면 true.
+  advance(index, beforeEl) {
+    for (const st of this.bySlide[index] || []) {
+      if (!st.nav || !this.shown(st)) continue;
+      if (beforeEl && !(st.el.compareDocumentPosition(beforeEl) & Node.DOCUMENT_POSITION_FOLLOWING)) break;
+      if (st.pos < st.max) { this.set(st, st.pos + 1, 'nav'); return true; }
+    }
+    return false;
+  },
+
+  // ← : 마지막으로 연 단계(afterEl)보다 뒤에 있는 단계 막대부터 한 칸 닫는다. 닫았으면 true.
+  retreat(index, afterEl) {
+    const list = (this.bySlide[index] || []).slice().reverse();
+    for (const st of list) {
+      if (!st.nav || st.pos === 0) continue;
+      if (afterEl && !(afterEl.compareDocumentPosition(st.el) & Node.DOCUMENT_POSITION_FOLLOWING)) return false;
+      this.set(st, st.pos - 1, 'nav');
+      return true;
+    }
+    return false;
+  },
+
+  // 장에 들어올 때: 이전 장에서 돌아오면 끝 칸, 그 밖에는 0단계.
+  enter(index, all) {
+    for (const st of this.bySlide[index] || []) this.set(st, all ? st.max : 0, 'enter');
+  },
+
+  // 인쇄·점검처럼 잠깐 모두 펼쳤다가 되돌릴 때 쓴다.
+  snapshot() { return this.all.map((st) => [st, st.pos]); },
+  openAll(src) { for (const st of this.all) this.set(st, st.max, src); },
+  restore(snap, src) { for (const [st, pos] of snap) this.set(st, pos, src); },
+};
+
+on('print-before', () => { Stepper.printSnap = Stepper.snapshot(); Stepper.openAll('print'); });
+on('print-after', () => {
+  if (Stepper.printSnap) Stepper.restore(Stepper.printSnap, 'print');
+  Stepper.printSnap = null;
+});
+
 /* ---- 99-boot.js ---- */
 // 시작 순서. 엔진이 두 번 포함돼도 한 번만 실행한다.
 let readyResolve;
@@ -1772,6 +2275,7 @@ ClassHTML.ready = new Promise((resolve) => { readyResolve = resolve; });
 
 async function start() {
   Stage.init();
+  Parts.init();   // Nav보다 먼저: 정답 상자 내용을 단계로 묶는다
   Panels.init();   // Nav보다 먼저: 첫 show 이벤트로 목차 현재 위치를 표시
   Nav.init();
   KeepWords.apply(Stage.deck);   // 목차 제목을 뽑은 뒤 어절을 감싼다
@@ -1792,7 +2296,7 @@ function boot() {
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
   ClassHTML.audit = () => Audit.run();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit };
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, Answer, Zoom, Expr, Stepper };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

@@ -1,6 +1,7 @@
 // 모든 슬라이드의 단계를 펼쳐 인쇄한다. 판서는 현재 반의 문서에서 가져온다.
 const Print = {
   added: [],
+  opened: false,
 
   init() {
     window.addEventListener('beforeprint', () => this.before());
@@ -38,6 +39,8 @@ const Print = {
 
   before() {
     this.after();
+    this.opened = true;
+    emit('print-before');   // 부품: 단계 막대 끝 칸, 문제 정답 표시 등
     if (!Settings.values.printInk || !Session.doc) return;
     for (const slide of Stage.slides) {
       const strokes = Session.doc.slides[slide.dataset.key];
@@ -56,5 +59,7 @@ const Print = {
   after() {
     for (const el of this.added) el.remove();
     this.added = [];
+    if (this.opened) emit('print-after');
+    this.opened = false;
   },
 };

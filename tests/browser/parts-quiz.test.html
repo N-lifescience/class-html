@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ko" data-deck="test-quiz">
+<head>
+<meta charset="utf-8">
+<title>quiz</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="pointer.js"></script>
+</head>
+<body>
+<section class="slide" id="q1">
+  <p>물이 가장 많이 있는 곳은?</p>
+  <div class="quiz" id="single">
+    <button class="opt" id="o1" data-why="빙하는 두 번째로 많다.">빙하</button>
+    <button class="opt" id="o2" data-ok data-why="맞다. 바다다.">바다</button>
+    <button class="opt" id="o3">강</button>
+  </div>
+  <p class="step" id="after1">풀이</p>
+</section>
+<section class="slide" id="q2">
+  <p>짝수를 모두 고르자.</p>
+  <div class="quiz" id="multi" data-multi data-cols="2" data-why="2와 4가 짝수다.">
+    <span class="opt" id="m1">1</span>
+    <span class="opt" id="m2" data-ok>2</span>
+    <span class="opt" id="m3">3</span>
+    <span class="opt" id="m4" data-ok>4</span>
+  </div>
+  <div class="quiz" id="nonum" data-num="off"><button class="opt" data-ok>O</button><button class="opt">X</button></div>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const q = (id) => I().Quiz.list.find((x) => x.box.id === id);
+const $ = (id) => document.getElementById(id);
+const has = (id, c) => $(id).classList.contains(c);
+
+test('보기에 번호를 붙이고 한 상자에 모은다', () => {
+  eq($('o1').querySelector('.ch-opt-n').textContent, '①');
+  eq($('o3').querySelector('.ch-opt-n').textContent, '③');
+  eq($('o1').parentElement.className, 'ch-opts');
+  eq($('m1').parentElement.style.getPropertyValue('--cols'), '2');
+  assert(!document.querySelector('#nonum .ch-opt-n'), 'num off');
+  assert($('o1').getBoundingClientRect().height >= 56 * I().Stage.scale - 0.5, '56px');
+});
+test('틀린 보기: 빨강, 흔들림, 그 보기의 이유', () => {
+  $('o1').click();
+  assert(has('o1', 'is-wrong') && has('o1', 'ch-shake'), 'wrong');
+  eq(q('single').fb.textContent, '빙하는 두 번째로 많다.');
+  assert(q('single').fb.classList.contains('is-bad'), 'bad');
+  $('o3').click();
+  eq(q('single').fb.textContent, '다시 생각해 보자.');
+});
+test('맞는 보기: 초록과 이유, 조금 뒤 다음 단계', async () => {
+  $('o2').click();
+  assert(has('o2', 'is-right'), 'right');
+  eq(q('single').fb.textContent, '맞다. 바다다.');
+  await wait(700);
+  assert(has('after1', 'is-shown'), 'next step');
+});
+test('펜을 든 채로 보기를 톡 누르면 작동한다(span 보기도)', () => {
+  ClassHTML.go(1);
+  I().Tools.set('pen');
+  const r = $('m1').getBoundingClientRect();
+  const o = { clientX: r.left + 20, clientY: r.top + 10 };
+  ptr('pointerdown', $('m1'), 0, 0, o);
+  eq(I().Ink.gesture && I().Ink.gesture.started, false, 'waits for drag');
+  ptr('pointerup', $('m1'), 0, 0, o);
+  $('m1').click();
+  assert(has('m1', 'is-pick'), 'picked');
+  eq(I().Ink.page.length, 0);
+  I().Tools.set('hand');
+});
+test('여러 개 고르기: 확인하면 맞게·잘못·놓침과 개수', () => {
+  $('m2').click();   // 1, 2를 고른 상태
+  q('multi').check.click();
+  assert(has('m1', 'is-wrong') && has('m2', 'is-right') && has('m4', 'is-miss') && !has('m3', 'is-wrong'), 'marks');
+  eq(q('multi').fb.textContent, '4개 가운데 2개를 맞게 판단했다. 점선은 골라야 하는데 고르지 않은 것이다.');
+});
+test('다시 고르면 표시가 지워지고, 다 맞으면 문제의 풀이', () => {
+  $('m1').click();
+  assert(!has('m4', 'is-miss') && !has('m1', 'is-pick'), 'cleared');
+  $('m4').click();
+  q('multi').check.click();
+  eq(q('multi').fb.textContent, '2와 4가 짝수다.');
+  assert(q('multi').fb.classList.contains('is-ok'), 'ok');
+});
+test('Enter로 span 보기를 고르고 장은 넘어가지 않는다', () => {
+  $('m3').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+  assert(has('m3', 'is-pick'), 'picked');
+  eq(I().Nav.state.slide, 1);
+});
+</script>
+</body>
+</html>

@@ -17,6 +17,8 @@
 | 계산 상자 | `.calc[data-const][data-let]` + `data-expr/show/class/style/attr`, `.bar[data-value]`, `[data-set]` | 입력하면 식을 다시 계산(eval 없는 해석기). 단계 막대 칸도 변수(`data-name`) |
 | 그래프 | `figure.plot[data-x][data-y] > i[data-line|data-vline|data-point]` | 계산 상자 변수로 곡선·표시선·점 |
 | 그림 자리 | `img[data-ppt="12-2"]` | 원본 PPTX를 끌어다 놓으면 채움, 그림 바꾸기, 그림 넣어 저장, 오프라인용 저장 |
+| 빈칸 | `.blank` | 핵심어를 가렸다가 눌러서 연다 |
+| 교실 도구 | `.timer[data-sec]`, `.picker[data-range]`(또는 `data-items`), `.score[data-teams]`, `ul.checklist`, `figure.hotspots > .hs` | 타이머, 뽑기, 모둠 점수판, 체크리스트, 그림 핫스팟(활동으로 치지 않음) |
 
 테마: `body[data-theme]` = `paper`(기본)·`ppt`(원본 PPT 색 띠)·`grid`·`chalk`. 색은 `--accent`, `--tab`, `--tab-ink`. 본문 28px.
 

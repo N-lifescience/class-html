@@ -30,7 +30,8 @@ R_EMBED = '{%s}embed' % NS['r']
 REL_NOTES = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide'
 REL_THEME = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme'
 REL_MASTER = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster'
-BROWSER_OK = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'}
+BROWSER_OK = {'png', 'jpg', 'jpeg', 'jfif', 'gif', 'bmp', 'webp', 'svg'}
+EMU_PX = 9525   # 1px(96dpi) = 9525 EMU
 THEME_KEYS = ['dk1', 'lt1', 'dk2', 'lt2', 'accent1', 'accent2', 'accent3', 'accent4', 'accent5', 'accent6']
 
 
@@ -47,18 +48,55 @@ def resolve(base, target):
     return posixpath.normpath(posixpath.join(posixpath.dirname(base), target))
 
 
-def rels(z, path):
-    """경로 → {rId: (대상 경로, 종류)}"""
+def rels(z, path, external=False):
+    """경로 → {rId: (대상 경로, 종류)}. external=True면 바깥 링크(URL·파일)만 {rId: 주소}"""
     rel_path = posixpath.join(posixpath.dirname(path), '_rels', posixpath.basename(path) + '.rels')
     root = read_xml(z, rel_path)
     out = {}
     if root is None:
         return out
     for r in root.findall('rel:Relationship', NS):
-        if r.get('TargetMode') == 'External':
-            continue
-        out[r.get('Id')] = (resolve(path, r.get('Target', '')), r.get('Type', ''))
+        is_ext = r.get('TargetMode') == 'External'
+        if external and is_ext:
+            out[r.get('Id')] = r.get('Target', '')
+        elif not external and not is_ext:
+            out[r.get('Id')] = (resolve(path, r.get('Target', '')), r.get('Type', ''))
     return out
+
+
+def own_xfrm(node):
+    """도형 자신의 a:xfrm(그룹이면 grpSpPr, 그 밖에는 spPr·xfrm). 자식 도형의 것은 고르지 않는다."""
+    for path in ('p:spPr/a:xfrm', 'p:grpSpPr/a:xfrm', 'p:xfrm'):
+        x = node.find(path, NS)
+        if x is not None:
+            return x
+    return None
+
+
+def shape_pos(sp, parents=None):
+    """도형의 슬라이드 위 (y, x, 폭, 높이) px. 그룹 안 도형은 그룹 좌표를 바꿔 준다.
+    위치가 없으면(레이아웃 자리를 물려받음) 맨 위(-1)로 본다."""
+    xf = own_xfrm(sp)
+    off = xf.find('a:off', NS) if xf is not None else None
+    ext = xf.find('a:ext', NS) if xf is not None else None
+    if off is None:
+        return -1, -1, 0, 0
+    x, y = int(off.get('x', 0)), int(off.get('y', 0))
+    w = int(ext.get('cx', 0)) if ext is not None else 0
+    h = int(ext.get('cy', 0)) if ext is not None else 0
+    node = parents.get(sp) if parents else None
+    while node is not None:
+        if node.tag.split('}')[-1] == 'grpSp':
+            g = own_xfrm(node)
+            if g is not None and g.find('a:chOff', NS) is not None:
+                go, ge, co, ce = (g.find('a:' + k, NS) for k in ('off', 'ext', 'chOff', 'chExt'))
+                sx = int(ge.get('cx', 1)) / max(int(ce.get('cx', 1)), 1)
+                sy = int(ge.get('cy', 1)) / max(int(ce.get('cy', 1)), 1)
+                x = int(go.get('x', 0)) + (x - int(co.get('x', 0))) * sx
+                y = int(go.get('y', 0)) + (y - int(co.get('y', 0))) * sy
+                w, h = w * sx, h * sy
+        node = parents.get(node)
+    return int(y // EMU_PX), int(x // EMU_PX), int(w // EMU_PX), int(h // EMU_PX)
 
 
 def slide_paths(z):
@@ -72,6 +110,32 @@ def slide_paths(z):
         target = pr.get(s.get(R_ID))
         out.append(target[0] if target else None)
     return out, pr
+
+
+def reading_order(blocks):
+    """(y, x, 높이, 글) 목록을 읽는 순서로: 세로로 겹치는 도형끼리 한 줄로 묶고, 줄 안에서는 왼쪽부터."""
+    rows = []
+    for b in sorted(blocks, key=lambda b: (b[0], b[1])):
+        y, h = b[0], max(b[2], 1)
+        row = rows[-1] if rows else None
+        # 이 도형의 세로 가운데가 앞 줄의 범위 안이면 같은 줄
+        if row and y + h / 2 < row['bottom'] and y >= 0:
+            row['items'].append(b)
+            row['bottom'] = max(row['bottom'], y + h)
+        else:
+            rows.append({'bottom': y + h, 'items': [b]})
+    out = []
+    for row in rows:
+        items = sorted(row['items'], key=lambda b: b[1])
+        for k, b in enumerate(items):
+            lines = list(b[3])
+            # 나란히 놓인 글(두 칸 이상)은 몇 번째 칸인지 적는다: 다음 줄의 같은 칸과 짝이다
+            if len(items) > 1:
+                first = next((i for i, ln in enumerate(lines) if ln.strip()), None)
+                if first is not None:
+                    lines[first] = lines[first].replace('- ', f'- (같은 줄 {k + 1}/{len(items)}칸) ', 1)
+            out.append(lines)
+    return out
 
 
 def para_text(p):
@@ -188,17 +252,29 @@ def extract(pptx, out, media=True):
                 md.append('(슬라이드를 읽지 못했어요)')
                 continue
             sr = rels(z, path)
+            links = rels(z, path, external=True)
             parents = {child: parent for parent in root.iter() for child in parent}
+            # 글 도형과 표를 화면 위치 순서(위→아래, 같은 줄은 왼→오른)로 적는다. XML 순서는 읽는 순서와 다를 수 있다.
+            blocks = []
             for node in root.iter():
                 tag = node.tag.split('}')[-1]
                 if tag == 'sp' and node.find('p:txBody', NS) is not None:
-                    md.extend(shape_lines(node))
+                    lines = shape_lines(node)
+                    if lines:
+                        y, x, _, h = shape_pos(node, parents)
+                        blocks.append((y, x, h, lines))
                 elif tag == 'graphicFrame':
                     tbl = node.find('.//a:tbl', NS)
                     if tbl is not None:
-                        md.append('')
-                        md.extend(table_md(tbl))
-                        md.append('')
+                        y, x, _, h = shape_pos(node, parents)
+                        blocks.append((y, x, h, [''] + table_md(tbl) + ['']))
+            for lines in reading_order(blocks):
+                md.extend(lines)
+            # 그림·글에 걸린 링크(영상·사료 주소, 파일)
+            for hl in root.iter('{%s}hlinkClick' % NS['a']):
+                target = links.get(hl.get(R_ID))
+                if target:
+                    md.append(f'- 링크: {target}')
             # 채우기 색 집계: 직접 지정한 색과 테마 색
             for fill in root.iter('{%s}solidFill' % NS['a']):
                 if not len(fill):
@@ -222,14 +298,20 @@ def extract(pptx, out, media=True):
                     continue
                 ext = posixpath.splitext(target[0])[1].lstrip('.').lower()
                 name = f'{gid}.{ext}'
+                holder = parents.get(blip)
+                while holder is not None and holder.tag.split('}')[-1] not in ('pic', 'sp', 'bg'):
+                    holder = parents.get(holder)
+                _, _, w, h = shape_pos(holder, parents) if holder is not None and holder.tag.split('}')[-1] != 'bg' else (0, 0, 0, 0)
                 if media:
                     try:
                         (out / 'media' / name).write_bytes(z.read(target[0]))
                     except KeyError:
                         name = '(없음)'
                 note = '' if ext in BROWSER_OK else f' · {ext.upper()}: 브라우저에서 안 보임'
-                md.append(f'- 그림 {gid}: media/{name}{" · " + alt if alt else ""}{note}')
-                images.append({'id': gid, 'file': f'media/{name}', 'alt': alt, 'browser': ext in BROWSER_OK})
+                size = f' · 화면 {w}×{h}px' if w and h else ''
+                small = ' · 작은 그림(장식·단추일 수 있음)' if w and h and max(w, h) < 80 else ''
+                md.append(f'- 그림 {gid}: media/{name}{" · " + alt if alt else ""}{size}{small}{note}')
+                images.append({'id': gid, 'file': f'media/{name}', 'alt': alt, 'browser': ext in BROWSER_OK, 'width': w, 'height': h})
             for target, kind in sr.values():
                 if kind != REL_NOTES:
                     continue

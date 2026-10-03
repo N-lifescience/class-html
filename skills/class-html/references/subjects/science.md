@@ -10,6 +10,28 @@
 | 실험 과정 | `ol.order` + 안전 주의는 `.answer` 또는 단계 |
 | 개념 구분(확산/삼투, 산/염기) | `.sort` |
 | 순환·과정 그림 | `.reveal` + `data-at` |
+| 확산·삼투·기체 운동(입자 그림) | `figure.particles`(입자 상자): 막 양쪽 개수와 통과 여부를 정하면 입자가 움직이며 개수가 바뀐다 |
+
+## 입자 상자 `figure.particles`
+
+```html
+<div class="calc" style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start">
+  <figure class="particles" data-membrane="0.5" data-labels="세포 밖|세포 안" data-height="300">
+    <i data-kind="물" data-left="30" data-right="30" data-pass="1" data-color="#5AA9E6" data-size="4"></i>
+    <i data-kind="설탕" data-left="sugar" data-right="5" data-pass="0" data-color="#C04F15" data-size="8"></i>
+  </figure>
+  <div>
+    <p>세포 밖 설탕 <output data-expr="sugar" data-unit="개"></output></p>
+    <input type="range" name="sugar" min="0" max="40" value="20" aria-label="세포 밖 설탕 수">
+    <p data-show="sugar > 5">설탕은 막을 못 지난다. 물이 세포 밖으로 더 많이 나간다.</p>
+  </div>
+</div>
+```
+
+- `data-membrane`: 막의 가로 위치(0~1). 빼면 막이 없는 한 칸(기체 운동, 확산).
+- 입자 종류마다 `data-left`·`data-right`(처음 개수), `data-pass`(막을 지날 확률 0~1: 반투과성막이면 물 1, 용질 0), `data-color`, `data-size`(반지름 px). 값은 식이라 계산 상자 변수를 쓸 수 있다. `data-speed`(상자 전체 속도, 기본 1)도 식.
+- 장이 보이면 움직이고 넘기면 멈춘다. 「멈추기」·「다시」 단추, 아래에 양쪽 개수. 입자는 모두 300개까지.
+- 움직임은 모형이다. 개수의 비율이 개념과 맞는지만 지키고, '실제 분자 수'처럼 말하지 않는다.
 
 ## 규칙
 

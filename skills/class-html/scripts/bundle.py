@@ -19,7 +19,7 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
-TYPES = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.bmp': 'image/bmp'}
+TYPES = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.jfif': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.bmp': 'image/bmp'}
 
 
 def image_size(data):
@@ -41,6 +41,32 @@ def image_size(data):
                 return w, h
             i += 2 + length
     return None
+
+
+def png_opaque(data):
+    """PNG가 알파 없이 칠해졌는가(색 형식 0·2이고 tRNS 조각이 없음)"""
+    return data[:8] == b'\x89PNG\r\n\x1a\n' and data[25] in (0, 2) and b'tRNS' not in data[:4096]
+
+
+def to_jpeg(path, data, notes):
+    """큰 불투명 PNG → JPEG(품질 85). Pillow나 sips가 없으면 그대로."""
+    try:
+        from PIL import Image
+        import io
+        out = io.BytesIO()
+        Image.open(io.BytesIO(data)).convert('RGB').save(out, 'JPEG', quality=85, optimize=True)
+        return out.getvalue(), 'image/jpeg'
+    except ImportError:
+        pass
+    if shutil.which('sips'):
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / path.name
+            dst = Path(tmp) / (path.stem + '.jpg')
+            src.write_bytes(data)
+            subprocess.run(['sips', '-s', 'format', 'jpeg', '-s', 'formatOptions', '85', str(src), '--out', str(dst)], check=True, capture_output=True)
+            return dst.read_bytes(), 'image/jpeg'
+    notes.append(f'{path.name}: 큰 PNG를 JPEG로 바꾸지 못했어요(Pillow나 sips가 없음)')
+    return data, 'image/png'
 
 
 def shrink(path, data, limit, notes):
@@ -81,6 +107,8 @@ def inline_images(html, base, limit, notes):
         data = path.read_bytes()
         if mime not in ('image/svg+xml',):
             data = shrink(path, data, limit, notes)
+        if mime == 'image/png' and len(data) > 300 * 1024 and png_opaque(data):
+            data, mime = to_jpeg(path, data, notes)   # 사진·만화 같은 큰 PNG는 JPEG가 훨씬 작다
         return f'{head}{q}data:{mime};base64,{base64.b64encode(data).decode()}{q}'
     # <img>의 src만 바꾼다(엔진 <script src>는 --offline일 때만 따로 넣는다)
     return re.sub(r'(<img\b[^>]*?\bsrc=)(["\'])([^"\']+)\2', repl, html)

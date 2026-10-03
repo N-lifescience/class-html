@@ -1,6 +1,8 @@
 # 부품 사전
 
-엔진이 동작을 붙인다. 수업 HTML에는 구조와 `data-*` 속성만 쓴다. 맞춤 `<script>`는 부품으로 안 될 때만 쓴다(11절).
+엔진이 동작을 붙인다. 수업 HTML에는 구조와 `data-*` 속성만 쓴다. 맞춤 `<script>`는 부품으로 안 될 때만 쓴다(이 문서 끝 '맞춤 스크립트').
+
+`data-why`·`data-hint`·`data-stops` 같은 속성 값은 글자만 된다(태그 없음). 위첨자·아래첨자는 유니코드로 쓴다(Na⁺, H₂O, x²).
 
 ## 0. 뼈대와 공통 모양
 
@@ -30,14 +32,30 @@
 | 꼬리표 | `<p class="kicker">` | 강조색 선 + 작은 글씨 |
 | 형광 강조 | `<mark>` | 노랑 밑줄 형광 |
 | 번호 제목 | `<h2 data-n="1">` | 동그라미 번호 |
-| 문항 | `<p class="q" data-n="1">` | 큰 번호 + 굵은 물음 |
+| 문항 | `<p class="q" data-n="1">` | 큰 번호 + 굵은 물음. 번호 대신 기호도 된다(`data-n="●"`) |
 | 번호 목록 | `<ol class="points">` (1)(2), `<ol class="circled">` ①② | |
 | 자료 단추 | `<a class="pill" href="…" target="_blank" rel="noopener">` | 색: `style="--pill:#7B3FC4"` |
-| 비교표 | `<table class="compare">` | 첫 줄 thead, 첫 칸 th |
+| 비교표 | `<table class="compare">` | 첫 줄 thead, 첫 칸 th. 머리 색은 띠 색(`--tab`)을 따른다. 바꾸려면 `--table-head`, `--table-side` |
 | 빈칸 | `<span class="blank">확산</span>` | 누르면 열린다. 활동으로 치지 않는다 |
 | 정답 상자 | `<div class="answer"><p>…</p></div>` | ✓ 단추나 →로 연다. `.answer.sheet`는 흰 답안지 |
-| 그림 | `<figure class="fig"><img src="data:…" alt="…"><figcaption>…</figcaption></figure>` | 확대 단추, 손 모드에서 눌러 확대 |
-| 표지 | `<section class="slide cover">` + `.band`(색 띠) + `img.cover-art`(오른쪽 둥근 그림) | |
+| 그림 | `<figure class="fig"><img src="data:…" alt="…"><figcaption>…</figcaption></figure>` | 오른쪽 위 확대 단추, 손 모드에서 눌러 확대. 단추가 그림 속 글자를 가리면 `data-zoom="off"` |
+| 표지 | 아래 '표지' 예시 | `img.cover-art`는 오른쪽 560px를 차지한다. 제목은 왼쪽 600px 안에서 `<br>`로 나눈다(겹치면 점검 경고) |
+| 수식 | `$x^2 + 1$`(줄 안), `$$E = mc^2$$`(가운데 한 줄) | KaTeX로 그린다(수식이 있을 때만 불러옴). 글자 그대로 $는 `\$`. `$5`처럼 $ 안쪽이 빈칸이면 수식이 아니다 |
+| 장 표지 | `<section class="slide chapter" data-sec="2. 확산"><p class="kicker">2</p><h1>확산</h1></section>` | 띠 색 바탕의 소단원 시작 |
+| 목차 슬라이드 | `<section class="slide toc"></section>` | 엔진이 `data-sec` 묶음 목록을 만든다(누르면 그 묶음 첫 장) |
+| 움직임 | `data-anim="fade-up"`(또는 `fade pop wipe type highlight draw count`), 묶음은 부모에 `data-stagger` | 장이 보일 때마다 재생. `count`는 숫자만 든 요소(`<b data-anim="count">1,234명</b>`), `draw`는 SVG 선. 한 화면에 두세 가지만 |
+
+표지:
+
+```html
+<section class="slide cover" id="cover" data-title="표지">
+  <img class="cover-art" src="data:image/jpeg;base64,…" alt="표지 그림 설명">
+  <div class="band"><p class="kicker">고등학교 생명과학 · 세포와 물질대사</p></div>
+  <h1>세포막을 통한<br>물질 이동</h1>
+</section>
+```
+
+표지 그림은 긴 변 1000px 이상이 좋다(작은 그림을 늘리면 흐리다). 그림이 없으면 `.cover-art`를 빼고 제목을 크게.
 
 ## 1. 단계 막대 `.reveal`
 
@@ -58,6 +76,9 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 - 이전 장으로 돌아오면 끝 칸, 그 밖에는 0단계로 들어온다. 인쇄는 끝 칸.
 - 막대 바깥에 있는 `data-at`·`data-only`는 그 장에 막대가 하나면 그 막대에, 여럿이면 `data-for="막대 id"`로 묶는다.
 - 지금 칸은 `data-pos` 속성에 적힌다. CSS로 칸마다 모양을 바꿀 수 있다: `#fr[data-pos="2"] li:nth-child(3) { … }`.
+- `data-only="0"`은 0단계(시작)에만 보이는 안내. `.veil`이 없으면 그림은 처음부터 보이고 `data-at`·`data-only`만 숨는다.
+- 막대와 눈금 이름이 약 110px를 차지한다. 단계 막대 자체를 grid·flex로 배치하면 막대는 그 바로 뒤에 붙는다(칸 하나로 끼지 않는다).
+- 안에는 표·그림·SVG·카드 무엇이든 넣을 수 있다.
 
 ## 2. 비교 전환 `.switch`
 
@@ -118,6 +139,8 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 - 칸이 `.sort` 바로 아래에 있으면 칸 수만큼 열을 나눈다(최대 4).
 - 카드는 끌어서 놓거나, 카드→칸 차례로 누른다. 펜을 든 채로도 카드가 움직인다.
 - 다 맞히면 이 부품 뒤의 첫 `.step`을 연다. 「다시」 단추가 붙는다.
+- 아래에 알림 줄(이유·실마리)이 붙고, 맞힌 카드는 칸 안으로 들어간다. 엔진이 실마리 앞에 "다시 생각해 보자.", 마지막 이유 앞에 "모두 맞혔다!"를 붙인다.
+- 칸 2개에 카드 6~8장이 한 화면에 알맞다. 칸 높이는 이 수업 CSS로 바꾼다(`.bin { min-height: 100px }`). 칸 안의 빈 곳이나 이미 놓인 카드를 눌러도 그 칸에 놓인다.
 
 ## 6. 즉시 확인 문제 `.quiz`
 
@@ -132,6 +155,8 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 ```
 
 - 보기마다 `data-why`(왜 맞고 왜 틀린지)를 쓴다. 정답은 `data-ok`(둘 이상이어도 된다).
+- 하나 고르기는 누른 보기의 이유가 아래 알림 줄에 나온다. 여러 개 고르기는 「확인」 뒤 잘못 고른 보기와 놓친 보기 아래에 그 보기의 이유가 나오고, 다 맞히면 문제의 `data-why`가 나온다.
+- 보기 안에 그림·SVG를 넣어도 된다(그래프 고르기 등).
 - 번호 ①②는 엔진이 붙인다(`data-num="off"`로 끔). `data-cols`로 열 수.
 - 처음 맞히면 문제 뒤 첫 `.step`을 연다. 인쇄는 정답 표시.
 
@@ -144,7 +169,7 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 </ol>
 ```
 
-정답 순서로 쓴다. 엔진이 섞어 내놓고, 학생이 차례로 눌러 쌓으면 자리마다 채점한다.
+정답 순서로 쓴다. 엔진이 섞어 내놓고, 학생이 차례로 눌러 쌓으면 자리마다 채점한다. 맞은 칸 아래에 `data-why`가 붙어 길어지므로 항목은 5개 안팎, 이유는 한 줄로. 모두 맞으면 뒤 `.step`을 연다.
 
 ## 8. 계산 상자 `.calc` — 입력하면 화면이 계산해서 바뀐다
 
@@ -168,6 +193,8 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 - 출력: `data-expr`(글자, `data-digits` 소수 자리, `data-unit` 단위), `data-show`(참이면 보임), `data-class="클래스: 식; …"`, `data-style="속성: 식"`(숫자는 px, `--변수`는 그대로), `data-attr="속성: 식"`(SVG), `.bar[data-value][data-max]`(막대 길이).
 - 식 문법: 수, `'글자'`, `+ - * / % ^`, `== != < <= > >=`, `&& || !`, `조건 ? 가 : 나`, `× ÷ − ≤ ≥ ≠`도 된다. 함수: `abs min max round(x,n) floor ceil sqrt pow exp ln log(10이 밑) sin cos tan asin acos atan rad deg clamp(x,lo,hi) if(c,a,b) fix(x,n) len(글자) sign`. 상수 `pi e true false`. 글자 + 수는 이어 붙인다.
 - 식이 틀리면 그 자리에 '?'가 나오고 점검(D)에 오류로 뜬다. 근거 없는 수치를 지어내지 않는다. 단위를 쓴다.
+- 계산 상자의 슬라이더는 중간값에서 시작해도 된다(단계를 여는 막대가 아니다).
+- 입자·점이 많은 모식도는 `data-attr`로 점마다 식을 쓰지 말고 입자 상자 `figure.particles`(교과 지침: 과학)를 쓰거나, 그림 몇 장을 단계 막대로 바꾼다.
 
 ## 9. 그래프 `figure.plot`
 
@@ -180,7 +207,7 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 </figure>
 ```
 
-`.calc` 안에 두면 그 변수(v, s, k…)를 쓰고 입력이 바뀔 때마다 다시 그린다. 곡선의 가로 변수는 `x`. 폭은 감싼 칸 폭, 높이는 `data-height`.
+`.calc` 안에 두면 그 변수(v, s, k…)를 쓰고 입력이 바뀔 때마다 다시 그린다. 곡선의 가로 변수는 `x`. 폭은 감싼 칸 폭, 높이는 `data-height`. 가로 기준선은 상수 식(`<i data-line="vmax" data-dash>`), 점 색은 `data-color`.
 
 ## 10. 그림 자리 `img[data-ppt]`
 
@@ -191,7 +218,29 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 - 코드를 실행할 수 없어 그림을 못 넣을 때만 쓴다. `12-2`는 원본 PPT 12쪽의 2번째 그림(슬라이드 XML의 그림 순서, `extract_pptx.py`의 번호와 같다).
 - 선생님이 원본 PPTX를 화면에 끌어다 놓으면 채워지고, ⚙ 「그림 넣어 저장」으로 파일에 넣는다.
 
-## 11. 맞춤 스크립트(마지막 수단)
+## 11. 교실 도구
+
+활동으로 치지 않는 수업 진행 도구다. 상태는 그 화면 안에만 있다(저장하지 않는다).
+
+```html
+<div class="timer" data-sec="300" data-label="모둠 활동"></div>   <!-- 시작·멈춤·다시, 끝나면 '끝'과 깜빡임 -->
+<div class="picker" data-range="1-30"></div>                     <!-- 발표자 뽑기(겹치지 않게). data-items="가|나|다"도 된다 -->
+```
+
+```html
+<div class="score" data-teams="4"></div>                          <!-- 모둠 점수판(+1/−1). data-teams="빨강|파랑"도 된다 -->
+<ul class="checklist"><li>보안경</li><li>실험복</li></ul>         <!-- 누르면 ✓, 아래에 '1 / 2' -->
+```
+
+```html
+<figure class="hotspots" style="width:560px">                    <!-- 그림 위 번호를 누르면 그 설명 -->
+  <img src="data:…" alt="…">
+  <span class="hs" style="--x:30%; --y:40%">설명</span>
+  <span class="hs" style="--x:70%; --y:55%" data-label="A">설명</span>
+</figure>
+```
+
+## 12. 맞춤 스크립트(마지막 수단)
 
 ```html
 <script>

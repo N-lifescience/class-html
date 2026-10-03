@@ -24,6 +24,7 @@
 | | 예측 후 확인 그래프 | `.quiz`(예측) → `.reveal`/`.step`로 그래프 공개 |
 | | 식과 그림이 함께 바뀌는 모식도 | `.calc`의 `data-attr`(SVG)·`data-style` |
 | | 실험 순서 맞추기 | `ol.order` |
+| | 입자 운동(확산·삼투·기체) | `figure.particles` |
 | 사회 | 지도 시기별 공개와 영역 색칠 | `figure.map-reveal` |
 | | 연표 막대 | `ol.yearline` |
 | | 두 자료 비교 전환 | `.switch` |

@@ -414,3 +414,25 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
   .slide .quiz .opt[data-ok] .ch-opt-n { background: var(--ch-ok) !important; color: #fff !important; }
   .slide .quiz .ch-fb, .slide .quiz .ch-check-btn { display: none !important; }
 }
+
+/* ---- 78-order.css ---- */
+/* 순서 배열: 왼쪽은 섞인 항목, 오른쪽은 내가 만든 순서. 원래 목록(정답)은 인쇄 때만 보인다. */
+.ch-order { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; align-items: start; }
+.ch-order > .ch-fb { grid-column: 1 / -1; }
+.ch-order > ol.order { display: none; }
+.ch-order-bank { display: grid; gap: 10px; }
+.slide .ch-order-item { min-height: 58px; padding: 8px 20px; border: 2px solid #AEB4BC; border-radius: 14px; background: #fff; font: 700 24px/1.3 var(--ch-font); text-align: left; }
+.slide .ch-order-item:disabled { opacity: .35; cursor: default; }
+.slide .ch-order-out h3 { margin: 0 0 8px; font-size: 24px; color: var(--ch-mute); }
+.slide .ch-order-slots { counter-reset: ch-order; margin: 0 0 10px; padding: 0; list-style: none; display: grid; gap: 8px; }
+.slide .ch-order-slots li { counter-increment: ch-order; position: relative; min-height: 52px; box-sizing: border-box; margin: 0; padding: 8px 16px 8px 56px; border: 2px solid #D5D9DF; border-radius: 12px; font-size: 24px; font-weight: 700; line-height: 1.35; }
+.slide .ch-order-slots li::before { content: counter(ch-order); position: absolute; left: 14px; top: 8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #EEF0F3; font-size: 20px; }
+.slide .ch-order-slots li.is-empty { border-style: dashed; }
+.slide .ch-order-slots li.is-right { border-color: var(--ch-ok); background: #EAF7EF; }
+.slide .ch-order-slots li.is-wrong { border-color: var(--ch-bad); background: #FDECEA; }
+.slide .ch-order-why { display: block; margin-top: 4px; font-size: 20px; font-weight: 500; color: var(--ch-mute); }
+
+@media print {
+  .ch-order-bank, .ch-order-out, .ch-order > .ch-fb { display: none !important; }
+  .ch-order > ol.order { display: block !important; grid-column: 1 / -1; }
+}

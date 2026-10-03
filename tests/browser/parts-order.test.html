@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko" data-deck="test-order">
+<head>
+<meta charset="utf-8">
+<title>order</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="od">
+  <h2>하루의 순서</h2>
+  <ol class="order" id="o">
+    <li data-why="아침에 일어난다.">일어나기</li>
+    <li data-why="그다음 씻는다.">씻기</li>
+    <li>밥 먹기</li>
+    <li><b>학교</b> 가기</li>
+  </ol>
+  <p class="step" id="after">정리</p>
+</section>
+<section class="slide" id="od2"><ol class="order"><li>가</li><li>나</li></ol></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const it = () => I().Order.list[0];
+const byText = (t) => it().items.find((x) => x.li.textContent.includes(t)).btn;
+
+test('섞인 순서는 정답과 다르고 늘 같다', () => {
+  for (const o of I().Order.list) assert(!o.mixed.every((x, k) => x.i === k), 'not identity');
+  eq(it().bank.children.length, 4);
+  eq(it().slots.children.length, 4);
+  assert(Array.from(it().slots.children).every((li) => li.classList.contains('is-empty')), 'empty slots');
+  eq(getComputedStyle(it().ol).display, 'none');
+});
+test('누르면 차례로 쌓이고 그 항목은 다시 못 누른다', () => {
+  byText('씻기').click();
+  byText('일어나기').click();
+  eq(it().seq.map((x) => x.i), [1, 0]);
+  assert(byText('씻기').disabled, 'disabled');
+  assert(it().slots.children[0].textContent.includes('씻기'), 'slot 1');
+});
+test('한 칸 되돌리기', () => {
+  it().wrap.querySelectorAll('.ch-reset')[0].click();
+  eq(it().seq.map((x) => x.i), [1]);
+  assert(!byText('일어나기').disabled, 're-enabled');
+});
+test('다 쌓으면 자리마다 채점하고 몇 개 맞았는지', () => {
+  for (const t of ['일어나기', '밥 먹기', '학교']) byText(t).click();
+  const cls = Array.from(it().slots.children).map((li) => li.className.replace('is-filled ', ''));
+  eq(cls, ['is-wrong', 'is-wrong', 'is-right', 'is-right']);
+  eq(it().fb.textContent, '4개 가운데 2개가 제자리다. 빨간 칸부터 다시 생각해 보자.');
+  assert(it().slots.children[3].querySelector('b'), 'markup copied');
+});
+test('다시 한 뒤 바르게 쌓으면 맞음, 이유, 다음 단계', async () => {
+  it().wrap.querySelectorAll('.ch-reset')[1].click();
+  eq(it().seq.length, 0);
+  for (const t of ['일어나기', '씻기', '밥 먹기', '학교']) byText(t).click();
+  eq(it().fb.textContent, '맞다. 순서가 모두 맞다.');
+  eq(it().slots.children[0].querySelector('.ch-order-why').textContent, '아침에 일어난다.');
+  await wait(700);
+  assert(document.getElementById('after').classList.contains('is-shown'), 'next step');
+});
+</script>
+</body>
+</html>

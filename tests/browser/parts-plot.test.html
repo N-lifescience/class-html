@@ -22,10 +22,21 @@
   <figure class="plot" id="inv" style="width:400px" data-x="-1, 1" data-y="-5, 5" data-height="240"><i data-line="1 / x"></i></figure>
   <figure class="plot" id="bad" data-x="3, 1"><i data-line="x +"></i></figure>
 </section>
+<section class="slide" id="p2">
+  <div class="calc" data-let="qd = 900 - p / 5; qs = p / 5 - 300">
+    <input type="range" name="p" id="price" min="2000" max="4000" step="500" value="2500">
+    <figure class="plot" id="mk" style="width:640px" data-x="0, 600" data-y="1500, 4500" data-ystep="500" data-comma data-xlabel="수량" data-ylabel="가격(원)">
+      <i data-line="5 * (900 - x)" data-x="100, 500" data-label="수요"></i>
+      <i data-line="p" data-x="min(qd, qs), max(qd, qs)" data-show="qd != qs" data-label="초과량"></i>
+      <i data-points="100, 4000; 300, 3000; 500, 2000" data-label="표의 값"></i>
+    </figure>
+  </div>
+</section>
 <pre id="results" data-summary="pending"></pre>
 <script>
 const I = () => ClassHTML._internal;
 const it = (id) => I().Plot.list.find((p) => p.fig.id === id);
+const near = (a, b, tol) => assert(Math.abs(a - b) <= tol, `${a} vs ${b}`);
 const set = (v) => { const r = document.getElementById('v'); r.value = String(v); r.dispatchEvent(new Event('input', { bubbles: true })); };
 
 test('보이지 않는 장에 있어도 실제 크기로 그린다', () => {
@@ -66,6 +77,32 @@ test('계산 상자 값이 바뀌면 표시선과 점이 따라 움직인다', (
   const expectY = it('pl').h - 64 - ((8.7 / 1.2) / 11) * (it('pl').h - 18 - 64);
   assert(Math.abs(Number(c.getAttribute('cy')) - expectY) < 0.2, 'point y');
   eq(it('pl').marks.querySelector('text').textContent, '지금');
+});
+test('눈금 간격·천 단위 쉼표, 긴 눈금 글자에 맞춘 왼쪽 여백(세로축 이름과 겹치지 않음)', () => {
+  ClassHTML.go(2);
+  const mk = it('mk');
+  const ys = Array.from(mk.svg.querySelectorAll('.ch-plot-ticks text')).map((t) => t.textContent.replace(/\u2060/g, ''));
+  ['2,000', '2,500', '3,000', '4,500'].forEach((t) => assert(ys.includes(t), ys.join(' ')));
+  assert(mk.pad.l > 76, `pad ${mk.pad.l}`);
+  const label = mk.svg.querySelector('.ch-plot-label[transform]').getBoundingClientRect();
+  const left = Math.min(...Array.from(mk.svg.querySelectorAll('.ch-plot-ticks text[text-anchor="end"]')).map((t) => t.getBoundingClientRect().left));
+  assert(label.right <= left, `ylabel ${label.right} ticks ${left}`);
+});
+test('선마다 그릴 범위(data-x), 조건(data-show), 측정값 여러 개(data-points)', () => {
+  const mk = it('mk');
+  const xs = (d) => (d.match(/[ML](-?[\d.]+) /g) || []).map((m) => Number(m.slice(1)));
+  const demand = xs(mk.layer.querySelectorAll('path')[0].getAttribute('d'));
+  near(Math.min(...demand), mk.pad.l + (100 / 600) * (640 - mk.pad.l - 18), 0.2);
+  near(Math.max(...demand), mk.pad.l + (500 / 600) * (640 - mk.pad.l - 18), 0.2);
+  eq(mk.layer.querySelectorAll('path').length, 2);            // 2,500원: 초과 수요가 있다
+  eq(mk.marks.querySelectorAll('circle').length, 3);
+  const keys = Array.from(mk.legend.children);
+  assert(keys[2].classList.contains('is-dot'), 'dot legend');
+  document.getElementById('price').value = '3000';
+  document.getElementById('price').dispatchEvent(new Event('input', { bubbles: true }));
+  eq(mk.layer.querySelectorAll('path').length, 1);            // 균형: 초과량 선과 범례를 감춘다
+  eq(keys[1].hidden, true);
+  eq(getComputedStyle(keys[1]).display, 'none');
 });
 test('잘못 쓴 범위와 식은 오류 목록에', () => {
   const msgs = it('bad').errors.map((e) => e.msg);

@@ -229,3 +229,8 @@ const Expr = {
     return String(Object.is(r, -0) ? 0 : r);
   },
 };
+
+// 천 단위 쉼표(정수 부분만, ×10ⁿ 꼴은 그대로)
+function groupDigits(text) {
+  return /×/.test(text) ? text : text.replace(/^(-?)(\d{4,})/, (m, sign, int) => sign + int.replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+}

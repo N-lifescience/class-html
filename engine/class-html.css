@@ -447,7 +447,7 @@ body .slide.chapter::before { display: none; }
 .ch-card.is-sel { outline: 4px solid var(--accent); outline-offset: 2px; }
 .ch-card.is-drag { position: relative; z-index: 50; cursor: grabbing; box-shadow: 0 12px 26px rgba(0, 0, 0, .28); }
 .ch-card.is-done { border-color: var(--ch-ok); background: var(--ch-ok-bg); cursor: default; box-shadow: none; }
-:where(.slide) .sort .bin { min-height: 150px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; box-sizing: border-box; padding: 14px; border: 3px dashed #C3C9D1; border-radius: 18px; cursor: pointer; }
+:where(.slide) .sort .bin { min-height: 120px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; box-sizing: border-box; padding: 14px; border: 3px dashed #C3C9D1; border-radius: 18px; cursor: pointer; }
 :where(.slide) .sort .bin > h3 { width: 100%; margin: 0 0 4px; font-size: 28px; color: var(--bc, var(--ch-ink)); }
 :where(.slide) .sort .bin.is-hover { border-color: var(--accent); background: rgba(232, 84, 26, .06); }
 
@@ -525,6 +525,8 @@ body .slide.chapter::before { display: none; }
 .ch-plot-legend { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 0 6px; font-size: 20px; font-weight: 700; }
 .ch-plot-legend > span::before { content: ""; display: inline-block; width: 28px; margin-right: 8px; vertical-align: middle; border-top: 4px solid var(--c); }
 .ch-plot-legend > span.is-dash::before { border-top-style: dashed; }
+.ch-plot-legend > span.is-dot::before { width: 14px; height: 14px; margin: 0 10px 0 6px; border: 0; border-radius: 50%; background: var(--c); }
+.ch-plot-legend > span[hidden] { display: none; }
 
 /* ---- 80-pptfill.css ---- */
 /* 그림 자리, 끌어다 놓기 안내, 알림 줄, 그림 바꾸기 창 */

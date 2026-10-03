@@ -1551,7 +1551,8 @@ const Settings = {
 };
 
 /* ---- 40-keepwords.js ---- */
-// 어절을 nowrap span으로 감싸고 인라인 요소 사이에 WORD JOINER(U+2060)를 넣는다.
+// 어절을 nowrap 요소(ch-w.w)로 감싸고 인라인 요소 사이에 WORD JOINER(U+2060)를 넣는다.
+// span이 아닌 전용 태그를 써서 수업 CSS의 'span' 선택자가 어절까지 잡지 않게 한다.
 // 원래 요소와 이벤트는 보존하며, .w 내부를 건너뛰어 다시 적용해도 중첩하지 않는다.
 const KeepWords = {
   SKIP: 'svg, math, script, style, pre, code, textarea, select, button, canvas, .katex, .ch-math, .w, [data-no-keep], [contenteditable=""], [contenteditable="true"]',
@@ -1574,7 +1575,7 @@ const KeepWords = {
     const display = getComputedStyle(el).display;
     if (display) return /^(inline|inline-block|inline-flex|inline-grid|inline-table|contents|ruby.*)$/.test(display);
     // 분리된 요소도 보정할 수 있도록 브라우저 기본 인라인 태그를 사용한다.
-    return /^(A|ABBR|B|BDI|BDO|CITE|CODE|DATA|DEL|DFN|EM|I|INS|KBD|LABEL|MARK|Q|RP|RT|RUBY|S|SAMP|SMALL|SPAN|STRONG|SUB|SUP|TIME|U|VAR)$/.test(el.tagName);
+    return /^(A|ABBR|B|BDI|BDO|CITE|CODE|DATA|DEL|DFN|EM|I|INS|KBD|LABEL|MARK|Q|RP|RT|RUBY|S|SAMP|SMALL|SPAN|STRONG|SUB|SUP|TIME|U|VAR|CH-W|CH-WRUN)$/.test(el.tagName);
   },
 
   // 경계 쪽 첫 문자가 공백이면 끊고, 빈 요소·주석은 건너뛴다.
@@ -1618,12 +1619,12 @@ const KeepWords = {
     for (const part of text.split(/(\s+)/)) {
       if (!part) continue;
       if (/^\s+$/.test(part)) frag.append(part);
-      else frag.append(h('span', { class: 'w', text: part }));
+      else frag.append(h('ch-w', { class: 'w', text: part }));
     }
     // flex·grid 상자 안에서는 낱말 span 하나하나가 따로 놓여 사이 공백이 사라진다. 한 덩어리로 감싼다.
     const parent = node.parentElement;
     if (parent && /flex|grid/.test(getComputedStyle(parent).display) && frag.childNodes.length > 1) {
-      node.replaceWith(h('span', { class: 'ch-wrun' }, frag));
+      node.replaceWith(h('ch-wrun', { class: 'ch-wrun' }, frag));
     } else node.replaceWith(frag);
   },
 };
@@ -1723,13 +1724,19 @@ const Audit = {
   run() {
     const errors = [];
     const warnings = [];
-    // 단계 막대 칸마다 다시 재므로 같은 장·같은 내용의 알림은 한 번만 적는다
-    const seen = new Set();
-    const add = (list, level) => (slide, code, msg) => {
-      const k = `${slide}|${code}|${msg}`;
-      if (seen.has(k)) return;
-      seen.add(k);
-      list.push({ level, slide, page: slide == null ? null : slide + 1, code, msg });   // page는 화면 쪽 번호(1부터)
+    // 상태마다·단계 막대 칸마다 다시 재므로 같은 장·같은 내용의 알림은 한 번만 적는다.
+    // 넘침(amount가 있는 알림)은 장마다 하나만 두고 가장 많이 넘친 값으로 바꾼다.
+    const seen = new Map();
+    const add = (list, level) => (slide, code, msg, amount, same) => {
+      const k = amount == null ? `${slide}|${code}|${same || msg}` : `${slide}|${code}`;
+      const old = seen.get(k);
+      if (old) {
+        if (amount != null && amount > old.amount) Object.assign(old, { msg, amount });
+        return;
+      }
+      const item = { level, slide, page: slide == null ? null : slide + 1, code, msg };   // page는 화면 쪽 번호(1부터)
+      seen.set(k, Object.defineProperty(item, 'amount', { value: amount, writable: true }));
+      list.push(item);
     };
     const err = add(errors, 'error');
     const warn = add(warnings, 'warn');
@@ -1748,7 +1755,9 @@ const Audit = {
     const stepperSnap = Stepper.snapshot();
     root.classList.add('ch-auditing');
     try {
-      const measure = (slide, i) => {
+      // when: 어떤 상태에서 잰 것인지(계산 상자 슬라이더 끝값 등). 알림 끝에 붙인다.
+      const measure = (slide, i, when) => {
+        const tail = when ? ` (${when})` : '';
         Stage.slides.forEach((other) => other.classList.toggle('is-active', other === slide));
         qsa('.step', slide).forEach((el) => el.classList.add('is-shown'));
         const box = slide.getBoundingClientRect();
@@ -1762,7 +1771,7 @@ const Audit = {
           const lows = qsa('*', slide).filter((x) => x.getClientRects().length && !x.closest('svg'));
           const low = lows.reduce((a, b) => (b.getBoundingClientRect().bottom > (a ? a.getBoundingClientRect().bottom : -Infinity) ? b : a), null);
           const top = low ? low.closest('section.slide > *') : null;
-          err(i, 'slide-overflow', `내용이 ${over}px 넘쳐요${top ? ` (맨 아래: ${this.describe(top)})` : ''}. 여백·그림 크기를 줄이거나 장을 나누세요`);
+          err(i, 'slide-overflow', `내용이 ${over}px 넘쳐요${top ? ` (맨 아래: ${this.describe(top)})` : ''}${tail}. 여백·그림 크기를 줄이거나 장을 나누세요`, over);
         }
         for (const el of qsa('*', slide)) {
           const allowOverflow = !!el.closest('[data-allow-overflow]');
@@ -1793,14 +1802,14 @@ const Audit = {
           if (!rect.width && !rect.height) continue;
           if (!allowOverflow && (rect.right > box.right + scale || rect.bottom > box.bottom + scale
             || rect.left < box.left - scale || rect.top < box.top - scale)) {
-            err(i, 'out', `${this.describe(el)}이(가) 슬라이드 밖으로 나가요`);
+            err(i, 'out', `${this.describe(el)}이(가) 슬라이드 밖으로 나가요${tail}`, null, this.describe(el));
             reported.push(el);
             continue;
           }
           const cs = getComputedStyle(el);
           if (!allowOverflow && /(hidden|clip|auto|scroll)/.test(`${cs.overflowX} ${cs.overflowY}`)
             && (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1)) {
-            err(i, 'clip', `${this.describe(el)} 안의 내용이 잘려요`);
+            err(i, 'clip', `${this.describe(el)} 안의 내용이 잘려요${tail}`, null, this.describe(el));
             reported.push(el);
             continue;
           }
@@ -1809,7 +1818,7 @@ const Audit = {
           const hasText = Array.from(el.childNodes).some((node) =>
             node.nodeType === 3 && /\S/.test(node.nodeValue.replace(/\u2060/g, '')));
           if (!hasText) continue;
-          // 어절 보정이 감싼 span.w는 낱말 하나이므로 그 부모를 글 덩어리로 본다
+          // 어절 보정이 감싼 ch-w.w는 낱말 하나이므로 그 부모를 글 덩어리로 본다
           const base = el.classList.contains('w') && el.parentElement ? el.parentElement : el;
           const block = base.closest('p, li, td, th, h1, h2, h3, h4, figcaption, small, .caption, label') || base;
           const size = parseFloat(cs.fontSize);
@@ -1820,6 +1829,8 @@ const Audit = {
         }
       };
       Stepper.openAll('audit');
+      // 풀기 전(분류 카드 더미가 칸 위에 있을 때)이 더 긴 부품도 있으므로 두 상태를 모두 잰다
+      Stage.slides.forEach((slide, i) => measure(slide, i));
       emit('audit-expand');   // 부품: 다 맞힌 뒤·이유가 나온 뒤처럼 가장 길어지는 상태로 잠깐 바꾼다
       Stage.slides.forEach((slide, i) => measure(slide, i));
       // data-only 내용은 칸마다 다르므로 단계 막대의 칸마다 다시 잰다
@@ -1827,6 +1838,37 @@ const Audit = {
         if (!st.targets.some((t) => t.hasAttribute('data-only'))) continue;
         for (let k = 0; k < st.max; k++) { st.set(k, 'audit'); measure(st.slide, st.index); }
         st.set(st.max, 'audit');
+      }
+      // 계산 상자: 슬라이더를 끝값으로, 단추는 값마다 옮겨 잰다(상태 글이 길어지는 경우). 재고 나면 되돌린다.
+      for (const item of Calc.list) {
+        const slide = item.box.closest('section.slide');
+        const i = Stage.slides.indexOf(slide);
+        if (i < 0) continue;
+        for (const el of item.inputs.filter((x) => x.type === 'range')) {
+          const keep = el.value;
+          try {
+            for (const [v, end] of [[el.min || '0', '최솟값'], [el.max || '100', '최댓값']]) {
+              el.value = v;
+              Calc.update(item);
+              measure(slide, i, `슬라이더 ${el.name}를 ${end} ${v}로 옮겼을 때`);
+            }
+          } finally { el.value = keep; Calc.update(item); }
+        }
+        const groups = new Map();
+        for (const b of item.sets) groups.set(b.dataset.set, (groups.get(b.dataset.set) || []).concat(b));
+        for (const group of groups.values()) {
+          const keep = group.map((b) => b.getAttribute('aria-pressed'));
+          try {
+            for (const b of group) {
+              for (const x of group) x.setAttribute('aria-pressed', String(x === b));
+              Calc.update(item);
+              measure(slide, i, `단추 「${b.textContent.trim().slice(0, 12)}」를 눌렀을 때`);
+            }
+          } finally {
+            group.forEach((b, k) => b.setAttribute('aria-pressed', keep[k]));
+            Calc.update(item);
+          }
+        }
       }
     } finally {
       emit('audit-restore');
@@ -2294,6 +2336,11 @@ const Expr = {
     return String(Object.is(r, -0) ? 0 : r);
   },
 };
+
+// 천 단위 쉼표(정수 부분만, ×10ⁿ 꼴은 그대로)
+function groupDigits(text) {
+  return /×/.test(text) ? text : text.replace(/^(-?)(\d{4,})/, (m, sign, int) => sign + int.replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+}
 
 /* ---- 51-stepper.js ---- */
 // 단계 막대 공통: 0단계(전부 가림)에서 시작해 한 칸씩 연다. 슬라이더나 단추로 움직이고, → ←로도 움직인다.
@@ -3227,10 +3274,13 @@ const Calc = {
     for (const b of item.binds) {
       const el = b.el;
       if (b.expr) {
-        const unit = el.dataset.unit ? ` ${el.dataset.unit}` : '';
+        // 한글 단위(초·원·인분·년)는 숫자에 붙이고, 기호 단위(℃·mL·%)는 띄운다
+        const u = (el.dataset.unit || '').trim();
+        const unit = u ? (/^[가-힣]/.test(u) ? u : `\u00A0${u}`) : '';   // 띄울 때는 줄이 갈리지 않는 공백
         const digits = el.dataset.digits != null && el.dataset.digits !== '' ? Number(el.dataset.digits) : undefined;
         const v = b.expr === 'bad' ? NaN : val(b, b.expr);
-        const text = Expr.format(v, Number.isInteger(digits) ? digits : undefined);
+        const raw = Expr.format(v, Number.isInteger(digits) ? digits : undefined);
+        const text = el.hasAttribute('data-comma') && typeof v === 'number' ? groupDigits(raw) : raw;
         el.textContent = text === '?' ? '?' : text + unit;
       }
       if (b.show) el.classList.toggle('ch-hide', b.show === 'bad' || !val(b, b.show));
@@ -3269,8 +3319,17 @@ const Calc = {
 // 그래프: 식 곡선, 세로 표시선, 점. .calc 안에 있으면 그 변수를 쓰고 값이 바뀔 때마다 다시 그린다. 곡선의 가로 변수는 x.
 // 작성 모양: <figure class="plot" data-x="0.85, 1.35" data-y="0, 11" data-xlabel="부피" data-ylabel="압력(기압)">
 //   <i data-line="8.7 / x" data-label="삼투압"></i> <i data-vline="v"></i> <i data-point="v, s" data-label="지금"></i></figure>
+// 눈금: data-xstep·data-ystep(간격), data-comma(천 단위 쉼표). 선: data-x="10, 60"(그릴 범위), data-show="식"(참일 때만).
+// 측정값: <i data-points="10, 360; 20, 260" data-label="측정값"></i>
 const PLOT_COLORS = ['var(--accent)', '#2563EB', '#2E9E6A', '#7A4FBF', '#C8352B', '#B8860B'];
 const PLOT_PAD = { l: 76, r: 18, t: 18, b: 64 };
+
+// 눈금 글자 폭 어림(20px 글꼴): 숫자 11.5px, 쉼표·점 6px, 나머지 20px
+function tickWidth(text) {
+  let w = 0;
+  for (const c of text) w += /[0-9]/.test(c) ? 11.5 : /[.,]/.test(c) ? 6 : /[-−]/.test(c) ? 9 : 20;
+  return w;
+}
 
 function svgEl(tag, attrs, ...kids) {
   const el = document.createElementNS(SVG_NS, tag);
@@ -3279,13 +3338,13 @@ function svgEl(tag, attrs, ...kids) {
   return el;
 }
 
-// 1·2·5 × 10ⁿ 간격 눈금
-function niceTicks(lo, hi, count) {
+// 1·2·5 × 10ⁿ 간격 눈금. fixed(작성자가 정한 간격)가 있으면 그 간격으로 쓴다.
+function niceTicks(lo, hi, count, fixed) {
   const span = hi - lo;
   if (!(span > 0)) return [lo];
   const raw = span / Math.max(1, count);
   const p = 10 ** Math.floor(Math.log10(raw));
-  const step = [1, 2, 5, 10].map((m) => m * p).find((s) => s >= raw * 0.999) || 10 * p;
+  const step = fixed > 0 && span / fixed <= 50 ? fixed : [1, 2, 5, 10].map((m) => m * p).find((s) => s >= raw * 0.999) || 10 * p;
   const out = [];
   for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + step * 1e-9; v += step) out.push(Math.round(v / step) * step);
   return out;
@@ -3297,7 +3356,7 @@ const Plot = {
   init() {
     this.list = [];
     qsa('figure.plot', Stage.deck).forEach((fig, n) => {
-      const item = { fig, n, errors: [], lines: [], vlines: [], points: [], svg: null, legend: null, w: 0, h: 0, calc: Calc.of(fig) };
+      const item = { fig, n, errors: [], lines: [], vlines: [], points: [], sets: [], svg: null, legend: null, w: 0, h: 0, pad: PLOT_PAD, calc: Calc.of(fig) };
       const fail = (msg) => item.errors.push({ el: fig, msg });
       const range = (src, name) => {
         const parts = String(src || '').split(',').map((s) => Expr.compile(s.trim()));
@@ -3310,17 +3369,28 @@ const Plot = {
       };
       item.x = range(fig.dataset.x, 'data-x');
       item.y = range(fig.dataset.y, 'data-y');
+      item.step = { x: Number(fig.dataset.xstep) || 0, y: Number(fig.dataset.ystep) || 0 };
+      item.comma = fig.hasAttribute('data-comma');
       let color = 0;
-      for (const el of qsa(':scope > [data-line], :scope > [data-vline], :scope > [data-point]', fig)) {
+      for (const el of qsa(':scope > [data-line], :scope > [data-vline], :scope > [data-point], :scope > [data-points]', fig)) {
         el.hidden = true;
         const c = (src, label) => {
           const r = Expr.compile(src);
           if (!r.ok) { fail(`${label}: ${r.error}`); return null; }
           return r.fn;
         };
+        const show = el.dataset.show != null ? c(el.dataset.show, 'data-show') : null;
         if (el.dataset.line != null) {
           const fn = c(el.dataset.line, 'data-line');
-          if (fn) item.lines.push({ fn, label: el.dataset.label || '', dash: el.hasAttribute('data-dash'), color: el.dataset.color || PLOT_COLORS[color++ % PLOT_COLORS.length] });
+          const dom = el.dataset.x != null ? range(el.dataset.x, 'data-line의 data-x') : null;
+          if (fn) item.lines.push({ fn, dom, show, label: el.dataset.label || '', dash: el.hasAttribute('data-dash'), color: el.dataset.color || PLOT_COLORS[color++ % PLOT_COLORS.length] });
+        } else if (el.dataset.points != null) {
+          const pts = String(el.dataset.points).split(';').map((pair) => pair.trim()).filter(Boolean).map((pair) => {
+            const [xs, ys] = this.split(pair);
+            return [c(xs, 'data-points x'), c(ys, 'data-points y')];
+          });
+          if (pts.length && pts.every(([fx, fy]) => fx && fy)) item.sets.push({ pts, show, label: el.dataset.label || '', color: el.dataset.color || PLOT_COLORS[color++ % PLOT_COLORS.length] });
+          else if (!pts.length) fail("data-points: 'x, y; x, y' 꼴로 써 주세요");
         } else if (el.dataset.vline != null) {
           const fn = c(el.dataset.vline, 'data-vline');
           if (fn) item.vlines.push({ fn, label: el.dataset.label || '' });
@@ -3328,13 +3398,15 @@ const Plot = {
           const [xs, ys] = this.split(el.dataset.point);
           const fx = c(xs, 'data-point x');
           const fy = c(ys, 'data-point y');
-          if (fx && fy) item.points.push({ fx, fy, label: el.dataset.label || '', color: el.dataset.color || 'var(--ch-ink)' });
+          if (fx && fy) item.points.push({ fx, fy, show, label: el.dataset.label || '', color: el.dataset.color || 'var(--ch-ink)' });
         }
       }
-      if (item.lines.some((l) => l.label)) {
-        item.legend = h('div', { class: 'ch-plot-legend' }, ...item.lines.filter((l) => l.label).map((l) => h('span', {
-          class: l.dash ? 'is-dash' : '', style: `--c:${l.color}`, text: l.label,
-        })));
+      const keyed = [...item.lines, ...item.sets].filter((l) => l.label);
+      if (keyed.length) {
+        for (const l of keyed) {
+          l.key = h('span', { class: l.pts ? 'is-dot' : l.dash ? 'is-dash' : '', style: `--c:${l.color}`, text: l.label });
+        }
+        item.legend = h('div', { class: 'ch-plot-legend' }, ...keyed.map((l) => l.key));
         fig.prepend(item.legend);
       }
       item.svg = svgEl('svg', { class: 'ch-plot-svg', role: 'img', 'aria-label': fig.getAttribute('aria-label') || fig.dataset.ylabel || '그래프' });
@@ -3375,8 +3447,9 @@ const Plot = {
     this.draw(item);
   },
 
-  sx(item, v) { return PLOT_PAD.l + ((v - item.x[0]) / (item.x[1] - item.x[0])) * (item.w - PLOT_PAD.l - PLOT_PAD.r); },
-  sy(item, v) { return item.h - PLOT_PAD.b - ((v - item.y[0]) / (item.y[1] - item.y[0])) * (item.h - PLOT_PAD.t - PLOT_PAD.b); },
+  sx(item, v) { return item.pad.l + ((v - item.x[0]) / (item.x[1] - item.x[0])) * (item.w - item.pad.l - item.pad.r); },
+  sy(item, v) { return item.h - item.pad.b - ((v - item.y[0]) / (item.y[1] - item.y[0])) * (item.h - item.pad.t - item.pad.b); },
+  tick(item, v) { const t = Expr.format(v); return item.comma ? groupDigits(t) : t; },
 
   axes(item) {
     const { w, h } = item;
@@ -3385,21 +3458,25 @@ const Plot = {
     svg.setAttribute('width', w);
     svg.setAttribute('height', h);
     const clip = `ch-plot-clip-${item.n + 1}`;
-    const x0 = PLOT_PAD.l;
-    const x1 = w - PLOT_PAD.r;
-    const y0 = h - PLOT_PAD.b;
-    const y1 = PLOT_PAD.t;
+    // 세로 눈금 글자가 길면(4,000 등) 세로축 이름과 겹치지 않게 왼쪽 여백을 늘린다
+    const yTicks = niceTicks(item.y[0], item.y[1], Math.max(2, Math.floor((h - PLOT_PAD.t - PLOT_PAD.b) / 70)), item.step.y);
+    const widest = Math.max(0, ...yTicks.map((v) => tickWidth(this.tick(item, v))));
+    item.pad = Object.assign({}, PLOT_PAD, { l: Math.max(PLOT_PAD.l, Math.ceil(widest + (item.fig.dataset.ylabel ? 50 : 20))) });
+    const x0 = item.pad.l;
+    const x1 = w - item.pad.r;
+    const y0 = h - item.pad.b;
+    const y1 = item.pad.t;
     const grid = svgEl('g', { class: 'ch-plot-grid' });
     const labels = svgEl('g', { class: 'ch-plot-ticks' });
-    for (const v of niceTicks(item.x[0], item.x[1], Math.max(2, Math.floor((x1 - x0) / 90)))) {
+    for (const v of niceTicks(item.x[0], item.x[1], Math.max(2, Math.floor((x1 - x0) / 90)), item.step.x)) {
       const x = this.sx(item, v);
       grid.append(svgEl('line', { x1: x, x2: x, y1, y2: y0 }));
-      labels.append(svgEl('text', { x, y: y0 + 26, 'text-anchor': 'middle' }, Expr.format(v)));
+      labels.append(svgEl('text', { x, y: y0 + 26, 'text-anchor': 'middle' }, this.tick(item, v)));
     }
-    for (const v of niceTicks(item.y[0], item.y[1], Math.max(2, Math.floor((y0 - y1) / 70)))) {
+    for (const v of yTicks) {
       const y = this.sy(item, v);
       grid.append(svgEl('line', { x1: x0, x2: x1, y1: y, y2: y }));
-      labels.append(svgEl('text', { x: x0 - 10, y: y + 7, 'text-anchor': 'end' }, Expr.format(v)));
+      labels.append(svgEl('text', { x: x0 - 10, y: y + 7, 'text-anchor': 'end' }, this.tick(item, v)));
     }
     const axis = svgEl('path', { class: 'ch-plot-axis', d: `M${x0} ${y1}V${y0}H${x1}` });
     const kids = [
@@ -3414,14 +3491,17 @@ const Plot = {
     svg.replaceChildren(...kids);
   },
 
-  // 곡선은 가로 200칸으로 나눠 계산하고, 값이 없는 곳(0으로 나누기 등)에서 끊는다.
-  sample(item, fn, scope) {
+  // 곡선은 가로 200칸으로 나눠 계산하고, 값이 없는 곳(0으로 나누기 등)에서 끊는다. dom이 있으면 그 범위만 그린다.
+  sample(item, fn, scope, dom) {
     const N = 200;
     const pts = [];
     let seg = [];
     const s = Object.assign(Object.create(null), scope);
+    const lo = dom ? Math.max(item.x[0], dom[0]) : item.x[0];
+    const hi = dom ? Math.min(item.x[1], dom[1]) : item.x[1];
+    if (!(hi >= lo)) return pts;
     for (let i = 0; i <= N; i++) {
-      const x = item.x[0] + ((item.x[1] - item.x[0]) * i) / N;
+      const x = lo + ((hi - lo) * i) / N;
       s.x = x;
       let y;
       try { y = Number(fn(s)); } catch (err) { y = NaN; }
@@ -3436,19 +3516,33 @@ const Plot = {
     if (!item.layer) return;
     const scope = item.calc ? item.calc.scope : {};
     const r = (v) => Math.round(v * 10) / 10;
-    item.layer.replaceChildren(...item.lines.map((l) => {
-      const d = this.sample(item, l.fn, scope).map((seg) => `M${seg.map(([x, y]) => `${r(x)} ${r(y)}`).join('L')}`).join('');
+    const val = (fn) => { try { return Number(fn(scope)); } catch (err) { return NaN; } };
+    const shown = (l) => { if (!l.show) return true; try { return !!l.show(scope); } catch (err) { return false; } };
+    for (const l of [...item.lines, ...item.sets]) {
+      l.on = shown(l);
+      if (l.key) l.key.hidden = !l.on;
+    }
+    item.layer.replaceChildren(...item.lines.filter((l) => l.on).map((l) => {
+      const d = this.sample(item, l.fn, scope, l.dom).map((seg) => `M${seg.map(([x, y]) => `${r(x)} ${r(y)}`).join('L')}`).join('');
       return svgEl('path', { class: `ch-plot-line${l.dash ? ' is-dash' : ''}`, d, style: `stroke:${l.color}` });
     }));
-    const val = (fn) => { try { return Number(fn(scope)); } catch (err) { return NaN; } };
     const marks = [];
     for (const v of item.vlines) {
       const x = val(v.fn);
       if (!Number.isFinite(x) || x < item.x[0] || x > item.x[1]) continue;
       const px = r(this.sx(item, x));
-      marks.push(svgEl('line', { class: 'ch-plot-vline', x1: px, x2: px, y1: PLOT_PAD.t, y2: item.h - PLOT_PAD.b }));
+      marks.push(svgEl('line', { class: 'ch-plot-vline', x1: px, x2: px, y1: item.pad.t, y2: item.h - item.pad.b }));
+    }
+    for (const set of item.sets.filter((l) => l.on)) {
+      for (const [fx, fy] of set.pts) {
+        const x = val(fx);
+        const y = val(fy);
+        if (![x, y].every(Number.isFinite) || x < item.x[0] || x > item.x[1] || y < item.y[0] || y > item.y[1]) continue;
+        marks.push(svgEl('circle', { class: 'ch-plot-point', cx: r(this.sx(item, x)), cy: r(this.sy(item, y)), r: 7, style: `fill:${set.color}` }));
+      }
     }
     for (const p of item.points) {
+      if (!shown(p)) continue;
       const x = val(p.fx);
       const y = val(p.fy);
       if (![x, y].every(Number.isFinite) || x < item.x[0] || x > item.x[1] || y < item.y[0] || y > item.y[1]) continue;

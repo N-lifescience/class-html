@@ -1,4 +1,5 @@
-// 어절을 nowrap span으로 감싸고 인라인 요소 사이에 WORD JOINER(U+2060)를 넣는다.
+// 어절을 nowrap 요소(ch-w.w)로 감싸고 인라인 요소 사이에 WORD JOINER(U+2060)를 넣는다.
+// span이 아닌 전용 태그를 써서 수업 CSS의 'span' 선택자가 어절까지 잡지 않게 한다.
 // 원래 요소와 이벤트는 보존하며, .w 내부를 건너뛰어 다시 적용해도 중첩하지 않는다.
 const KeepWords = {
   SKIP: 'svg, math, script, style, pre, code, textarea, select, button, canvas, .katex, .ch-math, .w, [data-no-keep], [contenteditable=""], [contenteditable="true"]',
@@ -21,7 +22,7 @@ const KeepWords = {
     const display = getComputedStyle(el).display;
     if (display) return /^(inline|inline-block|inline-flex|inline-grid|inline-table|contents|ruby.*)$/.test(display);
     // 분리된 요소도 보정할 수 있도록 브라우저 기본 인라인 태그를 사용한다.
-    return /^(A|ABBR|B|BDI|BDO|CITE|CODE|DATA|DEL|DFN|EM|I|INS|KBD|LABEL|MARK|Q|RP|RT|RUBY|S|SAMP|SMALL|SPAN|STRONG|SUB|SUP|TIME|U|VAR)$/.test(el.tagName);
+    return /^(A|ABBR|B|BDI|BDO|CITE|CODE|DATA|DEL|DFN|EM|I|INS|KBD|LABEL|MARK|Q|RP|RT|RUBY|S|SAMP|SMALL|SPAN|STRONG|SUB|SUP|TIME|U|VAR|CH-W|CH-WRUN)$/.test(el.tagName);
   },
 
   // 경계 쪽 첫 문자가 공백이면 끊고, 빈 요소·주석은 건너뛴다.
@@ -65,12 +66,12 @@ const KeepWords = {
     for (const part of text.split(/(\s+)/)) {
       if (!part) continue;
       if (/^\s+$/.test(part)) frag.append(part);
-      else frag.append(h('span', { class: 'w', text: part }));
+      else frag.append(h('ch-w', { class: 'w', text: part }));
     }
     // flex·grid 상자 안에서는 낱말 span 하나하나가 따로 놓여 사이 공백이 사라진다. 한 덩어리로 감싼다.
     const parent = node.parentElement;
     if (parent && /flex|grid/.test(getComputedStyle(parent).display) && frag.childNodes.length > 1) {
-      node.replaceWith(h('span', { class: 'ch-wrun' }, frag));
+      node.replaceWith(h('ch-wrun', { class: 'ch-wrun' }, frag));
     } else node.replaceWith(frag);
   },
 };

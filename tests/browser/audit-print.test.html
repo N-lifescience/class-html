@@ -57,7 +57,7 @@ test('점검 뒤에는 보던 장과 단계로 돌아오고, 수업 훅은 불�
 });
 test('어절로 나뉜 작은 글자는 덩어리 하나로 한 번만 알린다', () => {
   const tiny = ClassHTML.audit().errors.filter((e) => e.code === 'tiny-text' && e.slide === 2);
-  assert(tiny.every((e) => !e.msg.includes('<span.w>')), 'not per word');
+  assert(tiny.every((e) => !e.msg.includes('.w>')), 'not per word');
   eq(tiny.filter((e) => e.msg.includes('#tinydiv')).length, 1);
 });
 test('D 키로 점검 창, AI 추가 표시는 점선, Esc로 닫기', () => {

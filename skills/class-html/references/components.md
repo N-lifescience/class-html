@@ -39,7 +39,7 @@
 | 빈칸 | `<span class="blank">확산</span>` | 누르면 열린다. 활동으로 치지 않는다 |
 | 정답 상자 | `<div class="answer"><p>…</p></div>` | ✓ 단추나 →로 연다. `.answer.sheet`는 흰 답안지 |
 | 그림 | `<figure class="fig"><img src="data:…" alt="…"><figcaption>…</figcaption></figure>` | 오른쪽 위 확대 단추, 손 모드에서 눌러 확대. 단추가 그림 속 글자를 가리면 `data-zoom="off"` |
-| 표지 | 아래 '표지' 예시 | `img.cover-art`는 오른쪽 560px를 차지한다. 제목은 왼쪽 600px 안에서 `<br>`로 나눈다(겹치면 점검 경고) |
+| 표지 | 아래 '표지' 예시 | `img.cover-art`는 오른쪽 560px를 차지한다. 제목은 왼쪽 600px 안에서 `<br>`로 나눈다(겹치면 점검 경고). 그림의 보일 부분은 `style="object-position: 20% 50%"`로 고른다 |
 | 수식 | `$x^2 + 1$`(줄 안), `$$E = mc^2$$`(가운데 한 줄) | KaTeX로 그린다(수식이 있을 때만 불러옴). 글자 그대로 $는 `\$`. `$5`처럼 $ 안쪽이 빈칸이면 수식이 아니다 |
 | 장 표지 | `<section class="slide chapter" data-sec="2. 확산"><p class="kicker">2</p><h1>확산</h1></section>` | 띠 색 바탕의 소단원 시작 |
 | 목차 슬라이드 | `<section class="slide toc"></section>` | 엔진이 `data-sec` 묶음 목록을 만든다(누르면 그 묶음 첫 장) |
@@ -140,7 +140,8 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 - 카드는 끌어서 놓거나, 카드→칸 차례로 누른다. 펜을 든 채로도 카드가 움직인다.
 - 다 맞히면 이 부품 뒤의 첫 `.step`을 연다. 「다시」 단추가 붙는다.
 - 아래에 알림 줄(이유·실마리)이 붙고, 맞힌 카드는 칸 안으로 들어간다. 엔진이 실마리 앞에 "다시 생각해 보자.", 마지막 이유 앞에 "모두 맞혔다!"를 붙인다.
-- 칸 2개에 카드 6~8장이 한 화면에 알맞다. 칸 높이는 이 수업 CSS로 바꾼다(`.bin { min-height: 100px }`). 칸 안의 빈 곳이나 이미 놓인 카드를 눌러도 그 칸에 놓인다.
+- 칸 안의 빈 곳이나 이미 놓인 카드를 눌러도 그 칸에 놓인다.
+- 높이: 풀기 전에는 카드 더미가 칸 위에 놓여 다 푼 뒤보다 길다. 카드 한 줄 60px, 빈 칸 120px, 「다시」·알림 줄 56px, 사이 16px. 칸 2개에 카드 6장(두세 줄)이면 약 400px다. 발문이 두 줄이면 제목(`h2`)을 빼거나 카드를 줄인다. 칸 높이는 이 수업 CSS로 바꾼다(`.bin { min-height: 100px }`).
 
 ## 6. 즉시 확인 문제 `.quiz`
 
@@ -159,6 +160,7 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 - 보기 안에 그림·SVG를 넣어도 된다(그래프 고르기 등).
 - 점검은 가장 긴 이유가 나온 상태(여러 개 고르기는 이유가 가장 긴 두 보기를 틀린 상태)까지 잰다. 이유는 한 문장으로 짧게.
 - 번호 ①②는 엔진이 붙인다(`data-num="off"`로 끔). `data-cols`로 열 수.
+- 높이: 보기 한 줄 64px, 사이 12px, 아래 알림 줄 약 60px. 보기 5개면 약 380px다.
 - 처음 맞히면 문제 뒤 첫 `.step`을 연다. 인쇄는 정답 표시.
 
 ## 7. 순서 배열 `ol.order`
@@ -191,8 +193,10 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 - 입력(변수 이름은 `name`): `input[type=range|number|checkbox|radio|text]`, `textarea`, `select`, 단추 고르기 `<button data-set="sex" data-value="여">`(처음엔 `aria-pressed="true"`인 것, 없으면 첫 단추).
 - 단계 막대를 변수로: `.calc` 안의 `<div class="reveal" data-name="v" data-stops="…">` → 지금 칸 번호가 `v`. 0단계 시작이 필요한 활동은 이것을 쓴다.
 - 계산: `data-const`(한 번), `data-let`(바뀔 때마다 앞에서부터).
-- 출력: `data-expr`(글자, `data-digits` 소수 자리, `data-unit` 단위), `data-show`(참이면 보임), `data-class="클래스: 식; …"`, `data-style="속성: 식"`(숫자는 px, `--변수`는 그대로), `data-attr="속성: 식"`(SVG), `.bar[data-value][data-max]`(막대 길이).
+- 단추 값(`data-value`)은 수처럼 생기면 수(`year == 1918`), 아니면 글자(`sex == '여'`)다.
+- 출력: `data-expr`(글자, `data-digits` 소수 자리, `data-unit` 단위, `data-comma` 천 단위 쉼표 3,000), `data-show`(참이면 보임), `data-class="클래스: 식; …"`, `data-style="속성: 식"`(숫자는 px, `--변수`는 그대로), `data-attr="속성: 식"`(SVG), `.bar[data-value][data-max]`(막대 길이).
 - 식 문법: 수, `'글자'`, `+ - * / % ^`, `== != < <= > >=`, `&& || !`, `조건 ? 가 : 나`, `× ÷ − ≤ ≥ ≠`도 된다. 함수: `abs min max round(x,n) floor ceil sqrt pow exp ln log(10이 밑) sin cos tan asin acos atan rad deg clamp(x,lo,hi) if(c,a,b) fix(x,n) len(글자) sign`. 상수 `pi e true false`. 글자 + 수는 이어 붙인다.
+- 단위: 한글 단위(`초`·`원`·`인분`·`년`)는 숫자에 붙고(360초), 기호 단위(`℃`·`mL`·`%`)는 한 칸 띄운다(10 ℃). 단위 앞에 빈칸을 넣지 않는다.
 - 식이 틀리면 그 자리에 '?'가 나오고 점검(D)에 오류로 뜬다. 근거 없는 수치를 지어내지 않는다. 단위를 쓴다.
 - 계산 상자의 슬라이더는 중간값에서 시작해도 된다(단계를 여는 막대가 아니다).
 - 입자·점이 많은 모식도는 `data-attr`로 점마다 식을 쓰지 말고 입자 상자 `figure.particles`(교과 지침: 과학)를 쓰거나, 그림 몇 장을 단계 막대로 바꾼다.
@@ -209,6 +213,16 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 ```
 
 `.calc` 안에 두면 그 변수(v, s, k…)를 쓰고 입력이 바뀔 때마다 다시 그린다. 곡선의 가로 변수는 `x`. 폭은 감싼 칸 폭, 높이는 `data-height`. 가로 기준선은 상수 식(`<i data-line="vmax" data-dash>`), 점 색은 `data-color`.
+
+| 하고 싶은 것 | 쓰는 법 |
+|---|---|
+| 눈금 간격 정하기, 천 단위 쉼표 | 그래프에 `data-ystep="500"`·`data-xstep`, `data-comma`(4,000). 눈금 글자가 길면 왼쪽 여백이 저절로 늘어 세로축 이름과 겹치지 않는다 |
+| 선을 일부 구간만 | 선에 `data-x="10, 60"`(식도 된다: `data-x="min(a, b), max(a, b)"`) |
+| 조건이 맞을 때만 선·점 | `data-show="qd != qs"`. 거짓이면 선과 범례가 함께 숨는다 |
+| 측정값(표의 점 여러 개) | `<i data-points="10, 360; 20, 260; 40, 160" data-label="측정값"></i>` 점으로 찍히고 범례에 동그라미 |
+| 범례 | `data-label`이 있는 선·측정값이 그래프 위에 범례로 나온다. 움직이는 점의 이름은 점 옆에 |
+
+예: 가격 슬라이더 `p`에 따라 초과량 구간만 굵게 보이기 `<i data-line="p" data-x="min(qd, qs), max(qd, qs)" data-show="qd != qs" data-label="초과량"></i>`.
 
 ## 10. 그림 자리 `img[data-ppt]`
 
@@ -260,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
 |---|---|---|
 | `slide-overflow`, `out` | 무대 밖으로 넘침 | 글자를 줄이지 말고 장을 나누거나 배치를 바꾼다 |
 | `clip` | 상자 안 내용이 잘림 | 상자 높이·글 양 |
-| `tiny-text`, `small-text` | 18px 미만 오류, 20px 미만 본문 경고 | 글자 키우기 |
+| `tiny-text` | 20px 미만 글자(SVG 안 글자는 실제 크기) | 글자 키우기, 그림 폭 키우기 |
 | `part` | 부품 작성 실수(칸 없는 카드, 정답 없는 문제, 식 오류, 어느 막대인지 모르는 data-at …) | 메시지대로 |
 | `not-veiled` | 부품 밖 슬라이더가 중간에서 시작 | 단계형이면 `.reveal`로 |
 | `few-activities` | 활동 장이 3분의 1 미만 | 개념마다 활동을 하나 더 |

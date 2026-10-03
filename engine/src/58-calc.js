@@ -140,10 +140,13 @@ const Calc = {
     for (const b of item.binds) {
       const el = b.el;
       if (b.expr) {
-        const unit = el.dataset.unit ? ` ${el.dataset.unit}` : '';
+        // 한글 단위(초·원·인분·년)는 숫자에 붙이고, 기호 단위(℃·mL·%)는 띄운다
+        const u = (el.dataset.unit || '').trim();
+        const unit = u ? (/^[가-힣]/.test(u) ? u : `\u00A0${u}`) : '';   // 띄울 때는 줄이 갈리지 않는 공백
         const digits = el.dataset.digits != null && el.dataset.digits !== '' ? Number(el.dataset.digits) : undefined;
         const v = b.expr === 'bad' ? NaN : val(b, b.expr);
-        const text = Expr.format(v, Number.isInteger(digits) ? digits : undefined);
+        const raw = Expr.format(v, Number.isInteger(digits) ? digits : undefined);
+        const text = el.hasAttribute('data-comma') && typeof v === 'number' ? groupDigits(raw) : raw;
         el.textContent = text === '?' ? '?' : text + unit;
       }
       if (b.show) el.classList.toggle('ch-hide', b.show === 'bad' || !val(b, b.show));

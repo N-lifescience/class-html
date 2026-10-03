@@ -15,6 +15,7 @@
     <label>부피 <input type="range" id="v" name="v" min="0.85" max="1.35" step="0.01" value="1.1"></label>
     <output id="vOut" data-expr="v" data-digits="2"></output>
     <p>흡수력 <output id="sOut" data-expr="s" data-digits="1" data-unit="기압"></output></p>
+    <p><output id="tOut" data-expr="10 + v * 40" data-unit=" ℃"></output> <output id="won" data-expr="v * 3000" data-comma data-unit="원"></output> <output id="year" data-expr="1830"></output></p>
     <p id="plas" data-show="v < 1">원형질 분리</p>
     <p id="state" data-class="is-ok: s > 0.05; is-flat: s <= 0.05">상태</p>
     <div class="bar" id="bar" data-value="s" data-max="10.5"></div>
@@ -59,18 +60,23 @@ const item = (id) => I().Calc.list.find((x) => x.box.id === id);
 test('처음 값으로 계산해 글자·단위·자릿수를 쓴다', () => {
   eq(txt('vOut'), '1.10');
   const s = 8.7 / 1.1 - (8.7 / 1.35) * Math.pow(0.1 / 0.35, 1.6);
-  eq(txt('sOut'), `${s.toFixed(1)} 기압`);
+  eq(txt('sOut'), `${s.toFixed(1)}기압`);
   assert(Math.abs(parseFloat($('v').style.getPropertyValue('--p')) - 50) < 1e-6, 'slider fill');
+});
+test('한글 단위는 붙이고 기호 단위는 줄이 안 갈리는 공백으로 띄운다, data-comma는 천 단위 쉼표', () => {
+  eq($('tOut').textContent.replace(/\u2060/g, ''), '54\u00a0℃');
+  eq(txt('won'), '3,300원');
+  eq(txt('year'), '1830');
 });
 test('슬라이더를 움직이면 다시 계산하고 보이기·클래스가 바뀐다', () => {
   set('v', 0.9);
   eq(txt('vOut'), '0.90');
-  eq(txt('sOut'), `${(8.7 / 0.9).toFixed(1)} 기압`);
+  eq(txt('sOut'), `${(8.7 / 0.9).toFixed(1)}기압`);
   assert(!$('plas').classList.contains('ch-hide'), 'plasmolysis shown');
   set('v', 1.35);
   assert($('plas').classList.contains('ch-hide'), 'hidden');
   assert($('state').classList.contains('is-flat') && !$('state').classList.contains('is-ok'), 'flat at max');
-  eq(txt('sOut'), '0.0 기압');
+  eq(txt('sOut'), '0.0기압');
 });
 test('막대 비율, 스타일(사용자 변수는 그대로, 길이는 px), SVG 속성', () => {
   set('v', 0.9);

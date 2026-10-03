@@ -1,11 +1,11 @@
 /* 단계 막대: 슬라이더(굵은 손잡이)와 눈금 이름. 색은 --stop-c(기본 --accent). */
 .ch-stops { position: relative; margin: 6px 0 0; padding-bottom: 48px; }
-.ch-stops input[type="range"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 56px; margin: 0; background: transparent; cursor: pointer; --p: 0%; }
-.ch-stops input[type="range"]::-webkit-slider-runnable-track { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--stop-c, var(--accent)) var(--p), #D5D9DF var(--p)); }
-.ch-stops input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 46px; height: 46px; margin-top: -17px; border-radius: 50%; background: #fff; border: 7px solid var(--stop-c, var(--accent)); box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
-.ch-stops input[type="range"]::-moz-range-track { height: 12px; border-radius: 6px; background: #D5D9DF; }
-.ch-stops input[type="range"]::-moz-range-progress { height: 12px; border-radius: 6px; background: var(--stop-c, var(--accent)); }
-.ch-stops input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 7px solid var(--stop-c, var(--accent)); }
+.ch-stops input[type="range"], .slide .calc input[type="range"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 56px; margin: 0; background: transparent; cursor: pointer; --p: 0%; }
+.ch-stops input[type="range"]::-webkit-slider-runnable-track, .slide .calc input[type="range"]::-webkit-slider-runnable-track { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--stop-c, var(--accent)) var(--p), #D5D9DF var(--p)); }
+.ch-stops input[type="range"]::-webkit-slider-thumb, .slide .calc input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 46px; height: 46px; margin-top: -17px; border-radius: 50%; background: #fff; border: 7px solid var(--stop-c, var(--accent)); box-shadow: 0 2px 8px rgba(0, 0, 0, .3); }
+.ch-stops input[type="range"]::-moz-range-track, .slide .calc input[type="range"]::-moz-range-track { height: 12px; border-radius: 6px; background: #D5D9DF; }
+.ch-stops input[type="range"]::-moz-range-progress, .slide .calc input[type="range"]::-moz-range-progress { height: 12px; border-radius: 6px; background: var(--stop-c, var(--accent)); }
+.ch-stops input[type="range"]::-moz-range-thumb, .slide .calc input[type="range"]::-moz-range-thumb { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 7px solid var(--stop-c, var(--accent)); }
 .ch-stop-labels { position: absolute; left: 23px; right: 23px; bottom: 0; height: 48px; pointer-events: none; }
 .ch-stop-labels span { position: absolute; top: 2px; transform: translateX(-50%); font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--ch-mute); white-space: pre; text-align: center; }
 .ch-stop-labels span.is-on { color: var(--ch-ink); }

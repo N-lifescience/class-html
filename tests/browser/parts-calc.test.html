@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko" data-deck="test-calc">
+<head>
+<meta charset="utf-8">
+<title>calc</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="pointer.js"></script>
+</head>
+<body>
+<section class="slide" id="c1">
+  <h2>흡수력 = 삼투압 − 팽압</h2>
+  <div class="calc" id="osm" data-const="k = 8.7; pmax = k / 1.35" data-let="o = k / v; t = v <= 1 ? 0 : pmax * ((v - 1) / 0.35) ^ 1.6; s = o - t">
+    <label>부피 <input type="range" id="v" name="v" min="0.85" max="1.35" step="0.01" value="1.1"></label>
+    <output id="vOut" data-expr="v" data-digits="2"></output>
+    <p>흡수력 <output id="sOut" data-expr="s" data-digits="1" data-unit="기압"></output></p>
+    <p id="plas" data-show="v < 1">원형질 분리</p>
+    <p id="state" data-class="is-ok: s > 0.05; is-flat: s <= 0.05">상태</p>
+    <div class="bar" id="bar" data-value="s" data-max="10.5"></div>
+    <div id="styled" data-style="--p: s / 10.5 * 100; width: 100 + v * 100; opacity: 0.5"></div>
+    <svg viewBox="0 0 300 250" width="150"><rect id="rect" data-attr="width: 216 * v; x: 150 - 108 * v" height="10" y="0"/></svg>
+  </div>
+</section>
+<section class="slide" id="c2">
+  <h2>선거권 판정 모형(가상의 나라)</h2>
+  <div class="calc" id="vote" data-let="need = year == 1918 && sex == '여' ? 30 : 21; ok = age >= need">
+    <button data-set="year" data-value="1918">1918년</button><button data-set="year" data-value="1928" aria-pressed="true">1928년</button>
+    <button data-set="sex" data-value="남">남</button><button data-set="sex" data-value="여" id="female">여</button>
+    <input type="range" name="age" id="age" min="0" max="100" value="25">
+    <p id="verdict" data-expr="ok ? '선거권 있음' : '선거권 없음'" data-class="is-ok: ok; is-bad: !ok"></p>
+    <p id="reason" data-expr="age + '세 ' + (ok ? '≥ ' : '< ') + need + '세'"></p>
+    <input type="checkbox" name="extra" id="extra"> <span id="chk" data-expr="extra ? 1 : 0"></span>
+    <input type="radio" name="r" value="3" id="r3"><input type="radio" name="r" value="4" id="r4"> <span id="rad" data-expr="r == '' ? '없음' : r * 2"></span>
+    <select name="sel" id="sel"><option value="2">둘</option><option value="5">다섯</option></select> <span id="selOut" data-expr="sel + 1"></span>
+  </div>
+  <div class="calc" id="bad">
+    <span id="syntax" data-expr="1 + * 2"></span>
+    <span id="unknown" data-expr="nope + 1"></span>
+    <span id="badclass" data-class="no colon here"></span>
+  </div>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const $ = (id) => document.getElementById(id);
+const txt = (id) => $(id).textContent.replace(/⁠/g, '');
+const set = (id, v) => { $(id).value = String(v); $(id).dispatchEvent(new Event('input', { bubbles: true })); };
+const item = (id) => I().Calc.list.find((x) => x.box.id === id);
+
+test('처음 값으로 계산해 글자·단위·자릿수를 쓴다', () => {
+  eq(txt('vOut'), '1.10');
+  const s = 8.7 / 1.1 - (8.7 / 1.35) * Math.pow(0.1 / 0.35, 1.6);
+  eq(txt('sOut'), `${s.toFixed(1)} 기압`);
+  assert(Math.abs(parseFloat($('v').style.getPropertyValue('--p')) - 50) < 1e-6, 'slider fill');
+});
+test('슬라이더를 움직이면 다시 계산하고 보이기·클래스가 바뀐다', () => {
+  set('v', 0.9);
+  eq(txt('vOut'), '0.90');
+  eq(txt('sOut'), `${(8.7 / 0.9).toFixed(1)} 기압`);
+  assert(!$('plas').classList.contains('ch-hide'), 'plasmolysis shown');
+  set('v', 1.35);
+  assert($('plas').classList.contains('ch-hide'), 'hidden');
+  assert($('state').classList.contains('is-flat') && !$('state').classList.contains('is-ok'), 'flat at max');
+  eq(txt('sOut'), '0.0 기압');
+});
+test('막대 비율, 스타일(사용자 변수는 그대로, 길이는 px), SVG 속성', () => {
+  set('v', 0.9);
+  const s = 8.7 / 0.9;
+  assert(Math.abs(Number($('bar').style.getPropertyValue('--f')) - Math.min(1, s / 10.5)) < 1e-9, 'bar');
+  assert(Math.abs(parseFloat($('styled').style.getPropertyValue('--p')) - (s / 10.5) * 100) < 1e-9, '--p raw');
+  eq($('styled').style.width, '190px');
+  eq($('styled').style.opacity, '0.5');
+  eq($('rect').getAttribute('width'), '194.4');
+  eq($('rect').getAttribute('x'), '52.8');
+});
+test('단추 고르기: aria-pressed가 처음 값, 누르면 바뀌고 글자 비교', () => {
+  eq(txt('verdict'), '선거권 있음');
+  eq(txt('reason'), '25세 ≥ 21세');
+  document.querySelector('[data-set="year"][data-value="1918"]').click();
+  $('female').click();
+  eq(txt('verdict'), '선거권 없음');
+  assert($('verdict').classList.contains('is-bad'), 'bad class');
+  eq(txt('reason'), '25세 < 30세');
+  set('age', 30);
+  eq(txt('verdict'), '선거권 있음');
+  eq($('female').getAttribute('aria-pressed'), 'true');
+  eq(document.querySelector('[data-set="sex"][data-value="남"]').getAttribute('aria-pressed'), 'false');
+});
+test('체크 상자·라디오·고르기 상자', () => {
+  eq(txt('chk'), '0');
+  $('extra').checked = true; $('extra').dispatchEvent(new Event('change', { bubbles: true }));
+  eq(txt('chk'), '1');
+  eq(txt('rad'), '없음');
+  $('r4').checked = true; $('r4').dispatchEvent(new Event('change', { bubbles: true }));
+  eq(txt('rad'), '8');
+  $('sel').value = '5'; $('sel').dispatchEvent(new Event('change', { bubbles: true }));
+  eq(txt('selOut'), '6');
+});
+test('식 오류는 ?로 쓰고 오류 목록에 남긴다', () => {
+  eq(txt('syntax'), '?');
+  eq(txt('unknown'), '?');
+  const errs = item('bad').errors.map((e) => e.msg);
+  assert(errs.some((m) => m.startsWith('data-expr')), 'syntax error');
+  assert(errs.some((m) => m.includes('nope')), 'unknown name');
+  assert(errs.some((m) => m.includes('data-class')), 'bad pair');
+  eq(item('osm').errors.length, 0);
+});
+test('펜을 든 채로 슬라이더를 움직여도 판서가 생기지 않는다', () => {
+  ClassHTML.go(0);
+  I().Tools.set('pen');
+  const r = $('v').getBoundingClientRect();
+  ptr('pointerdown', $('v'), 0, 0, { clientX: r.left + 10, clientY: r.top + r.height / 2 });
+  eq(I().Ink.gesture, null);
+  ptr('pointerup', $('v'), 0, 0, { clientX: r.left + 10, clientY: r.top + r.height / 2 });
+  set('v', 1.2);
+  eq(txt('vOut'), '1.20');
+  eq(I().Ink.page.length, 0);
+  I().Tools.set('hand');
+});
+</script>
+</body>
+</html>

@@ -1826,6 +1826,7 @@ const Parts = {
     Sort.init();
     Quiz.init();
     Order.init();
+    Calc.init();
     Stepper.sort();   // 모든 단계 막대를 만든 뒤 문서 순서로 정렬하고 0단계로 둔다
   },
 };
@@ -2814,6 +2815,183 @@ const Order = {
   },
 };
 
+/* ---- 58-calc.js ---- */
+// 계산 상자: 입력(슬라이더·숫자·고르기·단추)이 바뀌면 식을 다시 계산해 글자·보이기·클래스·모양·SVG 속성을 바꾼다.
+// 작성 모양: <div class="calc" data-const="k = 8.7" data-let="o = k / v; s = o - t">
+//   <input type="range" name="v" …> <output data-expr="s" data-digits="1" data-unit="기압"></output>
+//   <p data-show="v < 1">…</p> <p data-class="is-ok: s > 0"> <div class="bar" data-value="s" data-max="10"></div>
+//   <button data-set="sex" data-value="여">여</button> <rect data-attr="width: 200 * v"/> </div>
+// 식은 50-expr.js(eval 없음). 식 오류는 그 자리에 '?'를 쓰고 자동 점검에 알린다.
+const CALC_BIND = '[data-expr], [data-show], [data-class], [data-style], [data-attr], .bar[data-value]';
+const CALC_UNITLESS = /^(opacity|z-index|flex|flex-grow|flex-shrink|order|font-weight|line-height|scale)$/;
+
+const Calc = {
+  list: [],
+
+  init() {
+    this.list = [];
+    for (const box of qsa('.calc', Stage.deck)) {
+      const item = { box, consts: {}, lets: [], binds: [], errors: [], listeners: [], scope: {} };
+      const own = (el) => el.closest('.calc') === box;
+      const fail = (el, msg) => item.errors.push({ el, msg });
+      const consts = Expr.lets(box.dataset.const || '');
+      if (!consts.ok) fail(box, `data-const: ${consts.error}`);
+      for (const { name, fn } of consts.list) {
+        try { item.consts[name] = fn(item.consts); } catch (err) { fail(box, `data-const ${name}: ${err.message}`); }
+      }
+      const lets = Expr.lets(box.dataset.let || '');
+      if (!lets.ok) fail(box, `data-let: ${lets.error}`);
+      item.lets = lets.list;
+      const targets = qsa(CALC_BIND, box).filter(own);
+      if (box.matches(CALC_BIND)) targets.unshift(box);
+      for (const el of targets) this.bind(item, el, fail);
+      // 단추 고르기: 같은 이름 단추 가운데 하나만 눌린다. 처음에는 aria-pressed="true"인 것, 없으면 첫 단추.
+      const sets = qsa('[data-set][data-value]', box).filter(own);
+      for (const name of new Set(sets.map((b) => b.dataset.set))) {
+        const group = sets.filter((b) => b.dataset.set === name);
+        const first = group.find((b) => b.getAttribute('aria-pressed') === 'true') || group[0];
+        for (const b of group) {
+          if (b.tagName === 'BUTTON') b.type = 'button';
+          else { b.setAttribute('role', 'button'); b.setAttribute('data-tap', ''); }
+          b.setAttribute('aria-pressed', String(b === first));
+          b.addEventListener('click', () => {
+            for (const x of group) x.setAttribute('aria-pressed', String(x === b));
+            if (b.blur) b.blur();
+            this.update(item);
+          });
+        }
+      }
+      item.inputs = qsa('input[name], select[name], textarea[name]', box).filter(own);
+      item.sets = sets;
+      box.addEventListener('input', (e) => { if (own(e.target)) this.update(item); });
+      box.addEventListener('change', (e) => {
+        if (!own(e.target)) return;
+        this.update(item);
+        if (e.target.type === 'range') e.target.blur();   // 손을 떼면 Space·→가 다시 넘기기로
+      });
+      this.list.push(item);
+      this.update(item);
+    }
+  },
+
+  // 'a: 식; b: 식' → [[a, 식]]. 따옴표 안의 ;는 나누지 않고, 이름 뒤 첫 :에서 자른다(식 안의 ? :는 그대로).
+  pairs(src) {
+    const out = [];
+    let cur = '';
+    let quote = '';
+    for (const c of `${src};`) {
+      if (quote) { if (c === quote) quote = ''; cur += c; continue; }
+      if (c === '"' || c === "'") quote = c;
+      if (c === ';') {
+        const m = /^\s*([\w-]+)\s*:([\s\S]*)$/.exec(cur);
+        if (m) out.push([m[1], m[2].trim()]);
+        else if (cur.trim()) out.push([null, cur.trim()]);
+        cur = '';
+        continue;
+      }
+      cur += c;
+    }
+    return out;
+  },
+
+  compileOne(src, el, fail, label) {
+    const c = Expr.compile(src);
+    if (!c.ok) { fail(el, `${label}: ${c.error}`); return null; }
+    return c.fn;
+  },
+
+  bind(item, el, fail) {
+    const b = { el, expr: null, show: null, cls: [], style: [], attr: [], bar: null, max: null, warned: false };
+    const ds = el.dataset;
+    if (ds.expr != null) b.expr = this.compileOne(ds.expr, el, fail, 'data-expr') || 'bad';
+    if (ds.show != null) b.show = this.compileOne(ds.show, el, fail, 'data-show') || 'bad';
+    for (const [key, list] of [['class', b.cls], ['style', b.style], ['attr', b.attr]]) {
+      if (ds[key] == null) continue;
+      for (const [name, src] of this.pairs(ds[key])) {
+        if (!name) { fail(el, `data-${key}: '이름: 식' 꼴이 아니에요 (${src})`); continue; }
+        const fn = this.compileOne(src, el, fail, `data-${key} ${name}`);
+        if (fn) list.push([name, fn]);
+      }
+    }
+    if (el.matches('.bar[data-value]')) {
+      b.bar = this.compileOne(ds.value, el, fail, 'data-value');
+      b.max = this.compileOne(ds.max || '100', el, fail, 'data-max');
+    }
+    item.binds.push(b);
+  },
+
+  read(item) {
+    const scope = Object.assign(Object.create(null), item.consts);
+    const num = (v) => (/^\s*-?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?\s*$/i.test(v) ? Number(v) : v);
+    for (const el of item.inputs) {
+      const name = el.getAttribute('name');
+      if (el.type === 'radio') { if (el.checked) scope[name] = num(el.value); else if (!(name in scope)) scope[name] = ''; continue; }
+      if (el.type === 'checkbox') { scope[name] = el.checked; continue; }
+      if (el.type === 'range' || el.type === 'number') {
+        scope[name] = el.value === '' ? NaN : Number(el.value);
+        if (el.type === 'range') {
+          const lo = Number(el.min || 0);
+          const hi = Number(el.max || 100);
+          el.style.setProperty('--p', `${hi > lo ? ((Number(el.value) - lo) / (hi - lo)) * 100 : 0}%`);
+        }
+        continue;
+      }
+      scope[name] = num(el.value);
+    }
+    for (const b of item.sets) if (b.getAttribute('aria-pressed') === 'true') scope[b.dataset.set] = num(b.dataset.value);
+    return scope;
+  },
+
+  update(item) {
+    const scope = this.read(item);
+    for (const { name, fn } of item.lets) {
+      try { scope[name] = fn(scope); } catch (err) { scope[name] = NaN; this.runtime(item, item.box, `data-let ${name}: ${err.message}`); }
+    }
+    item.scope = scope;
+    const val = (b, fn) => {
+      try { return fn(scope); } catch (err) { this.runtime(item, b.el, err.message); return NaN; }
+    };
+    for (const b of item.binds) {
+      const el = b.el;
+      if (b.expr) {
+        const unit = el.dataset.unit ? ` ${el.dataset.unit}` : '';
+        const digits = el.dataset.digits != null && el.dataset.digits !== '' ? Number(el.dataset.digits) : undefined;
+        const v = b.expr === 'bad' ? NaN : val(b, b.expr);
+        const text = Expr.format(v, Number.isInteger(digits) ? digits : undefined);
+        el.textContent = text === '?' ? '?' : text + unit;
+      }
+      if (b.show) el.classList.toggle('ch-hide', b.show === 'bad' || !val(b, b.show));
+      for (const [name, fn] of b.cls) el.classList.toggle(name, !!val(b, fn));
+      for (const [name, fn] of b.style) {
+        const v = val(b, fn);
+        const ok = typeof v === 'string' || Number.isFinite(v);
+        el.style.setProperty(name, !ok ? '' : typeof v === 'number' && !name.startsWith('--') && !CALC_UNITLESS.test(name) ? `${v}px` : String(v));
+      }
+      for (const [name, fn] of b.attr) {
+        const v = val(b, fn);
+        if (typeof v === 'number') { if (Number.isFinite(v)) el.setAttribute(name, String(Math.round(v * 1000) / 1000)); }
+        else el.setAttribute(name, String(v));
+      }
+      if (b.bar && b.max) {
+        const v = Number(val(b, b.bar));
+        const max = Number(val(b, b.max));
+        el.style.setProperty('--f', String(Number.isFinite(v) && max > 0 ? clamp(v / max, 0, 1) : 0));
+      }
+    }
+    for (const fn of item.listeners) {
+      try { fn(scope); } catch (err) { console.error('[class-html] calc', err); }
+    }
+  },
+
+  // 실행 중 오류(모르는 이름 등)는 처음 한 번만 적는다.
+  runtime(item, el, msg) {
+    if (item.errors.some((e) => e.el === el && e.msg === msg)) return;
+    item.errors.push({ el, msg });
+  },
+
+  of(el) { const box = el.closest('.calc'); return box ? this.list.find((x) => x.box === box) || null : null; },
+};
+
 /* ---- 99-boot.js ---- */
 // 시작 순서. 엔진이 두 번 포함돼도 한 번만 실행한다.
 let readyResolve;
@@ -2842,7 +3020,7 @@ function boot() {
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
   ClassHTML.audit = () => Audit.run();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, Answer, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order };
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, Answer, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order, Calc };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

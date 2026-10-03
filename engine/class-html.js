@@ -1871,8 +1871,9 @@ const Audit = {
     const ACT = '.map-reveal, .ch-yearline, .sort, .quiz, .ch-order, .calc, .plot, .particles, input[type="range"]:not(.ch-stops input), [data-activity]';
     const visual = (st) => st.el.matches('[data-name]') || !!st.el.closest('.calc')
       || !!st.el.querySelector('.veil, img, svg, figure, canvas');
-    const activities = Stage.slides.filter((s, i) => s.querySelector(ACT)
-      || (Stepper.bySlide[i] || []).some((st) => (st.el.matches('.reveal, .switch') ? visual(st) : true))).length;
+    const activityPages = Stage.slides.map((s, i) => (s.querySelector(ACT)
+      || (Stepper.bySlide[i] || []).some((st) => (st.el.matches('.reveal, .switch') ? visual(st) : true)) ? i + 1 : 0)).filter(Boolean);
+    const activities = activityPages.length;
     const total = Stage.slides.length;
     if (total >= 3 && activities * 3 < total) warn(null, 'few-activities', `활동 장이 ${activities}/${total}장이에요. 3분의 1(${Math.ceil(total / 3)}장) 이상이 되게 하세요`);
     // 표지 그림(.cover-art)이 제목·글을 가리면 경고(넘침과 달리 무대 안에서 겹치는 것)
@@ -1895,7 +1896,7 @@ const Audit = {
       if (!shown) s.classList.remove('ch-measure');
     }
     const imgs = qsa('img[data-ppt]', Stage.deck);
-    return { activities, placeholders: imgs.length, emptyPlaceholders: imgs.filter((x) => !x.getAttribute('src')).length };
+    return { activities, activityPages, placeholders: imgs.length, emptyPlaceholders: imgs.filter((x) => !x.getAttribute('src')).length };
   },
 
   toggle() {
@@ -1921,7 +1922,7 @@ const Audit = {
         item.slide == null ? h('span', { text: item.msg })
           : h('button', { type: 'button', text: `${item.slide + 1}쪽 · ${item.msg}`,
             onclick: () => Nav.go(item.slide, true) })))) : h('p', { text: '고칠 것이 없어요.' }),
-      h('p', { class: 'ch-audit-info', text: `슬라이드 ${report.info.slides}장 · 활동 장 ${report.info.activities}장 · AI 추가 표시 ${report.info.aiAdded}곳 (점선으로 보임)` }));
+      h('p', { class: 'ch-audit-info', text: `슬라이드 ${report.info.slides}장 · 활동 장 ${report.info.activities}장(${report.info.activityPages.join(', ')}쪽) · AI 추가 표시 ${report.info.aiAdded}곳 (점선으로 보임)` }));
   },
 };
 

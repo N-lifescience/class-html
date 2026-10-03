@@ -76,7 +76,8 @@ test('부품 밖 슬라이더가 중간에서 시작하면 경고', () => {
   assert(w[0].msg.includes('#raw'), w[0].msg);
 });
 test('활동 장이 3분의 1보다 적으면 경고(글만 여는 비교 전환은 활동이 아니다)', () => {
-  eq(report.info.activities, 3);   // 퀴즈·분류(a1), 지도·계산(a2), 순서(a3). 글만 여는 비교 전환(a0)은 빠진다
+  eq(report.info.activities, 3);
+  eq(report.info.activityPages, [2, 3, 4]);   // 퀴즈·분류(a1), 지도·계산(a2), 순서(a3). 글만 여는 비교 전환(a0)은 빠진다
   const w = report.warnings.find((x) => x.code === 'few-activities');
   assert(w && w.msg.includes('3/10'), JSON.stringify(report.warnings));
   assert(report.errors.every((e) => e.page === (e.slide == null ? null : e.slide + 1)), 'page numbers');

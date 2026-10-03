@@ -75,7 +75,7 @@ try {
   await ev("ClassHTML._internal.emit('audit-restore')");
   const report = await ev('ClassHTML.audit()');
   writeFileSync(join(out, 'audit.json'), JSON.stringify(report, null, 2));
-  console.log(`slides ${n} · errors ${report.errors.length} · warnings ${report.warnings.length} · activities ${report.info.activities}`);
+  console.log(`slides ${n} · errors ${report.errors.length} · warnings ${report.warnings.length} · activities ${report.info.activities} (${report.info.activityPages.join(',')}쪽)`);
   for (const item of report.errors.concat(report.warnings)) console.log(`${item.level === 'error' ? 'ERR ' : 'WARN'} ${item.page == null ? '-' : item.page}쪽 ${item.code}: ${item.msg}`);
   if (report.errors.length) code = 1;
   ws.close();

@@ -31,7 +31,7 @@
 | `engine/` | 엔진(`class-html.js`·`.css`, 빌드 결과). 소스는 `engine/src`, `engine/css` |
 | `skills/class-html/` | AI 지침(스킬). `SKILL.md`, `references/`(부품 사전, 인터뷰, 패턴, 화면, 한국어, 교과별), `scripts/`(`extract_pptx.py`, `bundle.py`), `assets/template.html` |
 | `guide/class-html-guide.md` | 채팅 AI용 합본 지침(빌드 때 자동 생성) |
-| `examples/` | 직접 만든 예시 덱(`m2-parts.html`: 모든 부품) |
+| `examples/` | 직접 만든 예시 덱(`m2-parts.html`: 모든 부품), 연수 슬라이드(`training.html`), 실습용 PPT(`practice/`: 과학 '확산', 사회 '수요와 공급', `tools/make_practice_pptx.py`로 만듦) |
 | `tests/`, `tools/` | 엔진 시험, 빌드, 화면 캡처·점검(`tools/shots.mjs`) |
 
 ## 개발

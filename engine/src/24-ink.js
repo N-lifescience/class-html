@@ -32,6 +32,7 @@ const Ink = {
   suppressClick: false,
   palmErase: false,
   laser: [],
+  laserHead: null,
   laserRAF: 0,
 
   init() {
@@ -100,6 +101,7 @@ const Ink = {
     if (this.laserRAF) cancelAnimationFrame(this.laserRAF);
     this.laserRAF = 0;
     this.laser = [];
+    this.laserHead = null;
     this.ctx.laser.clearRect(0, 0, STAGE_W, STAGE_H);
   },
 
@@ -211,6 +213,7 @@ const Ink = {
       this.ring(x, y);
     } else if (g.tool === 'laser') {
       this.laser.push({ x, y, t: performance.now() });
+      this.laserHead = { x, y };                          // 누르고 있는 동안은 멈춰 있어도 점이 보인다
       this.animateLaser();
     }
   },
@@ -230,6 +233,9 @@ const Ink = {
       InkModel.commitErase(Session.hist, this.page, g.removed);
       if (!this.laser.length) this.ctx.laser.clearRect(0, 0, STAGE_W, STAGE_H);
       if (g.removed.length) Session.changed();
+    } else if (g.tool === 'laser') {
+      this.laserHead = null;                              // 점은 떼면 사라지고 꼬리는 1초에 걸쳐 옅어진다
+      this.animateLaser();
     }
   },
 
@@ -272,7 +278,18 @@ const Ink = {
         c.lineTo(b.x, b.y);
         c.stroke();
       }
-      this.laserRAF = this.laser.length ? requestAnimationFrame(tick) : 0;
+      const head = this.laserHead;
+      if (head) {
+        c.fillStyle = 'rgba(255, 45, 45, .28)';
+        c.beginPath();
+        c.arc(head.x, head.y, 16, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = 'rgb(255, 45, 45)';
+        c.beginPath();
+        c.arc(head.x, head.y, 8, 0, Math.PI * 2);
+        c.fill();
+      }
+      this.laserRAF = this.laser.length || head ? requestAnimationFrame(tick) : 0;
     };
     this.laserRAF = requestAnimationFrame(tick);
   },

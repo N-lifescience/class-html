@@ -144,6 +144,24 @@ test('레이저는 저장하지 않고 1초 뒤 사라진다', async () => {
   await wait(1300);
   eq(I().Ink.laser.length, 0);
 });
+test('레이저를 누르고 있으면 멈춰 있어도 빨간 점이 보이고 떼면 사라진다', async () => {
+  const { Ink, Stage } = I();
+  I().Tools.set('laser');
+  const red = () => {
+    const k = Stage.scale * devicePixelRatio;
+    const d = Ink.ctx.laser.getImageData(Math.round(640 * k), Math.round(200 * k), 1, 1).data;
+    return d[0] > 200 && d[1] < 120 && d[3] > 200;
+  };
+  ptr('pointerdown', null, 640, 200);
+  await wait(1300);                                       // 꼬리 점은 1초 뒤 사라지지만 머리 점은 남는다
+  eq(Ink.laser.length, 0);
+  assert(red(), 'head dot while held');
+  ptr('pointerup', null, 640, 200);
+  await wait(100);
+  eq(Ink.laserHead, null);
+  assert(!red(), 'dot gone after release');
+  eq(Ink.laserRAF, 0);
+});
 test('장을 넘기면 그 장의 쪽으로 바뀐다', () => {
   ClassHTML.go(1);
   eq(page().length, 0);

@@ -6,6 +6,7 @@ const Parts = {
     Stepper.init();
     MapReveal.init();
     Yearline.init();
+    Sort.init();
     Stepper.sort();   // 모든 단계 막대를 만든 뒤 문서 순서로 정렬하고 0단계로 둔다
   },
 };

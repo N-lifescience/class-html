@@ -79,3 +79,12 @@
 @media print {
   .ch-check, .ch-zoom-btn, .ch-zoom { display: none !important; }
 }
+
+/* 부품 공통: 맞음·틀림 알림 줄, 흔들림, 「다시」 단추 */
+.ch-row { display: flex; align-items: center; gap: 14px; }
+.slide .ch-fb { flex: 1; min-height: 40px; margin: 0; font-size: 26px; font-weight: 700; line-height: 1.45; }
+.slide .ch-fb.is-ok { color: var(--ch-ok); }
+.slide .ch-fb.is-bad { color: var(--ch-bad); }
+.slide .ch-reset { min-height: 56px; padding: 0 22px; border-width: 2px; border-color: #AEB4BC; color: var(--ch-mute); font-size: 22px; }
+.ch-shake { animation: ch-shake .4s; }
+@keyframes ch-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }

@@ -281,6 +281,15 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
   .ch-check, .ch-zoom-btn, .ch-zoom { display: none !important; }
 }
 
+/* 부품 공통: 맞음·틀림 알림 줄, 흔들림, 「다시」 단추 */
+.ch-row { display: flex; align-items: center; gap: 14px; }
+.slide .ch-fb { flex: 1; min-height: 40px; margin: 0; font-size: 26px; font-weight: 700; line-height: 1.45; }
+.slide .ch-fb.is-ok { color: var(--ch-ok); }
+.slide .ch-fb.is-bad { color: var(--ch-bad); }
+.slide .ch-reset { min-height: 56px; padding: 0 22px; border-width: 2px; border-color: #AEB4BC; color: var(--ch-mute); font-size: 22px; }
+.ch-shake { animation: ch-shake .4s; }
+@keyframes ch-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
 /* ---- 72-stepper.css ---- */
 /* 단계 막대: 슬라이더(굵은 손잡이)와 눈금 이름. 색은 --stop-c(기본 --accent). */
 .ch-stops { position: relative; margin: 6px 0 0; padding-bottom: 48px; }
@@ -364,4 +373,22 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
   .ch-yl-head .ch-yl-list { display: none; }
   .ch-yearline > ol.yearline { display: grid !important; grid-template-columns: 1fr 1fr; gap: 0 32px; margin: 8px 0 0; padding-left: 1.2em; }
   .ch-yearline > ol.yearline li { margin: 0; font-size: 20px; }
+}
+
+/* ---- 76-sort.css ---- */
+/* 분류 카드. 칸이 .sort의 바로 아래에 있으면 칸 수만큼 열을 나눈다(--cols, 최대 4). */
+.slide .sort { display: grid; grid-template-columns: repeat(var(--cols, 1), 1fr); gap: 16px 22px; align-items: start; }
+.slide .sort > .ch-pool, .slide .sort > .ch-row, .slide .sort > :not(.bin) { grid-column: 1 / -1; }
+.ch-pool { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 12px; min-height: 60px; }
+.ch-pool[hidden] { display: none; }
+.slide .ch-card { display: inline-flex; align-items: center; min-height: 58px; box-sizing: border-box; padding: 8px 20px; border: 2px solid #AEB4BC; border-radius: 14px; background: #fff; color: var(--ch-ink); font-size: 26px; font-weight: 700; line-height: 1.3; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: 0 3px 0 rgba(0, 0, 0, .12); }
+.ch-card.is-sel { outline: 4px solid var(--accent); outline-offset: 2px; }
+.ch-card.is-drag { position: relative; z-index: 50; cursor: grabbing; box-shadow: 0 12px 26px rgba(0, 0, 0, .28); }
+.ch-card.is-done { border-color: var(--ch-ok); background: #EAF7EF; cursor: default; box-shadow: none; }
+.slide .sort .bin { min-height: 150px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; box-sizing: border-box; padding: 14px; border: 3px dashed #C3C9D1; border-radius: 18px; cursor: pointer; }
+.slide .sort .bin > h3 { width: 100%; margin: 0 0 4px; font-size: 28px; color: var(--bc, var(--ch-ink)); }
+.slide .sort .bin.is-hover { border-color: var(--accent); background: rgba(232, 84, 26, .06); }
+
+@media print {
+  .ch-pool, .ch-row .ch-reset { display: none !important; }
 }

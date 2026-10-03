@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko" data-deck="test-sort">
+<head>
+<meta charset="utf-8">
+<title>sort</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="pointer.js"></script>
+</head>
+<body>
+<section class="slide" id="so">
+  <h2>동물과 식물</h2>
+  <div class="sort" id="box">
+    <div class="bin" data-bin="a" id="binA"><h3>동물</h3></div>
+    <div class="bin" data-bin="p" id="binP"><h3>식물</h3></div>
+    <span data-bin="a" id="c1" data-why="고양이는 동물이다." data-hint="스스로 움직인다.">고양이</span>
+    <span data-bin="a" id="c2" data-why="참새는 동물이다.">참새</span>
+    <span data-bin="p" id="c3" data-why="소나무는 식물이다." data-hint="광합성을 한다.">소나무</span>
+  </div>
+  <p class="step" id="next">다음 단계</p>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const it = () => I().Sort.list[0];
+const $ = (id) => document.getElementById(id);
+const center = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+const dragTo = (card, target) => {
+  const [x0, y0] = center(card);
+  const [x1, y1] = center(target);
+  const o = (x, y) => ({ clientX: x, clientY: y });
+  ptr('pointerdown', card, 0, 0, o(x0, y0));
+  for (let i = 1; i <= 5; i++) ptr('pointermove', card, 0, 0, o(x0 + ((x1 - x0) * i) / 5, y0 + ((y1 - y0) * i) / 5));
+  ptr('pointerup', card, 0, 0, o(x1, y1));
+};
+const tap = (card) => { const [x, y] = center(card); ptr('pointerdown', card, 0, 0, { clientX: x, clientY: y }); ptr('pointerup', card, 0, 0, { clientX: x, clientY: y }); };
+
+test('카드는 카드 자리로 모이고, 펜 예외·톡 누르기 표시가 붙는다', () => {
+  const t = it();
+  eq(t.pool.children.length, 3);
+  assert(t.cards.every((c) => c.classList.contains('ch-card') && c.hasAttribute('data-no-ink')), 'cards');
+  assert(t.bins.every((b) => b.hasAttribute('data-tap')), 'bins');
+  eq($('box').style.getPropertyValue('--cols'), '2');
+  eq(Array.from(t.pool.children), t.order);
+});
+test('섞는 순서는 장 열쇠로 정해진다', () => {
+  const again = I().Sort.list[0].order.map((c) => c.id);
+  eq(again, it().order.map((c) => c.id));
+});
+test('카드를 누르고 맞는 칸을 누르면 칸에 붙고 이유', () => {
+  tap($('c3'));
+  assert($('c3').classList.contains('is-sel'), 'selected');
+  $('binP').click();
+  eq($('c3').parentElement, $('binP'));
+  assert($('c3').classList.contains('is-done'), 'done');
+  eq(it().fb.textContent, '소나무는 식물이다.');
+  assert(it().fb.classList.contains('is-ok'), 'ok');
+});
+test('틀린 칸이면 흔들리고 실마리, 카드는 제자리', () => {
+  tap($('c1'));
+  $('binP').click();
+  eq($('c1').parentElement, it().pool);
+  assert($('c1').classList.contains('ch-shake'), 'shake');
+  eq(it().fb.textContent, '다시 생각해 보자. 스스로 움직인다.');
+  assert(it().fb.classList.contains('is-bad'), 'bad');
+});
+test('펜을 든 채로 카드를 끌어 칸에 놓으면 판서 없이 옮겨진다', () => {
+  I().Tools.set('pen');
+  const before = I().Ink.page.length;
+  dragTo($('c1'), $('binA'));
+  eq($('c1').parentElement, $('binA'));
+  eq(I().Ink.page.length, before, 'no ink');
+  I().Tools.set('hand');
+});
+test('다 맞히면 카드 자리를 접고 다음 단계를 연다', async () => {
+  dragTo($('c2'), $('binA'));
+  assert(it().pool.hidden, 'pool hidden');
+  assert(it().fb.textContent.startsWith('모두 맞혔다!'), it().fb.textContent);
+  await wait(750);
+  assert($('next').classList.contains('is-shown'), 'next step');
+});
+test('다시: 처음 섞인 순서로 카드 자리에 돌아간다', () => {
+  it().reset.click();
+  eq(Array.from(it().pool.children), it().order);
+  assert(!it().pool.hidden, 'pool shown');
+  assert(it().cards.every((c) => !c.classList.contains('is-done')), 'not done');
+  eq(it().fb.textContent, '');
+});
+test('Enter로 카드를 고를 수 있고 장은 넘어가지 않는다', () => {
+  ClassHTML.go(0);
+  $('c2').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+  assert($('c2').classList.contains('is-sel'), 'selected');
+  eq(I().Nav.state.shown, 0);
+});
+test('인쇄 때는 모든 카드가 정답 칸에, 끝나면 되돌린다', () => {
+  window.dispatchEvent(new Event('beforeprint'));
+  eq($('c1').parentElement, $('binA')); eq($('c3').parentElement, $('binP'));
+  window.dispatchEvent(new Event('afterprint'));
+  eq(Array.from(it().pool.children), it().order);
+  assert($('c2').classList.contains('is-sel'), 'class restored');
+});
+</script>
+</body>
+</html>

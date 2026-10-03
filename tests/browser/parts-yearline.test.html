@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko" data-deck="test-yearline">
+<head>
+<meta charset="utf-8">
+<title>yearline</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="y">
+  <h2>가상의 섬나라 연표</h2>
+  <ol class="yearline" id="yl" data-from="1900" data-to="1960">
+    <li data-year="1920" data-tag="북섬" data-flag>북섬 의회 설립</li>
+    <li data-year="1905" data-tag="남섬">남섬 <b>항구</b> 개항</li>
+    <li data-year="1920" data-tag="남섬">남섬 철도 개통</li>
+    <li data-year="1948" data-tag="북섬" data-color="#123456">두 섬 통합</li>
+    <li data-year="1931" data-tag="동섬">동섬 발견</li>
+    <li data-year="1955" data-tag="북섬">새 헌법</li>
+  </ol>
+  <p class="step" id="after">정리 단계</p>
+</section>
+<section class="slide" id="z"><h2>다음</h2></section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const it = () => I().Yearline.list[0];
+const key = (k) => document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+const move = (v) => { it().range.value = String(v); it().range.dispatchEvent(new Event('input', { bubbles: true })); };
+const lit = () => it().events.filter((e) => e.dot.classList.contains('is-on')).length;
+
+test('칸은 사건이 있는 해(중복 없이, 시간순) + 앞의 시작', () => {
+  eq(it().st.stops, ['시작', '1905', '1920', '1931', '1948', '1955']);
+  eq(it().years, [1905, 1920, 1931, 1948, 1955]);
+  eq(Number(it().range.min), 1899); eq(Number(it().range.max), 1960);
+});
+test('0단계: 시작, 켜진 점 없음, 깃발 숨김, 안내 한 줄', () => {
+  eq(it().st.pos, 0);
+  eq(it().now.textContent, '시작');
+  eq(lit(), 0);
+  assert(it().events.filter((e) => e.flagEl).every((e) => !e.flagEl.classList.contains('is-on')), 'flags off');
+  eq(it().recent.children.length, 1);
+  assert(it().recent.textContent.includes('막대를'), 'hint');
+  assert(it().wrap.classList.contains('is-veiled'), 'veiled');
+  eq(getComputedStyle(it().ol).display, 'none');
+});
+test('축 위치는 연도에 비례한다', () => {
+  const e1955 = it().events.find((e) => e.year === 1955);
+  assert(Math.abs(parseFloat(e1955.dot.style.left) - ((1955 - 1899) / (1960 - 1899)) * 100) < 0.01, e1955.dot.style.left);
+});
+test('막대를 사건 없는 해로 옮기면 그 앞 사건까지 켜지고 연도는 그대로', () => {
+  move(1925);
+  eq(it().now.textContent, '1925년');
+  eq(it().st.pos, 2);
+  eq(lit(), 3);
+  const flag = it().events.find((e) => e.flagEl).flagEl;
+  assert(flag.classList.contains('is-on'), 'flag 1920 on');
+  eq(Array.from(it().recent.children).map((li) => li.querySelector('b').textContent), ['1920', '1920', '1905']);
+  assert(!it().recent.querySelector('.is-now'), 'no event this year');
+});
+test('그해 사건은 굵게, 최근 4개만', () => {
+  move(1955);
+  eq(it().recent.children.length, 4);
+  eq(it().recent.firstElementChild.className, 'is-now');
+  assert(it().recent.textContent.includes('새 헌법'), 'latest first');
+});
+test('같은 해 사건은 점을 위로 쌓고, 꼬리표 색은 꼬리표마다, data-color로 바꾼다', () => {
+  const same = it().events.filter((e) => e.year === 1920).map((e) => e.dot.style.getPropertyValue('--n'));
+  eq(same, ['0', '1']);
+  const north = it().events.filter((e) => e.tag === '북섬').map((e) => e.color);
+  eq(new Set(north).size, 1);
+  eq(north[0], '#123456');
+  assert(it().events.find((e) => e.tag === '남섬').color !== north[0], 'different tags differ');
+});
+test('글 안의 굵은 글씨를 목록에 그대로 옮긴다', () => {
+  move(1905);
+  assert(it().recent.querySelector('b + span b'), 'bold kept');
+});
+test('→ 는 사건 해마다 한 칸, 끝나면 다음 단계, 그다음 장', () => {
+  ClassHTML.go(0);
+  eq(it().now.textContent, '시작');
+  key('ArrowRight'); eq(it().now.textContent, '1905년');
+  key('ArrowRight'); eq(it().now.textContent, '1920년');
+  eq(it().range.value, '1920');
+  for (let i = 0; i < 3; i++) key('ArrowRight');
+  eq(it().now.textContent, '1955년');
+  key('ArrowRight'); assert(document.getElementById('after').classList.contains('is-shown'), 'step');
+  key('ArrowRight'); eq(I().Nav.state.slide, 1);
+  key('ArrowLeft'); eq(it().st.pos, 5);
+});
+test('사건 연도를 막대로 고른 뒤 → 는 다음 사건 해로', () => {
+  ClassHTML.go(0);
+  move(1940);
+  key('ArrowRight');
+  eq(it().now.textContent, '1948년');
+  key('ArrowLeft');
+  eq(it().now.textContent, '1931년');
+});
+test('인쇄 때는 끝 칸, 원래 목록을 보인다', () => {
+  ClassHTML.go(0);
+  window.dispatchEvent(new Event('beforeprint'));
+  eq(lit(), 6);
+  window.dispatchEvent(new Event('afterprint'));
+  eq(lit(), 0);
+});
+</script>
+</body>
+</html>

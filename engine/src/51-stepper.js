@@ -38,9 +38,10 @@ const Stepper = {
     return st;
   },
 
-  // '시작|가|나' → ['시작', '가', '나']. <br>과 줄바꿈은 눈금 이름 안의 줄바꿈. 첫 칸이 '시작'이 아니면 붙인다.
+  // '시작|가|나'(또는 배열) → ['시작', '가', '나']. <br>과 줄바꿈은 눈금 이름 안의 줄바꿈. 첫 칸이 '시작'이 아니면 붙인다.
   parseStops(text) {
-    const list = String(text || '').split('|').map((s) => s.replace(/<br\s*\/?>/gi, '\n').trim()).filter((s) => s);
+    const raw = Array.isArray(text) ? text.map(String) : String(text || '').split('|');
+    const list = raw.map((s) => s.replace(/<br\s*\/?>/gi, '\n').trim()).filter((s) => s);
     if (list[0] !== '시작') list.unshift('시작');
     return list;
   },

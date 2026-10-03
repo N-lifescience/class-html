@@ -55,6 +55,8 @@ test('함수와 상수', () => {
   assert.equal(run('if(1 > 2, "가", "나")'), '나');
   assert.equal(run('fix(2, 1)'), '2.0');
   assert.equal(run('pow(2, 10)'), 1024);
+  assert.equal(run('len("참정권 운동")'), 6);
+  assert.equal(run('len(t)', { t: '' }), 0);
 });
 
 test('글자와 + 하면 이어 붙인다', () => {

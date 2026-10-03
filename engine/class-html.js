@@ -1900,7 +1900,7 @@ const Parts = {
     Calc.init();
     Plot.init();
     PptFill.init();
-    Stepper.sort();   // 모든 단계 막대를 만든 뒤 문서 순서로 정렬하고 0단계로 둔다
+    Stepper.sort();   // 모든 단계 막대를 만든 뒤 문서 순서로 정렬하고 0단계로 둔다(계산 상자는 ch-stepper 이벤트로 다시 계산)
   },
 };
 
@@ -1981,6 +1981,7 @@ const EXPR_FUNCS = Object.assign(Object.create(null), {
   rad: (d) => (d * Math.PI) / 180, deg: (r) => (r * 180) / Math.PI,
   clamp: (x, lo, hi) => Math.max(lo, Math.min(hi, x)),
   if: (c, a, b) => (c ? a : b),
+  len: (s) => Array.from(String(s == null ? '' : s)).length,   // 글자 수
   fix: (x, n) => Expr.format(Number(x), Math.max(0, Math.min(10, Math.trunc(Number(n) || 0)))),
 });
 const EXPR_CONSTS = Object.assign(Object.create(null), { pi: Math.PI, e: Math.E, true: true, false: false });
@@ -2946,7 +2947,10 @@ const Calc = {
           });
         }
       }
-      item.inputs = qsa('input[name], select[name], textarea[name]', box).filter(own);
+      item.inputs = qsa('input[name], select[name], textarea[name]', box).filter((el) => own(el) && !el.closest('.ch-stops'));
+      // 단계 막대(.reveal 등)에 data-name이 있으면 지금 칸 번호를 그 이름의 변수로 쓴다
+      item.steppers = qsa('.ch-stepper[data-name]', box).filter(own);
+      box.addEventListener('ch-stepper', (e) => { if (item.steppers.includes(e.target)) this.update(item); });
       item.sets = sets;
       box.addEventListener('input', (e) => { if (own(e.target)) this.update(item); });
       box.addEventListener('change', (e) => {
@@ -3024,6 +3028,7 @@ const Calc = {
       scope[name] = num(el.value);
     }
     for (const b of item.sets) if (b.getAttribute('aria-pressed') === 'true') scope[b.dataset.set] = num(b.dataset.value);
+    for (const el of item.steppers) scope[el.dataset.name] = Number(el.dataset.pos || 0);
     return scope;
   },
 

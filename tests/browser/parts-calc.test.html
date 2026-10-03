@@ -40,6 +40,14 @@
     <span id="badclass" data-class="no colon here"></span>
   </div>
 </section>
+<section class="slide" id="c3">
+  <div class="calc" id="stepcalc">
+    <div class="reveal" data-name="k" id="rk" data-stops="시작|하나|둘|셋"></div>
+    <p id="kOut" data-expr="k * 10"></p>
+    <i id="lit2" data-class="lit: k >= 2"></i>
+    <textarea name="t" id="t"></textarea><span id="tl" data-expr="len(t) + ' / 200자'"></span>
+  </div>
+</section>
 <pre id="results" data-summary="pending"></pre>
 <script>
 const I = () => ClassHTML._internal;
@@ -105,6 +113,19 @@ test('식 오류는 ?로 쓰고 오류 목록에 남긴다', () => {
   assert(errs.some((m) => m.includes('nope')), 'unknown name');
   assert(errs.some((m) => m.includes('data-class')), 'bad pair');
   eq(item('osm').errors.length, 0);
+});
+test('단계 막대의 칸 번호를 계산 상자 변수로 쓴다(data-name), 글자 수', () => {
+  ClassHTML.go(2);
+  eq(txt('kOut'), '0');
+  const st = I().Stepper.all.find((s) => s.el.id === 'rk');
+  st.set(2, 'input');
+  eq(txt('kOut'), '20');
+  assert($('lit2').classList.contains('lit'), 'lit');
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  eq(txt('kOut'), '30');
+  eq(txt('tl'), '0 / 200자');
+  $('t').value = '참정권 운동'; $('t').dispatchEvent(new Event('input', { bubbles: true }));
+  eq(txt('tl'), '6 / 200자');
 });
 test('펜을 든 채로 슬라이더를 움직여도 판서가 생기지 않는다', () => {
   ClassHTML.go(0);

@@ -21,6 +21,7 @@ const EXPR_FUNCS = Object.assign(Object.create(null), {
   rad: (d) => (d * Math.PI) / 180, deg: (r) => (r * 180) / Math.PI,
   clamp: (x, lo, hi) => Math.max(lo, Math.min(hi, x)),
   if: (c, a, b) => (c ? a : b),
+  len: (s) => Array.from(String(s == null ? '' : s)).length,   // 글자 수
   fix: (x, n) => Expr.format(Number(x), Math.max(0, Math.min(10, Math.trunc(Number(n) || 0)))),
 });
 const EXPR_CONSTS = Object.assign(Object.create(null), { pi: Math.PI, e: Math.E, true: true, false: false });

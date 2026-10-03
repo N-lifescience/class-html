@@ -43,7 +43,10 @@ const Calc = {
           });
         }
       }
-      item.inputs = qsa('input[name], select[name], textarea[name]', box).filter(own);
+      item.inputs = qsa('input[name], select[name], textarea[name]', box).filter((el) => own(el) && !el.closest('.ch-stops'));
+      // 단계 막대(.reveal 등)에 data-name이 있으면 지금 칸 번호를 그 이름의 변수로 쓴다
+      item.steppers = qsa('.ch-stepper[data-name]', box).filter(own);
+      box.addEventListener('ch-stepper', (e) => { if (item.steppers.includes(e.target)) this.update(item); });
       item.sets = sets;
       box.addEventListener('input', (e) => { if (own(e.target)) this.update(item); });
       box.addEventListener('change', (e) => {
@@ -121,6 +124,7 @@ const Calc = {
       scope[name] = num(el.value);
     }
     for (const b of item.sets) if (b.getAttribute('aria-pressed') === 'true') scope[b.dataset.set] = num(b.dataset.value);
+    for (const el of item.steppers) scope[el.dataset.name] = Number(el.dataset.pos || 0);
     return scope;
   },
 

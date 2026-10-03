@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko" data-deck="test-map">
+<head>
+<meta charset="utf-8">
+<title>map</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+</head>
+<body>
+<section class="slide" id="m">
+  <h2>가상의 섬나라 통일</h2>
+  <div style="display:grid;grid-template-columns:560px 1fr;gap:30px">
+    <figure class="map-reveal fig" id="m1" data-stops="시작|북쪽|남쪽|섬">
+      <img alt="가상의 섬 지도" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='500'%3E%3Crect width='800' height='500' fill='%23BFE3F5'/%3E%3Cpath d='M100 80h500v300H100z' fill='%23E9F2D8'/%3E%3C/svg%3E">
+      <svg viewBox="0 0 800 500">
+        <polygon data-from="1" id="pa" points="100,80 600,80 600,230 100,230"/>
+        <polygon data-from="2" id="pb" points="100,230 600,230 600,380 100,380"/>
+        <polygon data-from="3" id="pc" points="650,300 760,300 760,420 650,420"/>
+        <polygon data-lost="2" id="pl" points="40,20 90,20 90,70 40,70"/>
+      </svg>
+      <figcaption>가상의 지도(자체 제작)</figcaption>
+    </figure>
+    <div>
+      <p data-for="m1" data-only="0" id="t0">막대를 움직여 보자.</p>
+      <p data-for="m1" data-only="1" id="t1">북쪽이 먼저 하나가 되었다.</p>
+      <p data-for="m1" data-at="2" id="t2">남쪽이 합류했다.</p>
+    </div>
+  </div>
+</section>
+<section class="slide" id="m2s">
+  <h2>지도 둘</h2>
+  <figure class="map-reveal" id="m2" data-stops="시작|가" data-approx="근사 영역"><img alt="두 번째" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'/%3E"><svg viewBox="0 0 10 10"><polygon data-from="1" points="0,0 10,0 10,10"/><polygon data-lost="1" points="0,0 5,0 5,5"/></svg></figure>
+  <figure class="map-reveal" id="m3" data-stops="시작|가"><img alt="세 번째" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'/%3E"><svg viewBox="0 0 10 10"><polygon data-from="1" points="0,0 10,0 10,10"/></svg></figure>
+  <p data-only="1" id="orphan">어느 지도인지 모름</p>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const item = (id) => I().MapReveal.list.find((m) => m.fig.id === id);
+const open = (id) => document.getElementById(id).classList.contains('is-open');
+const off = (id) => document.getElementById(id).classList.contains('ch-off');
+const move = (st, v) => { st.input.value = String(v); st.input.dispatchEvent(new Event('input', { bubbles: true })); };
+
+test('0단계: 지도 전체를 가리고, 다각형은 모두 회색, 근사 꼬리표', () => {
+  const m = item('m1');
+  eq(m.st.pos, 0);
+  assert(m.fig.classList.contains('is-veiled'), 'veiled');
+  assert(m.masks.every((x) => !x.shape.classList.contains('is-open')), 'all masked');
+  const box = m.fig.querySelector('.ch-map-box');
+  eq(box.dataset.veil, '막대를 움직여 하나씩 열어 보자');
+  assert(getComputedStyle(box, '::after').content.includes('막대를'), 'veil text');
+  eq(m.fig.querySelector('.ch-approx').textContent, '근사 · 회색은 아직 열리지 않은 곳');
+  eq(getComputedStyle(m.fig.querySelector('.ch-zoom-btn')).display, 'none');
+  assert(!off('t0') && off('t1') && off('t2'), 'side text 0');
+});
+test('막대는 지도 바로 뒤에, 그림 설명은 상자 밖에', () => {
+  const m = item('m1');
+  assert(m.fig.nextElementSibling.classList.contains('ch-stops'), 'stops after figure');
+  eq(m.fig.querySelector('.ch-map-box').parentElement, m.fig);
+  eq(m.fig.querySelector('figcaption').parentElement, m.fig);
+  eq(m.fig.querySelector('svg').getAttribute('preserveAspectRatio'), 'none');
+});
+test('한 칸 열면 그 땅이 열리고 새 땅에 테두리가 켜진다', () => {
+  const m = item('m1');
+  move(m.st, 1);
+  assert(open('pa') && !open('pb') && !open('pc'), 'pos 1');
+  const rings = m.masks.map((x) => x.ring.classList.contains('is-new'));
+  eq(rings, [true, false, false]);
+  assert(!m.fig.classList.contains('is-veiled'), 'unveiled');
+  assert(off('t0') && !off('t1') && off('t2'), 'side text 1');
+  assert(!document.getElementById('pl').classList.contains('is-on'), 'lost not yet');
+});
+test('잃은 땅은 그 칸부터 빗금', () => {
+  const m = item('m1');
+  move(m.st, 3);
+  assert(open('pa') && open('pb') && open('pc'), 'all open');
+  eq(m.masks.map((x) => x.ring.classList.contains('is-new')), [false, false, true]);
+  assert(document.getElementById('pl').classList.contains('is-on'), 'lost on');
+  assert(document.getElementById('pl').getAttribute('fill').startsWith('url(#ch-hatch-'), 'hatch fill');
+});
+test('빗금 무늬 id는 지도마다 다르고, 근사 꼬리표 글을 바꿀 수 있다', () => {
+  const ids = I().MapReveal.list.map((m) => m.fig.querySelector('pattern').id);
+  eq(new Set(ids).size, ids.length);
+  eq(item('m2').fig.querySelector('.ch-approx').textContent, '근사 영역');
+  eq(ClassHTML.audit().errors.filter((e) => e.code === 'dup-id').length, 0);
+});
+test('지도가 둘인 장에서 data-for 없는 설명은 어느 막대에도 묶이지 않는다', () => {
+  assert(I().Stepper.orphans.includes(document.getElementById('orphan')), 'orphan');
+});
+test('인쇄 전에는 모든 땅이 열린다', () => {
+  ClassHTML.go(0);
+  const m = item('m1');
+  eq(m.st.pos, 0);
+  window.dispatchEvent(new Event('beforeprint'));
+  assert(m.masks.every((x) => x.shape.classList.contains('is-open')), 'open for print');
+  window.dispatchEvent(new Event('afterprint'));
+  eq(m.st.pos, 0);
+  assert(m.masks.every((x) => !x.shape.classList.contains('is-open')), 'restored');
+});
+</script>
+</body>
+</html>

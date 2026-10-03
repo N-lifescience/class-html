@@ -315,3 +315,24 @@ body:not(.ch-board-on) .ch-board-only { display: none !important; }
   .ch-stops, .ch-switch-btns, .ch-switch-hint { display: none !important; }
   .ch-at.ch-off { opacity: 1 !important; visibility: visible !important; transform: none !important; }
 }
+
+/* ---- 74-map.css ---- */
+/* 그림 지도 단계 공개. 다각형 선 굵기는 그림 크기와 상관없이 화면 기준(non-scaling-stroke). */
+.slide figure.map-reveal { position: relative; margin: 0; }
+.ch-map-box { position: relative; }
+.ch-map-box > img { display: block; width: 100%; height: auto; border: 1px solid #CFCFCF; box-sizing: border-box; }
+.ch-map-box > svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.map-reveal .ch-m { fill: #ECE9E1; fill-opacity: .93; stroke: #8F8F8F; stroke-width: 2.5; stroke-dasharray: 8 6; vector-effect: non-scaling-stroke; transition: opacity .5s var(--ch-ease-out); }
+.map-reveal .ch-m.is-open { opacity: 0; }
+.map-reveal .ch-o { fill: none; stroke: var(--map-new, #E8541A); stroke-width: 5; stroke-linejoin: round; vector-effect: non-scaling-stroke; opacity: 0; }
+.map-reveal .ch-o.is-new { animation: ch-ring 1.4s ease-in-out 2 forwards; }
+@keyframes ch-ring { 0% { opacity: 0; } 30% { opacity: 1; } 70% { opacity: .55; } 100% { opacity: 1; } }
+.map-reveal .ch-lost { stroke: var(--ch-bad); stroke-width: 3; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity .5s var(--ch-ease-out); }
+.map-reveal .ch-lost.is-on { opacity: 1; }
+.ch-approx { position: absolute; left: 8px; bottom: 8px; z-index: 2; padding: 2px 10px; border-radius: 6px; background: rgba(255, 255, 255, .9); color: var(--ch-mute); font-size: 20px; font-weight: 600; }
+.map-reveal.is-veiled .ch-zoom-btn { display: none; }
+.slide .map-reveal figcaption { margin-top: 8px; font-size: 20px; color: var(--ch-mute); }
+
+@media print {
+  .map-reveal .ch-o { opacity: 0 !important; animation: none !important; }
+}

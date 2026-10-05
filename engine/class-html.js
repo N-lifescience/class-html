@@ -1,7 +1,7 @@
-/*! class-html engine v1.0.0-dev | MIT | https://github.com/N-lifescience/class-html */
+/*! class-html engine v1.0.0 | MIT | https://github.com/N-lifescience/class-html */
 (function () {
 'use strict';
-const VERSION = '1.0.0-dev';
+const VERSION = '1.0.0';
 /* ---- 00-core.js ---- */
 // 공통 상수, 작은 DOM 도우미, 이벤트 훅, 공개 객체 ClassHTML.
 const STAGE_W = 1280;

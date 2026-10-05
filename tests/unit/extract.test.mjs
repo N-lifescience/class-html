@@ -9,14 +9,15 @@ import { fileURLToPath } from 'node:url';
 import { buildMiniPptx } from '../fixtures/mini-pptx.mjs';
 
 const script = fileURLToPath(new URL('../../skills/class-html/scripts/extract_pptx.py', import.meta.url));
-const python = ['python3', 'python', 'py'].find((p) => spawnSync(p, ['--version']).status === 0);
+// 윈도우의 python3·python 바로 가기(스토어 안내)는 실행되지 않는다. py는 첫 줄(python3)을 따르지 않게 -3을 준다
+const python = [['python3'], ['python'], ['py', '-3']].find((p) => spawnSync(p[0], [...p.slice(1), '-c', 'pass']).status === 0);
 
 test('extract_pptx.py: 그림 번호·파일·노트 없는 개요·테마 색', { skip: !python && '파이썬 없음' }, () => {
   const dir = mkdtempSync(join(tmpdir(), 'class-html-extract-'));
   try {
     const pptx = join(dir, 'mini.pptx');
     writeFileSync(pptx, buildMiniPptx());
-    execFileSync(python, [script, pptx, '-o', join(dir, 'out')], { encoding: 'utf8' });
+    execFileSync(python[0], [...python.slice(1), script, pptx, '-o', join(dir, 'out')], { encoding: 'utf8' });
     const media = readdirSync(join(dir, 'out', 'media')).sort();
     assert.deepEqual(media, ['1-1.png', '1-2.png', '2-1.png', '2-2.emf', '2-3.png', '3-1.svg']);
     // 1-1과 2-3은 같은 그림(빨강), 2-1은 초록: 엔진 시험(parts-pptfill)과 같은 번호

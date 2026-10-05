@@ -10,7 +10,8 @@ import { noisyPng, png } from '../fixtures/mini-pptx.mjs';
 
 const script = fileURLToPath(new URL('../../skills/class-html/scripts/bundle.py', import.meta.url));
 const engine = fileURLToPath(new URL('../../engine/', import.meta.url));
-const python = ['python3', 'python', 'py'].find((p) => spawnSync(p, ['--version']).status === 0);
+// 윈도우의 python3·python 바로 가기(스토어 안내)는 실행되지 않는다. py는 첫 줄(python3)을 따르지 않게 -3을 준다
+const python = [['python3'], ['python'], ['py', '-3']].find((p) => spawnSync(p[0], [...p.slice(1), '-c', 'pass']).status === 0);
 
 test('bundle.py: 그림 넣기, 엔진 넣기, 큰 그림 줄이기 또는 알림', { skip: !python && '파이썬 없음' }, () => {
   const dir = mkdtempSync(join(tmpdir(), 'class-html-bundle-'));
@@ -23,7 +24,7 @@ test('bundle.py: 그림 넣기, 엔진 넣기, 큰 그림 줄이기 또는 알�
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
 <script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
 </head><body><section class="slide"><img src="media/1-1.png" alt="빨강"><img alt="큰" src='media/big.png'><img src="data:image/png;base64,AAAA" alt="그대로"><img src="media/없음.png" alt="없음"><img src="media/photo.png" alt="사진"></section></body></html>`);
-    const log = execFileSync(python, [script, join(dir, 'lesson.html'), '--offline', '--engine', engine], { encoding: 'utf8' });
+    const log = execFileSync(python[0], [...python.slice(1), script, join(dir, 'lesson.html'), '--offline', '--engine', engine], { encoding: 'utf8' });
     const out = readFileSync(join(dir, 'lesson-한파일.html'), 'utf8');
     assert.match(out, /<img src="data:image\/png;base64,[A-Za-z0-9+/=]{40,}" alt="빨강">/);
     assert.match(out, /<img alt="큰" src='data:image\/png;base64,/);

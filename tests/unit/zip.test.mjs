@@ -33,7 +33,15 @@ test('zip이 아니거나 깨진 파일은 알아듣는 오류', async () => {
   await assert.rejects(Zip.read(buf, undefined), /항목이 없어요/);
 });
 
-test('브라우저 시험용 base64 파일이 생성기와 같다', () => {
+// deflate 바이트는 zlib 빌드(맥 arm64·윈도우 x64)마다 달라서, 항목 이름·방식과 글 항목 내용을 비교한다
+test('브라우저 시험용 base64 파일이 생성기와 같다', async () => {
   const js = readFileSync(new URL('../fixtures/mini-pptx.js', import.meta.url), 'utf8');
-  assert.equal(/'(.+)'/.exec(js)[1], bytes.toString('base64'));
+  const fx = Buffer.from(/'(.+)'/.exec(js)[1], 'base64');
+  const fbuf = fx.buffer.slice(fx.byteOffset, fx.byteOffset + fx.byteLength);
+  const e = Zip.entries(fbuf);
+  assert.deepEqual([...e.keys()], files().map(([name]) => name));
+  for (const [name, data, method] of files()) {
+    assert.equal(e.get(name).method, method, name);
+    if (typeof data === 'string') assert.equal(await Zip.text(fbuf, e.get(name)), data, name);
+  }
 });

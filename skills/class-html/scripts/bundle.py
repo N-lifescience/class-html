@@ -147,7 +147,7 @@ def main():
     html = inline_images(src.read_text(encoding='utf-8'), src.parent, a.max, notes)
     if a.offline:
         html = inline_engine(html, a.engine)
-    out.write_text(html, encoding='utf-8')
+    out.write_bytes(html.encode('utf-8'))  # 윈도우에서도 줄바꿈을 바꾸지 않는다
     for n in notes:
         print('주의:', n)
     print(f'{out} ({len(html.encode("utf-8")) / 1024 / 1024:.2f}MB)')

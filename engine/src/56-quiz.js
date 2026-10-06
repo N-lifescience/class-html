@@ -1,7 +1,6 @@
 // 즉시 확인 문제. 하나 고르기: 누르면 바로 맞음·틀림과 그 보기의 이유. 여러 개 고르기(data-multi): 고른 뒤 「확인」.
 // 작성 모양: <div class="quiz"><p>물음</p><button class="opt" data-why="…">보기</button><button class="opt" data-ok data-why="…">보기</button></div>
-// 번호(①②…)는 엔진이 붙인다(data-num="off"로 끔). data-cols="2"면 보기를 두 줄로 놓는다.
-const CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩';
+// 번호는 엔진이 동그라미 배지에 1, 2…로 붙인다(data-num="off"로 끔). ①을 배지에 넣으면 동그라미가 겹쳐 ⊙처럼 보인다. data-cols="2"면 보기를 두 줄로 놓는다.
 
 const Quiz = {
   list: [],
@@ -27,7 +26,7 @@ const Quiz = {
         o.append(t);
         if (o.tagName !== 'BUTTON') { o.setAttribute('role', 'button'); o.setAttribute('data-tap', ''); o.tabIndex = 0; }
         else o.type = 'button';
-        if (box.dataset.num !== 'off') o.prepend(h('i', { class: 'ch-opt-n', 'aria-hidden': 'true', text: CIRCLED[i] || String(i + 1) }));
+        if (box.dataset.num !== 'off') o.prepend(h('i', { class: 'ch-opt-n', 'aria-hidden': 'true', text: String(i + 1) }));
         if (multi) o.setAttribute('aria-pressed', 'false');
       });
       const fb = h('p', { class: 'ch-fb', 'aria-live': 'polite' });

@@ -36,8 +36,8 @@ const $ = (id) => document.getElementById(id);
 const has = (id, c) => $(id).classList.contains(c);
 
 test('보기에 번호를 붙이고 한 상자에 모은다', () => {
-  eq($('o1').querySelector('.ch-opt-n').textContent, '①');
-  eq($('o3').querySelector('.ch-opt-n').textContent, '③');
+  eq($('o1').querySelector('.ch-opt-n').textContent, '1');
+  eq($('o3').querySelector('.ch-opt-n').textContent, '3');
   eq($('o1').parentElement.className, 'ch-opts');
   eq($('m1').parentElement.style.getPropertyValue('--cols'), '2');
   assert(!document.querySelector('#nonum .ch-opt-n'), 'num off');

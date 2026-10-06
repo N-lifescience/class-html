@@ -1,4 +1,4 @@
-/*! class-html engine v1.0.0 | MIT | https://github.com/N-lifescience/class-html */
+/*! class-html engine v1.1.0 | MIT | https://github.com/N-lifescience/class-html */
 /* ---- 00-tokens.css ---- */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 
@@ -459,7 +459,7 @@ body .slide.chapter::before { display: none; }
 /* 즉시 확인 문제 */
 .ch-opts { display: grid; grid-template-columns: repeat(var(--cols, 1), 1fr); gap: 12px 18px; margin: 6px 0 14px; }
 :where(.slide) .quiz .opt { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 64px; box-sizing: border-box; margin: 0; padding: 8px 22px; border: 2px solid #C3C9D1; border-radius: 16px; background: var(--ch-card); color: var(--ch-ink); font: 700 26px/1.35 var(--ch-font); text-align: left; cursor: pointer; }
-.ch-opt-n { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--ch-soft); font-style: normal; font-size: 24px; }
+.ch-opt-n { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--ch-soft); font-style: normal; font-size: 22px; font-weight: 800; }
 :where(.slide) .quiz .opt.is-pick { border-color: var(--accent); background: rgba(232, 84, 26, .07); }
 :where(.slide) .quiz .opt.is-pick .ch-opt-n { background: var(--accent); color: #fff; }
 :where(.slide) .quiz .opt.is-right { border-color: var(--ch-ok); background: var(--ch-ok-bg); }
@@ -619,6 +619,8 @@ body .slide.chapter::before { display: none; }
 .ch-anim-on[data-anim="fade"] { animation-name: ch-a-fade; }
 .ch-anim-on[data-anim="pop"] { animation-name: ch-a-pop; }
 @keyframes ch-a-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+/* 자동 등장(제목 → 문단 → 그림): 조금 더 천천히, 아래에서 올라온다 */
+.ch-anim-on[data-enter-auto] { animation-duration: .5s; }
 @keyframes ch-a-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ch-a-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
 /* wipe·type: 바탕색 가림막이 오른쪽으로 걷힌다(type은 계단식) */
@@ -647,3 +649,60 @@ body .slide.chapter::before { display: none; }
 .ch-particles-kind b { margin-right: 4px; }
 figure.particles > .ch-row { margin-top: 8px; }
 @media print { figure.particles > .ch-row { display: none !important; } }
+
+/* ---- 85-edit.css ---- */
+/* 편집 모드(67-edit.js): 위 막대, 오른쪽 창, 선택 상자. 편집 중에는 툴바·판서를 숨기고 단계 글과 움직임을 모두 멈춰 보여 준다. */
+html.ch-editing { --ch-reserve-left: 0px !important; --ch-reserve-right: 300px !important; --ch-reserve-bottom: 0px !important; }
+html.ch-editing .ch-viewport { top: 52px; }
+html.ch-editing :is(.ch-toolbar, .ch-tb-handle, .ch-ink, .ch-progress, .ch-board, .ch-pop, .ch-shade) { display: none !important; }
+html.ch-editing .ch-deck *, html.ch-editing .ch-deck *::before, html.ch-editing .ch-deck *::after { animation: none !important; transition: none !important; }
+html.ch-editing .step { opacity: 1; visibility: visible; transform: none; }
+html.ch-editing .ch-deck .slide * { pointer-events: auto !important; }   /* 판서가 지나가게 꺼 둔 머리 띠·장식도 고를 수 있게 */
+html.ch-editing .ch-deck [contenteditable="true"] { outline: 2px solid #2563EB; outline-offset: 4px; cursor: text; user-select: text; -webkit-user-select: text; }
+html.ch-editing .ch-deck [contenteditable="true"] * { user-select: text; -webkit-user-select: text; }
+html:not(.ch-editing) .ch-ed-ui { display: none !important; }
+
+.ch-ed-box { position: fixed; z-index: 9000; pointer-events: none; box-sizing: border-box; border: 2px solid #2563EB; border-radius: 2px; }
+.ch-ed-box.is-hover { border: 1.5px dashed rgba(37, 99, 235, .7); background: rgba(37, 99, 235, .05); }
+.ch-ed-box[hidden] { display: none; }
+.ch-ed-tag { position: absolute; left: -2px; bottom: 100%; padding: 4px 7px; border-radius: 4px 4px 0 0; background: #2563EB; color: #fff; font: 600 12px/1 var(--ch-font); white-space: nowrap; }
+.ch-ed-grip { position: absolute; right: -8px; bottom: -8px; width: 14px; height: 14px; box-sizing: border-box; border: 2px solid #2563EB; border-radius: 3px; background: #fff; pointer-events: auto; cursor: nwse-resize; touch-action: none; }
+.ch-ed-grip[hidden] { display: none; }
+
+.ch-ed-ui { box-sizing: border-box; color: var(--ch-ui-fg); font: 14px/1.5 var(--ch-font); }
+.ch-ed-ui * { box-sizing: border-box; }
+.ch-ed-ui button, .ch-ed-ui select, .ch-ed-ui input, .ch-ed-ui textarea { font: inherit; color: var(--ch-ui-fg); background: var(--ch-ui-2); border: 1px solid #3A3E47; border-radius: 7px; }
+.ch-ed-ui button { padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+.ch-ed-ui button:hover:not(:disabled) { border-color: #6B8DE8; }
+.ch-ed-ui button:disabled { opacity: .4; cursor: default; }
+.ch-ed-ui button.is-main { background: #2563EB; border-color: #2563EB; color: #fff; font-weight: 700; }
+.ch-ed-ui :focus-visible { outline: 2px solid #6B8DE8; outline-offset: 1px; }
+
+.ch-ed-bar { position: fixed; z-index: 9100; inset: 0 0 auto 0; height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: var(--ch-ui); border-bottom: 1px solid #2E323A; }
+.ch-ed-bar > b { margin-right: 6px; font-size: 15px; }
+.ch-ed-count { min-width: 56px; text-align: center; font: 600 13px var(--ch-mono); color: var(--ch-ui-mute); }
+.ch-ed-status { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; font-size: 13px; color: var(--ch-ui-mute); }
+
+.ch-ed-panel { position: fixed; z-index: 9100; top: 52px; right: 0; bottom: 0; width: 300px; overflow: auto; padding: 16px 16px 24px; background: var(--ch-ui); border-left: 1px solid #2E323A; }
+.ch-ed-panel h2 { margin: 0 0 8px; font-size: 17px; word-break: break-all; }
+.ch-ed-crumbs { display: flex; flex-wrap: wrap; gap: 4px 2px; margin-bottom: 12px; }
+.ch-ed-crumbs { gap: 4px 14px; }
+.ch-ed-crumbs button { position: relative; padding: 2px 7px; border-radius: 5px; font-size: 12px; }
+.ch-ed-crumbs button + button::before { content: "›"; position: absolute; left: -11px; color: var(--ch-ui-mute); }
+.ch-ed-crumbs button[aria-current="true"] { background: #2563EB; border-color: #2563EB; color: #fff; }
+.ch-ed-field { display: block; flex: 1; min-width: 0; margin: 0 0 10px; }
+.ch-ed-field > span { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 600; color: var(--ch-ui-mute); }
+.ch-ed-field :is(input, select, textarea, button) { width: 100%; }
+.ch-ed-field :is(input, select) { height: 34px; padding: 4px 8px; }
+.ch-ed-field input[type="color"] { padding: 2px 4px; }
+.ch-ed-field textarea { display: block; padding: 7px 8px; resize: vertical; line-height: 1.5; }
+.ch-ed-row { display: flex; gap: 8px; }
+.ch-ed-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+.ch-ed-note { margin: -2px 0 10px; font-size: 12px; color: var(--ch-ui-mute); }
+.ch-ed-raw { margin: 4px 0 12px; }
+.ch-ed-raw summary { cursor: pointer; font-size: 13px; color: var(--ch-ui-mute); }
+.ch-ed-raw textarea { display: block; width: 100%; margin: 8px 0 6px; padding: 7px 8px; font: 12px/1.5 var(--ch-mono); resize: vertical; }
+.ch-ed-keys { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid #2E323A; font-size: 12px; }
+.ch-ed-keys dt { color: var(--ch-ui-fg); font-weight: 600; white-space: nowrap; }
+.ch-ed-keys dd { margin: 0; color: var(--ch-ui-mute); }
+@media print { .ch-ed-ui, .ch-ed-box { display: none !important; } }

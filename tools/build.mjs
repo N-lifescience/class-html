@@ -3,7 +3,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 function concat(dir, ext) {
@@ -25,24 +25,23 @@ const skill = join(root, 'skills/class-html');
 const read = (rel) => readFileSync(join(skill, rel), 'utf8').replace(/^---[\s\S]*?---\n/, '').trim();
 const demote = (md) => md.replace(/^# .*\n+/, '').replace(/^(#+) /gm, '#$1 ');   // 맨 위 제목은 절 제목이 대신하고, 나머지는 한 단계 아래로
 const title = (rel) => (/^# (.+)$/m.exec(read(rel)) || [, rel])[1];
-const SUBJECT_ORDER = ['science.md', 'social.md', 'math.md', 'korean-lit.md', 'languages.md', 'info.md', 'others.md'];
 const parts = [
-  ['절차와 규칙', 'SKILL.md'],
-  ['인터뷰와 설계 확인', 'references/interview.md'],
+  ['절차와 기준', 'SKILL.md'],
+  ['만지는 도해', 'references/dohae.md'],
+  ['화면과 원본 모양', 'references/design.md'],
   ['부품 사전', 'references/components.md'],
-  ['PPT 패턴 → 부품', 'references/patterns.md'],
-  ['화면과 디자인', 'references/design.md'],
   ['한국어 문장', 'references/korean.md'],
-  ...readdirSync(join(skill, 'references/subjects')).filter((f) => f.endsWith('.md'))
-    .sort((a, b) => SUBJECT_ORDER.indexOf(a) - SUBJECT_ORDER.indexOf(b))
-    .map((f) => [`교과 지침: ${title(`references/subjects/${f}`)}`, `references/subjects/${f}`]),
 ];
+// 레퍼런스 완성본(HTML)은 합본에 넣지 않고 주소로 알린다
+const EXAMPLES = 'https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/skills/class-html/references/examples/';
+const examples = readdirSync(join(skill, 'references/examples')).filter((f) => f.endsWith('.html')).sort();
 const guide = [
   '# class-html 합본 지침',
   '',
   '> **AI에게**: 이 파일 하나가 「수업 HTML」 지침 전체다. 선생님이 수업 PPT를 주면 이 지침대로 수업용 HTML을 만든다.',
   '> 본문의 `references/…`는 이 파일의 해당 절을, `scripts/…`는 저장소 https://github.com/N-lifescience/class-html 의 `skills/class-html/scripts/`를 가리킨다.',
   `> 엔진: \`https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css\`·\`.js\` (v${VERSION})`,
+  `> 레퍼런스 완성본(\`references/examples/\`): ${examples.map((f) => `${EXAMPLES}${f}`).join(' · ')}`,
   '',
   '## 차례',
   '',

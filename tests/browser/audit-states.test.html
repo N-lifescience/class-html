@@ -29,6 +29,13 @@
     <div data-show="m == '길게'" style="height:800px">단추를 누르면 나오는 긴 설명</div>
   </div>
 </section>
+<section class="slide" id="s2">
+  <h2>칸마다 다른 그림</h2>
+  <div class="switch" data-stops="시작|가|나">
+    <svg data-only="1" viewBox="0 0 100 50" width="300"><text x="5" y="30" font-size="12">가 그림</text></svg>
+    <svg data-only="2" viewBox="0 0 100 50" width="300"><text x="5" y="30" font-size="12">나 그림</text></svg>
+  </div>
+</section>
 <pre id="results" data-summary="pending"></pre>
 <script>
 const I = () => ClassHTML._internal;
@@ -72,6 +79,9 @@ test('다 푼 상태(점검·다 연 화면)에서는 빈칸도 열리고, 되�
   eq(bl.getAttribute('aria-pressed'), 'true');
   I().emit('audit-restore');
   eq(bl.getAttribute('aria-pressed'), 'false');
+});
+test('숨은 칸의 SVG 글자는 0px로 재지 않는다', () => {
+  eq(ClassHTML.audit().errors.filter((e) => e.slide === 2 && e.code === 'tiny-text').length, 0);
 });
 test('계산 상자의 슬라이더 끝값·단추 값마다 재고, 재고 나면 되돌린다', () => {
   const report = ClassHTML.audit();

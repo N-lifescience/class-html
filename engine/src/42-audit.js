@@ -80,7 +80,7 @@ const Audit = {
           if (el.closest('.katex-mathml')) continue;
           if (el.closest('svg') && el.tagName.toLowerCase() !== 'svg') continue;
           // SVG 안 글자는 viewBox 배율까지 곱한 실제 크기로 잰다(그림을 줄이면 글자도 준다)
-          if (el.tagName.toLowerCase() === 'svg' && el.querySelector('text')) {
+          if (el.tagName.toLowerCase() === 'svg' && el.querySelector('text') && el.getBoundingClientRect().width) {   // 숨은 칸(data-only 등)의 그림은 잴 수 없으니 건너뛴다
             const vb = el.viewBox && el.viewBox.baseVal;
             const r = el.getBoundingClientRect();
             const k = vb && vb.width ? (r.width / scale) / vb.width : 1;

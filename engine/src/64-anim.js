@@ -4,10 +4,53 @@
 const ANIM_KINDS = ['fade-up', 'fade', 'pop', 'wipe', 'draw', 'count', 'highlight', 'type'];
 const ANIM_STAGGER = 0.06;
 
+// 자동 등장: 장이 보이면 제목 → 문단 → 그림이 차례로 나타난다(PPT의 '나타내기'처럼).
+// data-anim이 없는 덩어리에 엔진이 fade-up을 붙인다. 끄기: 요소·장에 data-enter="off", 문서 전체는 body[data-enter="off"].
+// 테두리·바탕이 없는 격자·flex 틀은 안으로 들어가 칸마다, 꾸미지 않은 목록은 항목마다 나타난다.
+// 단계(.step)·단계 막대에 묶인 요소는 자기 방식으로 나타나므로 건너뛴다.
+const ENTER_STEP = 0.12;
+const ENTER_MAX = 1.2;
+const ENTER_SKIP = '.step, .ch-at, .ch-only, [data-at], [data-only], script, style, template, [hidden], [data-enter="off"], [data-anim]';
+const ENTER_WHOLE = '.calc, .quiz, .sort, .reveal, .switch, figure, svg, table, .ch-order, ol.order, ol.yearline, ol.timeline, .answer, .timer, .picker, .score, .checklist';
+
+const Enter = {
+  // 바탕·테두리가 없어 눈에 보이지 않는 틀인가
+  plain(el) {
+    const cs = getComputedStyle(el);
+    return cs.backgroundImage === 'none' && /rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)
+      && !parseFloat(cs.borderTopWidth) && !parseFloat(cs.borderLeftWidth) && !parseFloat(cs.borderBottomWidth);
+  },
+
+  blocks(root) {
+    const out = [];
+    for (const el of root.children) {
+      if (el.matches(ENTER_SKIP)) continue;
+      if (el.matches(ENTER_WHOLE)) out.push(el);
+      else if (el.matches('ul, ol') && this.plain(el)) out.push(...[...el.children].filter((li) => !li.matches(ENTER_SKIP)));
+      else if (el.children.length > 1 && /grid|flex/.test(getComputedStyle(el).display) && this.plain(el)) out.push(...this.blocks(el));
+      else out.push(el);
+    }
+    return out;
+  },
+
+  init() {
+    if (document.body.dataset.enter === 'off') return;
+    for (const slide of Stage.slides) {
+      if (slide.dataset.enter === 'off') continue;
+      this.blocks(slide).forEach((el, i) => {
+        el.dataset.anim = 'fade-up';
+        el.dataset.enterAuto = '';
+        el.style.setProperty('--ch-delay', `${Math.min(i * ENTER_STEP, ENTER_MAX).toFixed(2)}s`);
+      });
+    }
+  },
+};
+
 const Anim = {
   els: [],
 
   init() {
+    Enter.init();
     this.els = qsa('[data-anim]', Stage.deck).filter((el) => ANIM_KINDS.includes(el.dataset.anim));
     for (const box of qsa('[data-stagger]', Stage.deck)) {
       const step = Number(box.dataset.stagger) || ANIM_STAGGER;

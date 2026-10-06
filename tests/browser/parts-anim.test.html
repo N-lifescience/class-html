@@ -16,6 +16,16 @@
   <p><span data-anim="highlight" id="hl">핵심어</span>와 <span data-anim="wipe" id="wp">닦아 내기</span></p>
   <svg viewBox="0 0 100 20" width="200"><path data-anim="draw" id="pth" d="M0 10H100" stroke="#000"/></svg>
 </section>
+<section class="slide" id="a2">
+  <h2 id="e0">자동 등장</h2>
+  <p id="e1">첫 문단</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr"><p id="e2">왼쪽</p><figure id="e3"><svg viewBox="0 0 10 10" width="40"></svg></figure></div>
+  <ul><li id="e4">하나</li><li id="e5">둘</li></ul>
+  <div id="box" style="display:grid;border:2px solid #000"><p>상자 안 하나</p><p>상자 안 둘</p></div>
+  <p class="step" id="st">단계</p>
+  <p data-enter="off" id="off">고정</p>
+</section>
+<section class="slide" id="a3" data-enter="off"><p id="noauto">이 장은 자동 등장 없음</p></section>
 <pre id="results" data-summary="pending"></pre>
 <script>
 const I = () => ClassHTML._internal;
@@ -45,6 +55,19 @@ test('다시 보면 처음부터 다시 재생한다', async () => {
   ClassHTML.go(0); ClassHTML.go(1);
   const a = $('t').getAnimations()[0];
   assert(a && a.currentTime < 200, `restarted ${a && a.currentTime}`);
+});
+test('자동 등장: 제목·문단·틀 안 칸·목록 항목이 차례로, 꾸민 상자는 통째로', () => {
+  ClassHTML.go(2);
+  const ids = ['e0', 'e1', 'e2', 'e3', 'e4', 'e5', 'box'];
+  eq(ids.map((id) => anim(id)), ids.map(() => 'ch-a-fade-up'));
+  eq(ids.map((id) => $(id).style.getPropertyValue('--ch-delay')), ['0.00s', '0.12s', '0.24s', '0.36s', '0.48s', '0.60s', '0.72s']);
+  eq($('box').querySelector('p').dataset.anim, undefined);
+});
+test('자동 등장은 단계·data-enter="off"·직접 정한 움직임을 건드리지 않는다', () => {
+  eq($('st').dataset.anim, undefined);
+  eq($('off').dataset.anim, undefined);
+  eq($('noauto').dataset.anim, undefined);
+  eq($('t').dataset.enterAuto, undefined);
 });
 test('움직임 끄기면 재생하지 않고 숫자는 바로 끝 값', async () => {
   await I().Settings.set('motionOff', true);

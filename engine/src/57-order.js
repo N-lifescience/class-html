@@ -18,7 +18,7 @@ const Order = {
       const fb = h('p', { class: 'ch-fb', 'aria-live': 'polite' });
       const item = { ol, wrap, items, mixed, bank, slots, fb, seq: [], slide, solved: false };
       for (const x of mixed) {
-        x.btn = h('button', { type: 'button', class: 'ch-order-item' }, ...Array.from(x.li.childNodes).map((c) => c.cloneNode(true)));
+        x.btn = h('button', { type: 'button', class: 'ch-order-item' }, ...Array.from(x.li.childNodes).map((c) => bare(c.cloneNode(true))));
         x.btn.addEventListener('click', (e) => { this.push(item, x); e.currentTarget.blur(); });
         bank.append(x.btn);
       }
@@ -53,7 +53,7 @@ const Order = {
     const n = item.items.length;
     item.slots.replaceChildren(...Array.from({ length: n }, (_, k) => {
       const x = item.seq[k];
-      return x ? h('li', { class: 'is-filled' }, h('span', null, ...Array.from(x.li.childNodes).map((c) => c.cloneNode(true))))
+      return x ? h('li', { class: 'is-filled' }, h('span', null, ...Array.from(x.li.childNodes).map((c) => bare(c.cloneNode(true)))))
         : h('li', { class: 'is-empty', 'aria-label': '빈칸' });
     }));
     for (const x of item.items) x.btn.disabled = item.seq.includes(x);

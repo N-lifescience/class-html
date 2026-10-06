@@ -56,6 +56,7 @@ test('PPTX를 끌어다 놓으면 번호대로 채우고, 없는 번호·못 여
   eq(r.unsupported, ['2-2']);
   assert(!$('red').hidden && ph('red').hidden, 'red shown');
   assert($('red').src.startsWith('data:image/png;base64,'), 'png');
+  assert(I().Source.model().getElementById('red').getAttribute('src') === $('red').getAttribute('src'), 'model src for edit mode');
   assert($('svg').src.startsWith('data:image/svg+xml;base64,'), 'svg');
   eq($('red2').src, $('red').src);
   assert(ph('emf').textContent.includes('EMF') && ph('emf').classList.contains('is-bad'), 'emf note');
@@ -74,8 +75,8 @@ test('긴 변이 1600px을 넘는 그림은 줄인다', async () => {
 test('손 모드에서 그림 자리를 누르면 그 슬라이드 그림 가운데서 바꾼다', async () => {
   ClassHTML.go(1);
   ph('emf').click();
-  await wait(100);
   const p = I().PptFill.picker;
+  for (let i = 0; i < 60 && !p.classList.contains('is-open'); i++) await wait(50);   // 그림을 읽는 동안 기다린다
   assert(p.classList.contains('is-open'), 'picker open');
   const items = p.querySelectorAll('.ch-picker-item');
   eq(items.length, 3);

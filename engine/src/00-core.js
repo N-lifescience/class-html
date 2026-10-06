@@ -26,6 +26,12 @@ function h(tag, props, ...kids) {
 }
 
 function qsa(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
+
+// 엔진이 화면용으로 복제한 노드에서 편집 번호(data-eid)를 지운다. 번호는 원본 요소 하나에만 있어야 한다.
+function bare(node) {
+  if (node.nodeType === 1) for (const x of [node, ...node.querySelectorAll('[data-eid]')]) x.removeAttribute('data-eid');
+  return node;
+}
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 // 단축키 이름. 한글 입력 상태(key가 'Process'나 'ㅅ')에서도 같은 자리의 영문 글자로 읽는다.

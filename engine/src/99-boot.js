@@ -3,6 +3,7 @@ let readyResolve;
 ClassHTML.ready = new Promise((resolve) => { readyResolve = resolve; });
 
 async function start() {
+  Editor.tag();       // 원본 보관 전: 화면과 원본에 같은 편집 번호를 붙인다
   Source.capture();   // 엔진이 DOM을 바꾸기 전의 원본(저장할 때 쓴다)
   Stage.init();
   MathTex.init();   // 어절 보정보다 먼저: $…$ 자리를 잡는다
@@ -17,6 +18,7 @@ async function start() {
   await Toolbar.init();
   Board.init();    // 툴바 자리(slots.board)에 버튼을 넣는다
   await Settings.init();
+  Editor.init();   // 툴바(slots.misc)에 편집 단추를 넣는다
   Print.init();
   // 수식이 있으면 그려질 때까지(최대 5초) 기다린다. 그래야 ready 뒤 점검이 그린 수식을 잰다.
   await Promise.race([MathTex.ready, new Promise((r) => setTimeout(r, 5000))]);
@@ -30,7 +32,7 @@ function boot() {
   ClassHTML.next = () => Nav.next();
   ClassHTML.prev = () => Nav.prev();
   ClassHTML.audit = () => Audit.run();
-  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, TocSlide, Answer, Blank, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order, Calc, Plot, Zip, Pptx, Source, PptFill, Timer, Picker, Score, Checklist, Hotspots, Anim, MathTex, Particles };
+  ClassHTML._internal = { on, emit, Stage, Nav, Steps, Panels, InkGeom, InkModel, Store, Session, Tools, Ink, Toolbar, icon, Board, Settings, KeepWords, Print, Audit, Parts, TocSlide, Answer, Blank, Zoom, Expr, Stepper, MapReveal, Yearline, Sort, Quiz, Order, Calc, Plot, Zip, Pptx, Source, PptFill, Timer, Picker, Score, Checklist, Hotspots, Anim, MathTex, Particles, Editor };
   start().then(() => readyResolve(ClassHTML), (err) => {
     console.error('[class-html]', err);
     readyResolve(ClassHTML);

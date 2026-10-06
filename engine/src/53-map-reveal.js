@@ -40,7 +40,7 @@ const MapReveal = {
         svg.prepend(defs);
         for (const shape of qsa('[data-from]', svg)) {
           shape.classList.add('ch-m');
-          const ring = shape.cloneNode(false);
+          const ring = bare(shape.cloneNode(false));
           ring.removeAttribute('data-from');
           ring.removeAttribute('id');   // 복제본이 같은 id를 갖지 않게
           ring.setAttribute('class', 'ch-o');

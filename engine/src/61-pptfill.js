@@ -6,7 +6,10 @@ const IMG_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', jfi
 
 const Source = {
   html: '',
+  doc: null,   // 편집 모드가 고치는 원본 문서. 처음 고칠 때 만든다.
   capture() { this.html = `<!doctype html>\n${document.documentElement.outerHTML}`; },
+  model() { return this.doc || (this.doc = new DOMParser().parseFromString(this.html, 'text/html')); },
+  text() { return this.doc ? `<!doctype html>\n${this.doc.documentElement.outerHTML}` : this.html; },
 };
 
 function bytesToBase64(bytes) {
@@ -119,6 +122,9 @@ const PptFill = {
 
   set(img, url) {
     img.setAttribute('src', url);
+    // 편집 모드의 원본 문서에도 넣는다(복제·되돌리기가 이 그림을 잃지 않게)
+    const m = Source.model().querySelector(`[data-eid="${img.dataset.eid}"]`);
+    if (m) m.setAttribute('src', url);
     this.show(img);
     this.dirty = true;
   },
@@ -208,19 +214,23 @@ const PptFill = {
 
   closePicker() { if (this.picker) this.picker.classList.remove('is-open'); },
 
-  // 원본 HTML에 지금 그림만 넣은 문서. 엔진이 덧붙인 툴바·무대 등은 들어가지 않는다.
+  // 원본 HTML(편집 모드에서 고친 것 포함)에 지금 그림만 넣은 문서. 엔진이 덧붙인 툴바·무대 등은 들어가지 않는다.
   buildDoc() {
-    const doc = new DOMParser().parseFromString(Source.html, 'text/html');
-    qsa('section.slide img[data-ppt]', doc).forEach((el, i) => {
-      const live = this.imgs[i];
-      if (!live) return;
+    const doc = new DOMParser().parseFromString(Source.text(), 'text/html');
+    for (const live of this.imgs) {
+      const el = doc.querySelector(`[data-eid="${live.dataset.eid}"]`);   // 번호는 Editor.tag()가 붙인다
+      if (!el) continue;
       if (live.getAttribute('src')) el.setAttribute('src', live.getAttribute('src'));
       el.setAttribute('data-ppt', live.dataset.ppt);
-    });
+    }
     return doc;
   },
 
-  serialize(doc) { return `<!doctype html>\n${doc.documentElement.outerHTML}`; },
+  // 편집용 번호(data-eid)는 빼고 쓴다
+  serialize(doc) {
+    for (const el of qsa('[data-eid]', doc)) el.removeAttribute('data-eid');
+    return `<!doctype html>\n${doc.documentElement.outerHTML}`;
+  },
 
   fileName(suffix) {
     let name = '';

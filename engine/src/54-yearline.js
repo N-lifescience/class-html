@@ -70,7 +70,7 @@ const Yearline = {
   },
 
   // li 안의 글(줄바꿈·굵게 포함)을 복제한다. 어절 span(.w)은 그대로 둔다.
-  copy(li) { return Array.from(li.childNodes).map((n) => n.cloneNode(true)); },
+  copy(li) { return Array.from(li.childNodes).map((n) => bare(n.cloneNode(true))); },
 
   render(item, pos, src) {
     // 막대로 고른 연도는 그대로 두고, → ←나 처음·인쇄로 바뀐 칸은 그 칸의 연도로 맞춘다

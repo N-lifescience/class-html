@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ko" data-deck="test-edit">
+<head>
+<meta charset="utf-8">
+<title>edit</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+<script src="harness.js"></script>
+<script src="pointer.js"></script>
+</head>
+<body>
+<section class="slide" id="e1">
+  <h2 id="ttl" style="pointer-events: none">편집 시험</h2>
+  <p id="para">가나 <b id="bold">굵은</b> 글</p>
+  <div class="calc" data-let="v = 2"><p id="cp">값은 <output id="co" data-expr="v * 3"></output> 이다</p></div>
+  <div id="card" style="padding: 20px; border: 2px solid #000"><h3 id="ch">카드</h3><p id="cpara">내용</p></div>
+  <svg id="sv" viewBox="0 0 200 50" width="400" height="100"><rect id="rc" x="10" y="5" width="80" height="40" fill="#ff0000"/><text id="st" x="120" y="35" font-size="20">글자</text></svg>
+  <p class="step" id="stp">단계 글</p>
+</section>
+<section class="slide" id="e2">
+  <h2 id="ttl2">둘째 장</h2>
+</section>
+<section class="slide" id="e3">
+  <div class="quiz" id="qz"><button class="opt" id="q1">빙하</button><button class="opt" id="q2" data-ok>바다</button></div>
+  <div class="answer" id="ans"><p id="ansText">답은 바다다.</p></div>
+  <p id="money">값은 \$5이다</p>
+  <figure class="map-reveal" id="mp" data-stops="시작|북쪽"><svg viewBox="0 0 800 500" width="400"><polygon data-from="1" id="pa" points="100,80 600,80 600,230 100,230"/></svg></figure>
+</section>
+<pre id="results" data-summary="pending"></pre>
+<script>
+const I = () => ClassHTML._internal;
+const E = () => I().Editor;
+const $ = (id) => document.getElementById(id);
+const src = (id) => I().Source.model().getElementById(id);
+const tap = (el) => { ptr('pointerdown', el, 0, 0); ptr('pointerup', el, 0, 0); };
+const key = (k, opts) => document.body.dispatchEvent(new KeyboardEvent('keydown', Object.assign({ key: k, bubbles: true, cancelable: true }, opts)));
+const panel = (name) => E().panel.querySelector(`[name="${name}"]`);
+const change = (el, v) => { el.value = v; el.dispatchEvent(new Event('change', { bubbles: true })); };
+
+test('슬라이드의 모든 요소에 편집 번호가 붙고, 원본 문서에도 같은 번호가 있다', () => {
+  const all = [...document.querySelectorAll('section.slide, section.slide *')].filter((el) => !el.closest('[class*="ch-"]') && el.tagName.toLowerCase() !== 'ch-w');
+  for (const el of all.filter((x) => x.id)) eq(src(el.id).dataset.eid, el.dataset.eid, el.id);
+  assert($('rc').dataset.eid && $('st').dataset.eid, 'svg parts tagged');
+});
+test('편집 단추로 들어가면 툴바가 숨고 단계 글이 보인다', () => {
+  document.querySelector('.ch-tb-btn[data-name="edit"]').click();
+  assert(document.documentElement.classList.contains('ch-editing'), 'editing class');
+  eq(getComputedStyle(document.querySelector('.ch-toolbar')).display, 'none');
+  eq(getComputedStyle($('stp')).visibility, 'visible');
+  assert(!E().bar.hidden && getComputedStyle(E().bar).display !== 'none', 'bar shown');
+});
+test('누르면 가장 안쪽 블록을 고른다: 굵은 글은 문단, SVG 도형·글자, 상자, 빈 곳은 슬라이드', () => {
+  tap($('bold')); eq(E().sel, $('para'));
+  tap($('rc')); eq(E().sel, $('rc'));
+  tap($('st')); eq(E().sel, $('st'));
+  tap($('card')); eq(E().sel, $('card'));
+  tap($('e1')); eq(E().sel, $('e1'));
+  tap($('ch'));
+  const crumbs = [...E().panel.querySelectorAll('.ch-ed-crumbs button')].map((b) => b.textContent);
+  eq(crumbs, ['슬라이드', '상자', '제목']);
+  E().panel.querySelectorAll('.ch-ed-crumbs button')[1].click();
+  eq(E().sel, $('card'));
+});
+test('Alt+누르기는 같은 자리에 겹친 것을 차례로 고르고, 판서용으로 꺼 둔 요소도 잡힌다', () => {
+  const r = $('ch').getBoundingClientRect();
+  const d = I().Stage.deck.getBoundingClientRect();
+  const s = d.width / 1280;
+  const at = [(r.left + 10 - d.left) / s, (r.top + r.height / 2 - d.top) / s];
+  const press = (alt) => { ptr('pointerdown', $('ch'), at[0], at[1], { altKey: alt }); ptr('pointerup', $('ch'), at[0], at[1]); };
+  press(false); eq(E().sel, $('ch'));
+  press(true); eq(E().sel, $('card'));
+  press(true); eq(E().sel, $('e1'));
+  press(true); eq(E().sel, $('ch'));
+  eq(getComputedStyle($('ttl')).pointerEvents, 'auto');
+});
+test('끌면 옮겨지고 원본에도 들어가며, 되돌리기로 돌아온다', () => {
+  drag($('para'), [300, 200], [350, 220]);
+  eq($('para').style.translate, '50px 20px');
+  eq(src('para').style.translate, '50px 20px');
+  key('z', { ctrlKey: true });
+  eq($('para').style.translate, '');
+  eq(src('para').hasAttribute('style'), false);
+  key('y', { ctrlKey: true });
+  eq(src('para').style.translate, '50px 20px');
+});
+test('SVG 안 도형은 viewBox 배율대로 옮긴다', () => {
+  drag($('rc'), [100, 300], [140, 300]);   // 화면 40px = viewBox 20
+  eq(src('rc').style.translate, '20px');
+});
+test('두 번 눌러 고친 글은 어절 감싸기·계산값 없이 원본에 들어가고, 화면 계산값은 그대로 산다', () => {
+  $('cp').dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+  eq($('cp').getAttribute('contenteditable'), 'true');
+  eq($('co').getAttribute('contenteditable'), 'false');
+  const w = [...$('cp').querySelectorAll('ch-w')].find((x) => x.textContent.includes('값은'));
+  w.firstChild.nodeValue = w.firstChild.nodeValue.replace('값은', '값이');
+  key('Escape');
+  assert(!$('cp').hasAttribute('contenteditable'), 'editing ended');
+  const m = src('cp').innerHTML;
+  assert(m.startsWith('값이 <output'), m);
+  assert(!/ch-w|⁠|contenteditable/.test(m), m);
+  assert(/<output id="co" data-expr="v \* 3" data-eid="\d+"><\/output>/.test(m), m);
+  eq($('co').textContent, '6');
+});
+test('SVG 글자와 단추처럼 글만 든 것은 오른쪽 글자 칸으로 고친다', () => {
+  tap($('st'));
+  eq(panel('text').value, '글자');
+  change(panel('text'), '바뀐 글자');
+  eq(src('st').textContent, '바뀐 글자');
+  eq($('st').textContent, '바뀐 글자');
+});
+test('글자 크기·색은 원본과 화면에 함께 들어간다(SVG 글자는 fill)', () => {
+  tap($('ch'));
+  change(panel('size'), '40');
+  eq(src('ch').style.fontSize, '40px');
+  eq(getComputedStyle($('ch')).fontSize, '40px');
+  tap($('st'));
+  change(panel('color'), '#00aa00');
+  eq(src('st').style.fill, 'rgb(0, 170, 0)');
+});
+test('지우기와 복제는 되돌릴 수 있고, 복제본은 새 번호에 id가 없다', () => {
+  tap($('cpara'));
+  key('Delete');
+  assert(!$('cpara') && !src('cpara'), 'removed');
+  key('z', { ctrlKey: true });
+  assert($('cpara') && src('cpara'), 'restored');
+  eq($('cpara').previousElementSibling, $('ch'));
+  tap($('ch'));
+  key('d', { ctrlKey: true });
+  const copy = $('ch').nextElementSibling;
+  assert(copy !== $('cpara') && !copy.id && copy.dataset.eid !== $('ch').dataset.eid, 'copy');
+  assert(I().Source.model().querySelector(`[data-eid="${copy.dataset.eid}"]`), 'copy in model');
+  eq(E().sel, copy);
+  key('z', { ctrlKey: true });
+  eq($('ch').nextElementSibling, $('cpara'));
+});
+test('HTML 직접 고치기로 무엇이든 고친다', () => {
+  tap($('para'));
+  const raw = panel('raw');
+  assert(!raw.value.includes('data-eid'), raw.value);
+  raw.value = '새 <i>문단</i>';
+  raw.nextElementSibling.click();
+  eq($('para').innerHTML.replace(/ data-eid="\d+"/g, ''), '새 <i>문단</i>');
+  assert(src('para').querySelector('i').dataset.eid, 'new child tagged');
+});
+test('편집 중에는 → 키가 장을 넘기지 않고 고른 것을 옮긴다. PageDown은 넘긴다', () => {
+  tap($('ttl'));
+  key('ArrowRight');
+  eq(I().Nav.state.slide, 0);
+  eq(src('ttl').style.translate, '1px');
+  key('PageDown');
+  eq(I().Nav.state.slide, 1);
+  eq(E().sel, null);
+  key('PageUp');
+});
+test('엔진이 안을 다시 짠 상자(퀴즈·정답)와 $가 든 글은 바로 고치지 않고 HTML 직접 고치기로 보낸다', () => {
+  ClassHTML.go(2);
+  for (const id of ['qz', 'ans', 'money']) {
+    $(id).dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+    assert(!$(id).hasAttribute('contenteditable'), `${id} not inline`);
+    assert(E().panel.querySelector('.ch-ed-raw').open, `${id} raw open`);
+    key('Escape');
+  }
+  eq(src('qz').querySelectorAll('.opt').length, 2);
+  eq(src('ans').innerHTML.replace(/ data-eid="\d+"/g, ''), '<p id="ansText">답은 바다다.</p>');
+  ClassHTML.go(0);
+});
+test('두 번 눌렀다가 고치지 않고 끝내면 원본에 쓰지 않는다', () => {
+  const n = E().undo.length;
+  $('ch').dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+  assert($('ch').getAttribute('contenteditable') === 'true', 'editing');
+  key('Escape');
+  eq(E().undo.length, n);
+});
+test('엔진이 화면용으로 복제한 요소(지도 테두리 등)에는 편집 번호가 없다', () => {
+  const ids = [...document.querySelectorAll('.ch-deck [data-eid]')].map((x) => x.dataset.eid);
+  eq(ids.length, new Set(ids).size);
+  assert(!document.querySelector('.ch-o[data-eid]'), 'map ring has no eid');
+});
+test('복제 → 부모 HTML 고치기 → 되돌리기 두 번이면 복제본이 남지 않는다', () => {
+  tap($('cpara'));
+  key('d', { ctrlKey: true });
+  tap($('card'));
+  const raw = panel('raw');
+  raw.value = raw.value + '<p>더함</p>';
+  raw.nextElementSibling.click();
+  key('z', { ctrlKey: true });
+  key('z', { ctrlKey: true });
+  eq($('card').querySelectorAll('p').length, 1);
+  eq(src('card').querySelectorAll('p').length, 1);
+});
+test('Ctrl+S는 오른쪽 창에서 치고 있던 글자 칸까지 넣어 저장한다', () => {
+  tap($('st'));
+  const f = panel('text');
+  f.focus();
+  eq(document.activeElement, f);
+  f.select();
+  document.execCommand('insertText', false, '저장 직전 글');   // 손으로 친 것처럼(값 대입은 change가 안 난다)
+  const a = HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click = () => {};
+  try { key('s', { ctrlKey: true }); } finally { HTMLAnchorElement.prototype.click = a; }
+  eq(src('st').textContent, '저장 직전 글');
+});
+test('저장 파일에는 고친 것만 있고 번호·실행 흔적은 없다', () => {
+  const html = I().PptFill.serialize(I().PptFill.buildDoc()).split('<pre id="results"')[0];
+  assert(html.includes('값이 <output') && html.includes('저장 직전 글'), 'edits saved');
+  assert(!/data-eid|<ch-w|ch-toolbar|ch-editing|contenteditable/.test(html), 'no runtime');
+});
+test('편집 끝내기로 수업 화면에 돌아오면 단계 글은 다시 숨는다', () => {
+  [...E().bar.querySelectorAll('button')].find((b) => b.textContent === '편집 끝내기').click();
+  assert(!document.documentElement.classList.contains('ch-editing'), 'class off');
+  document.documentElement.classList.add('ch-motion-off');   // 전환 효과 없이 바로 잰다
+  eq(getComputedStyle($('stp')).visibility, 'hidden');
+  document.documentElement.classList.remove('ch-motion-off');
+  assert(E().box.hidden, 'selection box hidden');
+});
+</script>
+</body>
+</html>

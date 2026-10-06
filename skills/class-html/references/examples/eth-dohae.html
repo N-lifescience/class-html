@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="ko" data-deck="example-ethics-dohae">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>예시: 윤리 만지는 도해</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<style>
+body[data-theme="ppt"] { --accent: #006DBB; --tab: #006DBB; --tab-ink: #FFFFFF; }
+body[data-theme="ppt"] {
+  --ms-reason: #006DBB; --ms-emo: #C8325F; --ms-yield: #2E7D32; --ms-bold: #D9480F;
+  --ms-ink: #3F3F3F; --ms-muted: #5F6B7A; --ms-soft: #F1F5F9; --ms-line: #D3DCE6;
+  --ms-good: #2E7D32; --ms-bad: #C62828;
+}
+.slide .ms-wrap, .slide .ms-wrap * { box-sizing: border-box; }
+
+/* 표지 */
+.ms-coverbox { height: 592px; display: flex; flex-direction: column; justify-content: center; }
+.ms-coverbox .ms-kicker { font-size: 30px; font-weight: 700; color: var(--accent); margin: 0 0 14px; }
+.ms-coverbox h1 { margin: 0; }
+.ms-coverbox .ms-sub { font-size: 40px; font-weight: 600; margin: 18px 0 0; }
+
+/* 활동 공통 */
+.ms-act { display: grid; grid-template-columns: 420px 1fr; gap: 28px; margin-top: 18px; }
+.ms-ctrl { display: flex; flex-direction: column; gap: 10px; }
+.ms-view { position: relative; }
+.ms-lab { font-size: 24px; font-weight: 600; margin: 4px 0 0; }
+.ms-lab b { color: var(--accent); }
+/* 눈금 글자는 손잡이(지름 38px)의 실제 자리에: --f는 0~1 */
+.ms-ticks { position: relative; height: 28px; font-size: 20px; color: var(--ms-muted); margin-top: -6px; }
+.ms-ticks span { position: absolute; top: 0; left: calc(19px + (100% - 38px) * var(--f)); transform: translateX(-50%); white-space: nowrap; }
+.ms-ticks span:first-child { left: 0; transform: none; }
+.ms-ticks span:last-child { left: auto; right: 0; transform: none; }
+.ms-note { font-size: 24px; line-height: 1.45; color: var(--ms-ink); margin: 0; }
+.ms-lead { margin: 14px 0 0; font-size: 26px; line-height: 1.4; }
+.ms-seg { display: flex; gap: 10px; }
+.ms-seg button { flex: 1; }
+section.slide button.ms-b {
+  width: auto; margin: 0; font: inherit; font-size: 24px; font-weight: 700; line-height: 1.25;
+  min-height: 60px; padding: 8px 12px; border: 3px solid var(--ms-line); border-radius: 14px;
+  background: #fff; color: var(--ms-ink); cursor: pointer;
+}
+section.slide button.ms-b small { display: block; font-size: 20px; font-weight: 500; }
+section.slide button.ms-b[aria-pressed="true"], section.slide button.ms-b[aria-pressed="true"] small { background: var(--accent); border-color: var(--accent); color: #fff; }
+section.slide input.ms-range { -webkit-appearance: none; appearance: none; width: 100%; height: 56px; background: transparent; margin: 0; cursor: pointer; }
+section.slide input.ms-range::-webkit-slider-runnable-track { height: 10px; border-radius: 5px; background: #D7DEE6; }
+section.slide input.ms-range::-webkit-slider-thumb { -webkit-appearance: none; width: 38px; height: 38px; margin-top: -14px; border-radius: 50%; background: var(--accent); border: 5px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,.4); }
+section.slide input.ms-range::-moz-range-track { height: 10px; border-radius: 5px; background: #D7DEE6; }
+section.slide input.ms-range::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); border: 5px solid #fff; }
+.ms-veil { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px;
+  background: #EEF2F6; border: 3px dashed #B6C3D0; border-radius: 18px; font-size: 28px; font-weight: 600; color: var(--ms-muted); line-height: 1.5; }
+.ms-veil[hidden] { display: none; }
+.ms-verdict { margin: 6px 0 0; font-size: 26px; font-weight: 700; text-align: center; line-height: 1.4; min-height: 40px; }
+.ms-take { margin-top: 16px; padding: 12px 22px; background: #FFF6DA; border-radius: 14px; font-size: 26px; line-height: 1.45; font-weight: 600; }
+.ms-calc { padding: 10px 16px; background: var(--ms-soft); border-radius: 14px; font-size: 22px; line-height: 1.5; } .ms-bubble, .ms-calc, .ms-take, .ms-veil, section.slide button.ms-b { color: var(--ms-ink); }
+.ms-veil { color: var(--ms-muted); }
+.c-reason { color: var(--ms-reason); } .c-emo { color: var(--ms-emo); }
+.c-yield { color: var(--ms-yield); } .c-bold { color: var(--ms-bold); }
+.ms-dot { display: inline-block; width: 20px; height: 20px; border-radius: 50%; vertical-align: -2px; margin-right: 6px; }
+
+/* ③ 공감 */
+.ms-dr-row { display: flex; gap: 18px; align-items: center; }
+.ms-bubble { position: relative; flex: 1; padding: 18px 22px; border: 3px solid var(--ms-ink); border-radius: 26px; background: #fff; font-size: 26px; line-height: 1.45; font-weight: 600; min-height: 130px; display: flex; align-items: center; }
+.ms-bubble::before { content: ""; position: absolute; left: -22px; top: 50%; margin-top: -12px; border: 12px solid transparent; border-right: 20px solid var(--ms-ink); border-left: 0; }
+.ms-gauge { position: relative; height: 34px; margin-top: 46px; border-radius: 17px; background: #E6EBF0; }
+.ms-gauge i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 17px; background: var(--ms-emo); transition: width .25s; }
+.ms-gauge em { position: absolute; left: 50%; top: -40px; bottom: -6px; border-left: 4px dashed var(--ms-ink); font-style: normal; font-size: 20px; font-weight: 700; padding-left: 8px; white-space: nowrap; }
+
+/* ⑤ 혈연 */
+.ms-bars { display: flex; flex-direction: column; gap: 18px; margin-top: 6px; }
+.ms-bar p { margin: 0 0 6px; font-size: 24px; font-weight: 600; }
+.ms-bar div { height: 44px; border-radius: 10px; background: #E6EBF0; position: relative; overflow: hidden; }
+.ms-bar i { position: absolute; left: 0; top: 0; bottom: 0; transition: width .25s; }
+.ms-eq { margin: 14px 0 0; font-size: 30px; font-weight: 800; text-align: center; }
+#scale .ms-ctrl, #village .ms-ctrl, #kin .ms-ctrl { gap: 4px; }
+#scale .ms-take, #village .ms-take, #kin .ms-take { margin-top: 6px; }
+</style>
+</head>
+<body data-theme="ppt">
+
+
+<section class="slide" id="cover" data-title="표지">
+  <div class="ms-coverbox">
+    <p class="ms-kicker">예시 · 생활과 윤리 · 도덕과학적 접근</p>
+    <h1>계산이 없는 교과의<br>만지는 도해 다섯</h1>
+    <p class="ms-sub">저울 · 시간 막대 · 게이지 · 마을 시뮬레이터 · 부등호</p>
+  </div>
+</section>
+
+<section class="slide" id="scale" data-title="활동 ① 이성과 정서의 저울">
+  <h2>이성과 정서, 무엇이 판단을 움직일까</h2>
+  <div class="ms-wrap" data-ai="트롤리 딜레마 상황과 이성·정서 저울 계산 모형">
+    <div class="ms-act">
+      <div class="ms-ctrl">
+        <div class="ms-seg" id="ds-case">
+          <button class="ms-b" data-v="switch" aria-pressed="false">스위치 당기기</button>
+          <button class="ms-b" data-v="push" aria-pressed="false">사람 밀기</button>
+        </div>
+        <p class="ms-note" id="ds-desc">먼저 상황을 고른다.</p>
+        <p class="ms-lab">선로 위 사람 <b id="ds-n-out">5</b>명</p>
+        <input class="ms-range" type="range" autocomplete="off" id="ds-n" min="2" max="10" value="5" aria-label="선로 위 사람 수">
+        <p class="ms-lab">정서 반응 세기 <b id="ds-e-out">보통</b></p>
+        <input class="ms-range" type="range" autocomplete="off" id="ds-e" min="0" max="20" value="10" aria-label="정서 반응 세기">
+        <div class="ms-ticks"><span>약함 · 사이코패스 뇌</span><span>강함 · 엠패스 뇌</span></div>
+      </div>
+      <div class="ms-view">
+        <svg width="660" height="345" viewBox="0 0 660 345" aria-label="이성과 정서의 무게를 비교하는 저울">
+          <path d="M330 80 L330 320" stroke="#9AA6B2" stroke-width="10" stroke-linecap="round"/>
+          <rect x="260" y="318" width="140" height="16" rx="8" fill="#9AA6B2"/>
+          <line id="ds-beam" x1="100" y1="80" x2="560" y2="80" stroke="#3F3F3F" stroke-width="12" stroke-linecap="round"/>
+          <circle cx="330" cy="80" r="14" fill="#3F3F3F"/>
+          <g id="ds-L" transform="translate(100 80)">
+            <path d="M0 0 L-80 90 M0 0 L80 90" stroke="#3F3F3F" stroke-width="3" fill="none"/>
+            <rect id="ds-Lw" x="-50" y="60" width="100" height="30" rx="6" fill="#006DBB"/>
+            <path d="M-95 90 Q0 140 95 90 Z" fill="#CFE3F3" stroke="#006DBB" stroke-width="4"/>
+            <text id="ds-Lt" x="0" y="160" text-anchor="middle" font-size="28" font-weight="800" fill="#006DBB">이성</text>
+            <text x="0" y="188" text-anchor="middle" font-size="20" fill="#3F3F3F">더 살리는 사람 수</text>
+          </g>
+          <g id="ds-R" transform="translate(560 80)">
+            <path d="M0 0 L-80 90 M0 0 L80 90" stroke="#3F3F3F" stroke-width="3" fill="none"/>
+            <rect id="ds-Rw" x="-50" y="60" width="100" height="30" rx="6" fill="#C8325F"/>
+            <path d="M-95 90 Q0 140 95 90 Z" fill="#F7D5DF" stroke="#C8325F" stroke-width="4"/>
+            <text id="ds-Rt" x="0" y="160" text-anchor="middle" font-size="28" font-weight="800" fill="#C8325F">정서</text>
+            <text x="0" y="188" text-anchor="middle" font-size="20" fill="#3F3F3F">직접 해치는 거부감</text>
+          </g>
+        </svg>
+        <p class="ms-verdict" id="ds-verdict"></p>
+        <div class="ms-veil" id="ds-veil"><span>왼쪽에서 상황을 고르면<br>저울이 움직인다</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="ms-take step">같은 ‘여럿 대 한 명’인데 판단이 갈린다. 정서도 판단에 끼어든다.</p>
+</section>
+
+<section class="slide" id="libet" data-title="활동 ② 결심과 뇌, 무엇이 먼저일까">
+  <h2>결심이 먼저일까, 뇌가 먼저일까</h2>
+  <div class="ms-wrap" data-ai="리벳 실험(준비 전위) 시간 막대">
+    <div class="ms-act">
+      <div class="ms-ctrl">
+        <p class="ms-note">마음이 내킬 때 손가락을 움직인다.<br>그동안 뇌의 신호와<br>‘움직이자’고 느낀 순간을 잰다.</p>
+        <p class="ms-lab">시각 <b id="lb-t-out">시작</b></p>
+        <input class="ms-range" type="range" autocomplete="off" id="lb-t" min="0" max="21" value="0" aria-label="시각">
+        <div class="ms-ticks"><span>시작</span><span style="--f: 0.5238">−500ms</span><span>0ms</span></div>
+        <div class="ms-calc" id="lb-calc"></div>
+      </div>
+      <div class="ms-view">
+        <svg id="lb-svg" width="660" height="330" viewBox="0 0 660 330" aria-label="손가락을 움직이기 전 뇌의 준비 신호 그래프"></svg>
+        <p class="ms-verdict" id="lb-out"></p>
+        <div class="ms-veil" id="lb-veil"><span>시각 막대를 밀면<br>뇌의 신호가 그려진다</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="ms-take step" data-ai="토론 질문">결심을 느끼기 전에 뇌가 먼저 움직였다. 그렇다면 자유 의지는 있을까?</p>
+</section>
+
+<section class="slide" id="drug" data-title="활동 ③ 약으로 켠 공감">
+  <h2>약으로 공감을 켤 수 있을까</h2>
+  <div class="ms-wrap" data-ai="공감 영역 활성도와 약물 투여 사고실험 모형">
+    <div class="ms-act">
+      <div class="ms-ctrl">
+        <p class="ms-note">친구가 말한다.<br><b>“어제 키우던 강아지가 떠났어.”</b></p>
+        <div class="ms-seg" id="dr-brain">
+          <button class="ms-b" data-v="empath" aria-pressed="false">엠패스 뇌</button>
+          <button class="ms-b" data-v="psycho" aria-pressed="false">사이코패스 뇌</button>
+        </div>
+        <p class="ms-lab">약물 투여량 <b id="dr-dose-out">0</b></p>
+        <input class="ms-range" type="range" autocomplete="off" id="dr-dose" min="0" max="4" value="0" aria-label="약물 투여량">
+        <div class="ms-ticks"><span>0</span><span style="--f: 0.25">1</span><span style="--f: 0.5">2</span><span style="--f: 0.75">3</span><span>4</span></div>
+        <div class="ms-calc">활성도 = 타고난 값 + 투여량 × 16</div>
+      </div>
+      <div class="ms-view">
+        <div class="ms-dr-row">
+          <svg width="290" height="210" viewBox="0 0 290 210" aria-label="공감 영역이 빛나는 뇌">
+            <defs><filter id="dr-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter></defs>
+            <path d="M40 120 C20 70 70 22 130 34 C170 6 240 22 252 70 C284 90 276 150 236 160 C220 192 160 196 140 180 C100 194 50 174 40 120 Z" fill="#F4E4E0" stroke="#7A5C58" stroke-width="5"/>
+            <path d="M90 60 C110 80 100 100 120 110 M170 40 C160 70 190 80 180 110 M220 80 C200 100 230 120 210 140 M80 140 C110 130 120 160 150 150" stroke="#B89A95" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <ellipse id="dr-glow" cx="150" cy="118" rx="70" ry="48" fill="#FF3D7F" opacity="0" filter="url(#dr-blur)"/>
+            <ellipse id="dr-core" cx="150" cy="118" rx="38" ry="26" fill="#C8325F" opacity=".2"/>
+            <text x="150" y="126" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" stroke="#7A1F3D" stroke-width="4" paint-order="stroke">공감</text>
+          </svg>
+          <div class="ms-bubble" id="dr-say"></div>
+        </div>
+        <div class="ms-gauge"><i id="dr-bar" style="width:0"></i><em>공감 반응선 50</em></div>
+        <p class="ms-verdict" id="dr-out"></p>
+        <div class="ms-veil" id="dr-veil"><span>왼쪽에서 뇌를 고르면<br>공감 영역이 켜진다</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="ms-take step" data-ai="토론 질문">약으로 켠 공감도 그 사람의 도덕성이라 할 수 있을까?</p>
+</section>
+
+<section class="slide" id="village" data-title="활동 ④ 조상 마을 시뮬레이터">
+  <h2>조상 마을: 어떤 성향이 살아남을까</h2>
+  <div class="ms-wrap" data-ai="양보·나섬 성향의 세대별 비율을 계산하는 진화 모형">
+    <div class="ms-act" style="grid-template-columns:400px 1fr">
+      <div class="ms-ctrl">
+        <p class="ms-note" style="font-size:22px"><span class="ms-dot" style="background:var(--ms-yield)"></span>양보하는 성향 <b>10명</b><br><span class="ms-dot" style="background:var(--ms-bold)"></span>나서는 성향 <b>90명</b>으로 시작</p>
+        <p class="ms-lab">나섰다가 해코지당할 확률 <b id="vg-p-out">0%</b></p>
+        <input class="ms-range" type="range" autocomplete="off" id="vg-p" min="0" max="80" step="5" value="0" aria-label="해코지당할 확률">
+        <p class="ms-lab">세대 <b id="vg-g-out">시작</b></p>
+        <input class="ms-range" type="range" autocomplete="off" id="vg-g" min="0" max="20" value="0" aria-label="세대">
+        <div class="ms-ticks"><span>시작</span><span style="--f: 0.5">10</span><span>20세대</span></div>
+        <div class="ms-calc">한 사람이 남기는 자손<br><b class="c-yield">양보</b> 1명 · <b class="c-bold">나섬</b> <span id="vg-w"></span>명</div>
+      </div>
+      <div class="ms-view">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <svg id="vg-dots" width="300" height="300" viewBox="0 0 300 300" aria-label="마을 사람 100명의 성향"></svg>
+          <svg id="vg-chart" width="380" height="300" viewBox="0 0 380 300" aria-label="세대별 성향 수 그래프"></svg>
+        </div>
+        <p class="ms-verdict" id="vg-out"></p>
+        <div class="ms-veil" id="vg-veil"><span>세대 막대를 밀면<br>마을이 한 세대씩 바뀐다</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="ms-take step">해코지가 잦은 곳에서는 ‘참고 양보하는’ 성향이 살아남아 퍼진다.</p>
+</section>
+
+<section class="slide" id="kin" data-title="활동 ⑤ 이타적 유전자의 계산">
+  <h2>목숨을 거는 이타심, 유전자는 남는 장사일까</h2>
+  <div class="ms-wrap" data-ai="혈연 선택(해밀턴 규칙) 계산 모형과 물에 빠진 사람 상황">
+    <p class="ms-lead">물에 빠진 사람을 구하러 뛰어들면 나도 목숨을 잃을 수 있다.</p>
+    <div class="ms-act">
+      <div class="ms-ctrl">
+        <p class="ms-lab">구할 사람과 나의 같은 유전자 비율</p>
+        <div class="ms-seg" id="kn-rel">
+          <button class="ms-b" data-v="0.5" aria-pressed="false">형제<small>1/2</small></button>
+          <button class="ms-b" data-v="0.125" aria-pressed="false">사촌<small>1/8</small></button>
+          <button class="ms-b" data-v="0" aria-pressed="false">남<small>0</small></button>
+        </div>
+        <p class="ms-lab">구할 수 있는 사람 <b id="kn-n-out">1</b>명</p>
+        <input class="ms-range" type="range" autocomplete="off" id="kn-n" min="1" max="8" value="1" aria-label="구할 수 있는 사람 수">
+        <p class="ms-lab">내가 목숨을 잃을 위험 <b id="kn-c-out">10%</b></p>
+        <input class="ms-range" type="range" autocomplete="off" id="kn-c" min="10" max="100" step="10" value="10" aria-label="목숨을 잃을 위험">
+      </div>
+      <div class="ms-view">
+        <div class="ms-bars">
+          <div class="ms-bar"><p class="c-yield">살아남는 ‘같은 유전자’ 몫 <span id="kn-g-t"></span></p><div><i id="kn-g" style="background:var(--ms-yield);width:0"></i></div></div>
+          <div class="ms-bar"><p class="c-emo">잃을 수 있는 내 유전자 몫 <span id="kn-l-t"></span></p><div><i id="kn-l" style="background:var(--ms-emo);width:0"></i></div></div>
+        </div>
+        <p class="ms-eq" id="kn-eq"></p>
+        <p class="ms-verdict" id="kn-out"></p>
+        <div class="ms-veil" id="kn-veil"><span>누구를 구할지 고르면<br>유전자의 득실이 계산된다</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="ms-take step" data-ai="홀데인 일화">“형제 둘이나 사촌 여덟을 위해서라면 목숨을 걸겠다.” — 홀데인 · 1/2×2 = 1/8×8 = 1</p>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 슬라이더는 손을 떼면 초점을 풀어 → 키·리모컨이 다시 장을 넘기게 한다
+  document.querySelectorAll('section.slide input[type=range]').forEach((r) => r.addEventListener('change', () => r.blur()));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const num = v => String(+v.toFixed(3));
+
+  function seg(root, onPick) {
+    const bs = $$('button', root);
+    bs.forEach(b => b.addEventListener('click', () => {
+      bs.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      onPick(b.dataset.v);
+    }));
+  }
+
+  /* ① 이성과 정서의 저울: 이성 = 더 살리는 사람 수, 정서 = 직접 해치는 정도 × 정서 세기 */
+  const ds = { kase: null };
+  const HARM = { switch: 1.5, push: 6 };
+  const DESC = {
+    switch: n => `전차가 선로 위 ${n}명에게 달려온다.<br>스위치를 당기면 옆 선로로 꺾여<br>그곳의 1명이 죽는다.`,
+    push: n => `전차가 선로 위 ${n}명에게 달려온다.<br>육교 위의 한 사람을 밀어 떨어뜨리면<br>전차가 멈춘다.`
+  };
+  function drawScale() {
+    const n = +$('#ds-n').value, e = $('#ds-e').value / 10;
+    $('#ds-n-out').textContent = n;
+    $('#ds-e-out').textContent = (e < 0.5 ? '약함 ' : e > 1.4 ? '강함 ' : '보통 ') + e.toFixed(1) + '배';
+    if (!ds.kase) return;
+    $('#ds-veil').hidden = true;
+    $('#ds-desc').innerHTML = DESC[ds.kase](n);
+    const R = n - 1, E = HARM[ds.kase] * e, diff = R - E;
+    const deg = -clamp(diff * 4, -16, 16), rad = deg * Math.PI / 180;
+    $('#ds-beam').setAttribute('transform', `rotate(${deg} 330 80)`);
+    const end = s => [330 + s * 230 * Math.cos(rad), 80 + s * 230 * Math.sin(rad)];
+    const [lx, ly] = end(-1), [rx, ry] = end(1);
+    $('#ds-L').setAttribute('transform', `translate(${lx} ${ly})`);
+    $('#ds-R').setAttribute('transform', `translate(${rx} ${ry})`);
+    const block = (id, v) => { const h = 8 + v * 6; const r = $(id); r.setAttribute('y', 90 - h); r.setAttribute('height', h); };
+    block('#ds-Lw', R); block('#ds-Rw', E);
+    $('#ds-Lt').textContent = '이성 ' + num(R);
+    $('#ds-Rt').textContent = '정서 ' + num(E);
+    const act = ds.kase === 'switch' ? '스위치를 당긴다' : '사람을 민다';
+    const not = ds.kase === 'switch' ? '당기지 않는다' : '밀지 않는다';
+    const v = $('#ds-verdict');
+    if (diff > 0.25) v.innerHTML = `판단: <span class="c-reason">${act}</span> — ${R}명을 더 살린다는 계산이 이긴다`;
+    else if (diff < -0.25) v.innerHTML = `판단: <span class="c-emo">${not}</span> — 직접 해치는 거부감이 이긴다`;
+    else v.innerHTML = '판단: 망설인다 — 두 힘이 팽팽하다';
+  }
+  seg($('#ds-case'), v => { ds.kase = v; drawScale(); });
+  ['#ds-n', '#ds-e'].forEach(s => $(s).addEventListener('input', drawScale));
+
+  /* ② 결심과 뇌: 리벳 실험의 평균값(준비 신호 −550ms, 결심 자각 −200ms) */
+  const RP = -550, W = -200;
+  const LX = t => 70 + (t + 1000) * 0.56, LY = v => 290 - v * 2.2;
+  const rp = t => t < RP ? 0 : Math.pow((t - RP) / -RP, 2) * 100;
+  function drawLibet() {
+    const k = +$('#lb-t').value, t = -1000 + (k - 1) * 50;
+    const ms = v => (v < 0 ? '−' + -v : v) + 'ms';
+    $('#lb-t-out').textContent = k === 0 ? '시작' : ms(t);
+    $('#lb-veil').hidden = k > 0;
+    const passRP = k > 0 && t >= RP, passW = k > 0 && t >= W;
+    $('#lb-calc').innerHTML =
+      `뇌의 준비 신호 시작 <b class="c-reason">${passRP ? ms(RP) : '?'}</b><br>` +
+      `‘움직이자’ 결심을 느낌 <b class="c-emo">${passW ? ms(W) : '?'}</b><br>` +
+      (passW ? `→ 뇌가 <b>${W - RP}ms</b> 먼저` : '→ 어느 쪽이 먼저일까');
+    if (k === 0) return;
+    let pts = [];
+    for (let s = -1000; s <= t; s += 10) pts.push(`${LX(s).toFixed(1)},${LY(rp(s)).toFixed(1)}`);
+    const mark = (x, c, label, y, anchor, top = y + 8) =>
+      `<line x1="${x}" y1="${top}" x2="${x}" y2="290" stroke="${c}" stroke-width="3" stroke-dasharray="7 6"/>` +
+      `<text x="${anchor === 'end' ? x - 6 : x + 6}" y="${y}" text-anchor="${anchor}" font-size="20" font-weight="700" fill="${c}">${label}</text>`;
+    $('#lb-svg').innerHTML =
+      `<line x1="70" y1="290" x2="640" y2="290" stroke="#3F3F3F" stroke-width="2"/>` +
+      `<line x1="70" y1="40" x2="70" y2="290" stroke="#3F3F3F" stroke-width="2"/>` +
+      `<text x="78" y="30" font-size="20" fill="#5F6B7A">뇌의 준비 신호</text>` +
+      `<text x="${LX(-1000)}" y="318" text-anchor="middle" font-size="20" fill="#5F6B7A">−1000</text>` +
+      `<text x="${LX(-500)}" y="318" text-anchor="middle" font-size="20" fill="#5F6B7A">−500</text>` +
+      `<text x="${LX(0) - 4}" y="318" text-anchor="end" font-size="20" fill="#5F6B7A">0ms</text>` +
+      (passRP ? mark(LX(RP), '#006DBB', '준비 신호 시작', 70, 'end') : '') +
+      (passW ? mark(LX(W), '#C8325F', '결심을 느낌', 110, 'end') : '') +
+      (t >= 0 ? mark(LX(0), '#3F3F3F', '움직임', 268, 'end', 40) : '') +
+      `<polyline points="${pts.join(' ')}" fill="none" stroke="#006DBB" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>` +
+      `<circle cx="${LX(t)}" cy="${LY(rp(t))}" r="9" fill="#006DBB"/>`;
+    $('#lb-out').innerHTML = t < RP ? '아직 뇌도, 마음도 조용하다'
+      : t < W ? '<span class="c-reason">뇌는 벌써 준비를 시작했다.</span> 결심은 아직이다'
+      : t < 0 ? `<span class="c-emo">이제야 결심을 느낀다.</span> 뇌보다 ${W - RP}ms 늦다`
+      : '손가락이 움직인다';
+  }
+  $('#lb-t').addEventListener('input', drawLibet);
+
+  /* ③ 약으로 켠 공감: 활성도 = 타고난 값 + 투여량 × 16 */
+  const dr = { brain: null };
+  const BASE = { empath: 80, psycho: 20 };
+  function drawDrug() {
+    const d = +$('#dr-dose').value;
+    $('#dr-dose-out').textContent = d === 0 ? '0 (투여 안 함)' : d;
+    if (!dr.brain) return;
+    $('#dr-veil').hidden = true;
+    const base = BASE[dr.brain], act = Math.min(100, base + d * 16);
+    $('#dr-glow').setAttribute('opacity', (act / 100).toFixed(2));
+    $('#dr-core').setAttribute('opacity', (0.2 + act / 125).toFixed(2));
+    $('#dr-bar').style.width = act + '%';
+    const on = act >= 50;
+    $('#dr-say').innerHTML = on
+      ? '“와, 그 얘기<br>정말 안타까워…<br>너의 감정이 느껴져.”'
+      : '“응, 그래?<br>(그런데 난 왜<br>아무렇지 않지?)”';
+    $('#dr-out').innerHTML = `활성도 ${base} + ${d} × 16 = <span class="${on ? 'c-emo' : ''}">${act}</span>` +
+      (on ? ' → 반응선을 넘었다' : ' → 반응선에 못 미친다');
+  }
+  seg($('#dr-brain'), v => { dr.brain = v; drawDrug(); });
+  $('#dr-dose').addEventListener('input', drawDrug);
+
+  /* ④ 조상 마을: 양보 비율 x' = x / (x + (1 − x)·w), w = 1.5 × (1 − 해코지 확률) */
+  const X0 = 0.1, GMAX = 20;
+  const order = (() => { // 고정된 순서로 섞어 마을처럼 보이게
+    const a = [...Array(100).keys()]; let s = 7;
+    for (let i = 99; i > 0; i--) { s = (s * 9301 + 49297) % 233280; const j = Math.floor(s / 233280 * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  })();
+  const dotsSvg = $('#vg-dots');
+  dotsSvg.innerHTML = order.map((_, i) => `<circle cx="${15 + (i % 10) * 30}" cy="${15 + Math.floor(i / 10) * 30}" r="12"/>`).join('');
+  const dots = $$('circle', dotsSvg);
+  function series(p) {
+    const w = 1.5 * (1 - p), a = [X0];
+    for (let g = 1; g <= GMAX; g++) { const x = a[g - 1]; a.push(x / (x + (1 - x) * w)); }
+    return a;
+  }
+  const CX = g => 56 + g * 15.5, CY = k => 250 - k * 2.3;
+  function drawVillage() {
+    const p = $('#vg-p').value / 100, g = +$('#vg-g').value;
+    const w = 1.5 * (1 - p);
+    $('#vg-p-out').textContent = Math.round(p * 100) + '%';
+    $('#vg-g-out').textContent = g === 0 ? '시작' : g + '세대';
+    $('#vg-w').textContent = `(1 − ${p.toFixed(2)}) × 1.5 = ${num(w)}`;
+    $('#vg-veil').hidden = g > 0;
+    const s = series(p), k = Math.round(s[g] * 100);
+    dots.forEach((c, i) => c.setAttribute('fill', order[i] < k ? '#2E7D32' : '#D9480F'));
+    const line = f => s.slice(0, g + 1).map((x, i) => `${CX(i)},${CY(f(x))}`).join(' ');
+    $('#vg-chart').innerHTML =
+      `<line x1="56" y1="20" x2="56" y2="250" stroke="#3F3F3F" stroke-width="2"/>` +
+      `<line x1="56" y1="250" x2="366" y2="250" stroke="#3F3F3F" stroke-width="2"/>` +
+      `<line x1="56" y1="${CY(50)}" x2="366" y2="${CY(50)}" stroke="#D3DCE6" stroke-width="2" stroke-dasharray="6 6"/>` +
+      [100, 50, 0].map(v => `<text x="46" y="${CY(v) + 8}" text-anchor="end" font-size="20" fill="#5F6B7A">${v}</text>`).join('') +
+      [[0, '0'], [10, '10'], [20, '20세대']].map(([x, l]) => `<text x="${CX(x)}" y="280" text-anchor="${x === 20 ? 'end' : 'middle'}" font-size="20" fill="#5F6B7A">${l}</text>`).join('') +
+      `<polyline points="${line(x => 100 - x * 100)}" fill="none" stroke="#D9480F" stroke-width="5" stroke-linejoin="round"/>` +
+      `<polyline points="${line(x => x * 100)}" fill="none" stroke="#2E7D32" stroke-width="5" stroke-linejoin="round"/>` +
+      `<circle cx="${CX(g)}" cy="${CY(k)}" r="8" fill="#2E7D32"/>` +
+      `<circle cx="${CX(g)}" cy="${CY(100 - k)}" r="8" fill="#D9480F"/>`;
+    const trend = w < 1 ? '<span class="c-yield">양보하는 성향이 늘어난다</span>' : '<span class="c-bold">나서는 성향이 늘어난다</span>';
+    $('#vg-out').innerHTML = `${g}세대: 양보 <span class="c-yield">${k}</span>명 · 나섬 <span class="c-bold">${100 - k}</span>명<br>${trend}`;
+  }
+  ['#vg-p', '#vg-g'].forEach(s => $(s).addEventListener('input', drawVillage));
+
+  /* ⑤ 이타적 유전자의 계산: 같은 유전자 비율 × 구한 사람 수 vs 내 위험 */
+  const kn = { r: null };
+  const FRAC = { '0.5': '1/2', '0.125': '1/8', '0': '0' };
+  function drawKin() {
+    const n = +$('#kn-n').value, c = $('#kn-c').value / 100;
+    $('#kn-n-out').textContent = n;
+    $('#kn-c-out').textContent = Math.round(c * 100) + '%';
+    if (kn.r === null) return;
+    $('#kn-veil').hidden = true;
+    const r = +kn.r, gain = r * n, loss = c, PX = 100 / 4; // 막대 끝 = 4
+    $('#kn-g').style.width = Math.min(100, gain * PX) + '%';
+    $('#kn-l').style.width = Math.min(100, loss * PX) + '%';
+    $('#kn-g-t').textContent = `${FRAC[kn.r]} × ${n}명 = ${num(gain)}`;
+    $('#kn-l-t').textContent = `1 × ${Math.round(c * 100)}% = ${num(loss)}`;
+    const sign = Math.abs(gain - loss) < 1e-9 ? '=' : gain > loss ? '>' : '<';
+    $('#kn-eq').textContent = `얻는 몫 ${num(gain)}  ${sign}  잃는 몫 ${num(loss)}`;
+    $('#kn-out').innerHTML = sign === '>' ? '<span class="c-yield">뛰어들게 하는 유전자가 퍼진다</span>'
+      : sign === '=' ? '본전이다 — 늘지도 줄지도 않는다'
+      : '<span class="c-emo">뛰어들게 하는 유전자는 줄어든다</span>';
+  }
+  seg($('#kn-rel'), v => { kn.r = v; drawKin(); });
+  ['#kn-n', '#kn-c'].forEach(s => $(s).addEventListener('input', drawKin));
+
+});
+</script>
+</body>
+</html>

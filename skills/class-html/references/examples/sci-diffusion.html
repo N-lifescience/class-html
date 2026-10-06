@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="ko" data-deck="sci-1-particle-diffusion">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>냄새는 어떻게 퍼질까? 확산과 입자의 운동</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<style>
+/* theme.json의 css 줄 */
+body[data-theme="ppt"] { --accent: #0F766E; --tab: #0F766E; --tab-ink: #FFFFFF; --flag: #B3261E; }
+body[data-theme="ppt"] {
+  --teal: #0F766E; --teal-soft: #CCEAE6; --yellow: #FBBF24; --red: #B3261E; --gray: #6B7078; --ink: #222222;
+  --ink-dot: #E0464E; --water-dot: #9DC8F5; --odor: #A64DC0;
+}
+
+/* ── 원본 PPT의 얼굴: 전폭 청록 머리 띠 + 오른쪽 노란 배지 ── */
+body[data-theme="ppt"] section.slide {
+  background:
+    linear-gradient(rgba(0,0,0,.20), rgba(0,0,0,0)) 0 100px / 100% 7px no-repeat,
+    linear-gradient(#0F766E, #0F766E) 0 0 / 100% 100px no-repeat,
+    #FFFFFF;
+  color: var(--ink);
+}
+body[data-theme="ppt"] section.slide[data-sec]::before {
+  left: auto; right: 42px; top: 26px; height: 50px; line-height: 50px; min-width: 182px;
+  padding: 0 28px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+  border-radius: 9px; background: var(--yellow); color: var(--ink); font-size: 26px;
+  box-shadow: 0 3px 4px rgba(0,0,0,.25);
+}
+body[data-theme="ppt"] section.slide > h2:first-child {
+  position: absolute; top: 0; left: 60px; right: 260px; height: 100px; margin: 0; padding: 0;
+  display: flex; align-items: center; color: #FFFFFF; font-size: 42px; border: 0; background: none; width: auto;
+}
+.key { color: var(--teal); font-weight: 800; }
+.warn { color: var(--red); }
+.aside { color: var(--gray); font-size: 24px; }
+
+/* 표지: 청록 바탕, 왼쪽 노란 세로 막대 */
+body[data-theme="ppt"] section.slide#cover { background: var(--teal); }
+body[data-theme="ppt"] section.slide#cover::before { display: none; }
+.cv { margin-top: 70px; padding: 6px 0 10px 44px; border-left: 16px solid var(--yellow); color: #FFFFFF; }
+.cv p { margin: 0; color: #FFFFFF; }
+.cv .cv-k { font-size: 30px; }
+.cv h1 { margin: 26px 0 28px; font-size: 68px; line-height: 1.2; color: #FFFFFF; }
+.cv .cv-s { font-size: 38px; }
+
+/* 학습 목표 */
+.goals { margin: 40px 0 0; padding: 0; list-style: none; counter-reset: g; }
+.goals li { counter-increment: g; position: relative; padding: 0 0 0 58px; margin: 0 0 30px; font-size: 32px; line-height: 1.45; }
+.goals li::before { content: counter(g); position: absolute; left: 0; top: 2px; width: 42px; height: 42px; border-radius: 8px; background: var(--teal); color: #fff; font-weight: 800; font-size: 26px; text-align: center; line-height: 42px; }
+
+/* 생각 열기 */
+.two { display: grid; grid-template-columns: 1fr 500px; gap: 40px; align-items: start; margin-top: 20px; }
+.two p { font-size: 30px; line-height: 1.5; margin: 0 0 22px; }
+.two .ask { color: var(--teal); font-weight: 800; }
+.fig-plain { margin: 0; }
+.fig-plain img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.fig-plain figcaption { font-size: 20px; color: var(--gray); margin-top: 8px; }
+
+/* 확산이란 */
+.def { margin-top: 14px; padding: 20px 28px; border-left: 10px solid var(--teal); background: #EEF7F6; border-radius: 0 14px 14px 0; font-size: 32px; line-height: 1.45; font-weight: 700; }
+.def b { color: var(--teal); }
+.why { margin: 22px 0 0; font-size: 30px; line-height: 1.45; }
+.egs-h { margin: 26px 0 10px; font-size: 26px; font-weight: 700; color: var(--gray); }
+.egs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 0; padding: 0; list-style: none; }
+.egs li { border: 3px solid var(--teal-soft); border-radius: 14px; padding: 16px 20px; font-size: 26px; line-height: 1.4; }
+.egs li b { display: block; color: var(--teal); font-size: 24px; margin-bottom: 4px; }
+
+/* 실험 */
+.exp { display: grid; grid-template-columns: 1fr 400px; gap: 36px; align-items: start; margin-top: 14px; }
+.exp .need { margin: 0 0 10px; font-size: 24px; line-height: 1.4; color: var(--gray); }
+.exp ol { margin: 0; padding: 0; list-style: none; counter-reset: e; }
+.exp ol li { counter-increment: e; position: relative; padding-left: 40px; font-size: 27px; line-height: 1.4; margin: 0 0 8px; }
+.exp ol li::before { content: counter(e) "."; position: absolute; left: 0; font-weight: 700; }
+.exp .warn { margin: 10px 0 0; font-size: 26px; }
+.tip { margin-top: 18px; padding: 12px 20px; background: #FFF6DA; border-radius: 12px; font-size: 25px; line-height: 1.4; }
+
+/* 실험 결과 */
+.res table.compare { margin-top: 30px; font-size: 30px; --table-head: #CCEAE6; --table-side: #CCEAE6; }
+.res table.compare td { text-align: center; }
+.res .concl { margin: 34px 0 6px; font-size: 34px; font-weight: 800; line-height: 1.4; }
+
+/* ── 도해 공통 ── */
+.dx { display: grid; grid-template-columns: 350px 1fr; gap: 30px; margin-top: 0; }
+.dx-view > svg { display: block; }
+.dx-ctrl { display: flex; flex-direction: column; gap: 8px; }
+.dx-view { position: relative; }
+.dx-lab { margin: 0; font-size: 26px; font-weight: 700; }
+.dx-lab b { color: var(--teal); }
+.dx-ticks { position: relative; height: 28px; margin-top: -6px; font-size: 20px; color: var(--gray); }
+.dx-ticks span { position: absolute; top: 0; left: calc(22px + (100% - 44px) * var(--f)); transform: translateX(-50%); white-space: nowrap; }
+.dx-ticks span:first-child { transform: none; left: 0; }
+.dx-ticks span:last-child { transform: none; left: auto; right: 0; }
+section.slide input.dx-range { -webkit-appearance: none; appearance: none; width: 100%; height: 56px; margin: 0; background: transparent; cursor: pointer; }
+section.slide input.dx-range::-webkit-slider-runnable-track { height: 12px; border-radius: 6px; background: #D7DEE6; }
+section.slide input.dx-range::-webkit-slider-thumb { -webkit-appearance: none; width: 44px; height: 44px; margin-top: -16px; border-radius: 50%; background: var(--teal); border: 5px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,.45); }
+section.slide input.dx-range::-moz-range-track { height: 12px; border-radius: 6px; background: #D7DEE6; }
+section.slide input.dx-range::-moz-range-thumb { width: 34px; height: 34px; border-radius: 50%; background: var(--teal); border: 5px solid #fff; }
+.dx-veil { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px;
+  background: #EEF2F5; border: 3px dashed #B8C4CE; border-radius: 18px; color: #5C6B78; font-size: 28px; font-weight: 600; line-height: 1.5; }
+.dx-veil[hidden] { display: none; }
+.dx-out { margin: 8px 0 0; min-height: 40px; font-size: 26px; font-weight: 700; line-height: 1.4; }
+.dx-box { padding: 12px 16px; border-radius: 14px; background: #F1F5F4; font-size: 22px; line-height: 1.45; color: var(--ink); }
+.dx-box b { font-size: 26px; }
+.dx-model { font-size: 20px; color: var(--gray); font-weight: 500; }
+.dx-take { margin-top: 10px; padding: 10px 20px; background: #FFF6DA; border-radius: 14px; font-size: 26px; line-height: 1.4; font-weight: 700; }
+.dx-legend { display: flex; flex-direction: column; gap: 4px; font-size: 21px; line-height: 1.35; }
+.dot { display: inline-block; width: 20px; height: 20px; border-radius: 50%; vertical-align: -3px; margin-right: 8px; }
+
+/* A 잉크 입자 상자 */
+.ink-n { font-size: 46px; font-weight: 800; color: var(--ink-dot); line-height: 1.1; }
+.ink-n small { font-size: 26px; color: var(--ink); font-weight: 700; }
+.ink-bar { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-top: 8px; }
+.ink-bar i { height: 22px; border-radius: 4px; background: #E3E8EC; }
+.ink-bar i.on { background: var(--ink-dot); }
+
+/* B 온도 */
+.chain { display: flex; flex-direction: column; align-items: stretch; gap: 0; margin-top: 6px; }
+.chain > div { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 8px 14px; border: 3px solid var(--teal-soft); border-radius: 14px; font-size: 22px; line-height: 1.35; }
+.chain > div b { font-size: 28px; color: var(--teal); white-space: nowrap; }
+.chain > span { align-self: center; font-size: 24px; line-height: 26px; color: var(--teal); font-weight: 800; }
+.tp-row { display: flex; gap: 18px; align-items: flex-start; }
+.tp-note { margin: 4px 0 0; font-size: 20px; color: var(--gray); }
+
+/* C 매질 */
+.md-btns { display: flex; flex-direction: column; gap: 10px; }
+section.slide button.md-b { width: 100%; margin: 0; min-height: 60px; padding: 6px 14px; font: inherit; font-size: 26px; font-weight: 700;
+  border: 3px solid #D3DCE6; border-radius: 14px; background: #fff; color: var(--ink); cursor: pointer; text-align: left; }
+section.slide button.md-b[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: #fff; }
+.md-bars { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.md-bars p { margin: 0; font-size: 21px; font-weight: 700; }
+.md-bar { display: grid; grid-template-columns: 62px 1fr 92px; gap: 8px; align-items: center; font-size: 22px; font-weight: 700; }
+.md-bar div { height: 22px; border-radius: 6px; background: #E6EBF0; position: relative; overflow: hidden; }
+.md-bar div i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--odor); }
+.md-bar em { font-style: normal; text-align: right; }
+
+/* 확인 문제 · 정리 */
+.sum { margin: 30px 0 0; padding: 0; list-style: none; }
+.sum li { position: relative; padding-left: 36px; margin: 0 0 26px; font-size: 32px; line-height: 1.45; }
+.sum li::before { content: ""; position: absolute; left: 6px; top: 18px; width: 12px; height: 12px; border-radius: 50%; background: var(--ink); }
+.next { margin-top: 40px; font-size: 26px; color: var(--gray); }
+</style>
+</head>
+<body data-theme="ppt">
+
+<!-- 1 표지 -->
+<section class="slide" id="cover" data-title="표지">
+  <div class="cv">
+    <p class="cv-k">중학교 과학 · 입자의 운동</p>
+    <h1>냄새는 어떻게 퍼질까?</h1>
+    <p class="cv-s">확산과 입자의 운동</p>
+  </div>
+</section>
+
+<!-- 2 학습 목표 -->
+<section class="slide" id="goal" data-sec="학습 목표" data-title="학습 목표">
+  <h2>학습 목표</h2>
+  <ol class="goals">
+    <li>확산 현상을 입자의 운동으로 설명할 수 있다.</li>
+    <li>온도에 따라 확산 빠르기가 달라지는 까닭을 설명할 수 있다.</li>
+  </ol>
+</section>
+
+<!-- 3 생각 열기 -->
+<section class="slide" id="perfume" data-sec="생각 열기" data-title="교실 앞에서 향수 뚜껑을 열면?">
+  <h2>교실 앞에서 향수 뚜껑을 열면?</h2>
+  <div class="two">
+    <div>
+      <p>교실 앞 교탁에서 향수병 뚜껑을 열면<br>잠시 뒤 맨 뒷자리 학생도<br>냄새를 맡을 수 있다.</p>
+      <p class="ask">창문을 모두 닫아 바람이 없는데도<br>냄새가 퍼지는 이유는 무엇일까?</p>
+    </div>
+    <figure class="fig-plain">
+      <img src="media/sci-3-1.png" alt="향수병에서 냄새 입자가 퍼져 뒷자리 학생에게 닿는 모습" width="500">
+    </figure>
+  </div>
+</section>
+
+<!-- 4 확산이란 -->
+<section class="slide" id="define" data-sec="개념" data-title="확산이란?">
+  <h2>확산이란?</h2>
+  <p class="def"><b>확산</b>: 물질을 이루는 입자가 <span class="key">스스로</span> 움직여<br>다른 물질 속으로 퍼져 나가는 현상</p>
+  <p class="why">입자는 끊임없이 스스로 움직인다.<br>그래서 확산이 일어난다.</p>
+  <p class="egs-h">생활 속 확산의 예</p>
+  <ul class="egs">
+    <li><b>향수</b>향수 냄새가<br>방 안에 퍼진다.</li>
+    <li><b>잉크</b>물에 잉크를 떨어뜨리면<br>물 전체로 퍼진다.</li>
+    <li><b>티백</b>티백을 넣은 물의 색이<br>점점 진해진다.</li>
+  </ul>
+</section>
+
+<!-- 5 도해 A: 잉크 입자 상자 -->
+<section class="slide" id="ink-model" data-sec="개념" data-title="도해: 잉크가 퍼지는 모습을 입자로">
+  <h2>잉크가 퍼지는 모습을 입자로 나타내면</h2>
+  <div class="dx" data-ai="잉크 입자 상자: 무작위 걸음 모의실험(씨앗 고정)">
+    <div class="dx-ctrl">
+      <p class="dx-lab">잉크를 떨어뜨린 뒤 <b id="ik-t-out">시작</b></p>
+      <input class="dx-range" type="range" autocomplete="off" id="ik-t" min="0" max="31" value="0" aria-label="잉크를 떨어뜨린 뒤 지난 시간">
+      <div class="dx-ticks"><span>시작</span><span style="--f:0.2258">1분</span><span style="--f:0.6129">3분</span><span>5분</span></div>
+      <div class="dx-box">
+        잉크 입자가 있는 칸 <span class="dx-model">(모형)</span>
+        <p class="ink-n" style="margin:2px 0 0"><span id="ik-n">?</span><small> / 9칸</small></p>
+        <div class="ink-bar" id="ik-bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="dx-legend">
+        <span><i class="dot" style="background:var(--ink-dot)"></i>잉크 입자 36개</span>
+        <span><i class="dot" style="background:var(--water-dot)"></i>물 입자 90개</span>
+        <span><i class="dot" style="background:#1E5FA8;box-shadow:0 0 0 4px var(--yellow)"></i>물 입자 하나가<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1분 동안 지나온 길</span>
+      </div>
+    </div>
+    <div class="dx-view">
+      <svg id="ik-svg" width="504" height="360" viewBox="0 0 560 400" aria-label="잉크 입자와 물 입자가 움직이는 상자">
+        <rect x="1.5" y="1.5" width="557" height="397" fill="#FFFFFF" stroke="#3B4A5A" stroke-width="3"/>
+        <g id="ik-cells"></g>
+        <g stroke="#C9D3DC" stroke-width="2" stroke-dasharray="8 8">
+          <line x1="186.7" y1="3" x2="186.7" y2="397"/><line x1="373.3" y1="3" x2="373.3" y2="397"/>
+          <line x1="3" y1="133.3" x2="557" y2="133.3"/><line x1="3" y1="266.7" x2="557" y2="266.7"/>
+        </g>
+        <g id="ik-water"></g>
+        <polyline id="ik-trail" fill="none" stroke="#1E5FA8" stroke-width="3" stroke-linejoin="round" stroke-dasharray="2 6" stroke-linecap="round"/>
+        <g id="ik-ink"></g>
+        <circle id="ik-me" cx="-50" cy="-50" r="10" fill="#1E5FA8" stroke="#FBBF24" stroke-width="4"/>
+      </svg>
+      <p class="dx-out" id="ik-out"></p>
+      <div class="dx-veil" id="ik-veil"><span>시간 막대를 밀면<br>잉크 한 방울을 떨어뜨린다</span></div>
+    </div>
+  </div>
+  <p class="dx-take step">잉크 입자와 물 입자가 모두 스스로 움직인다.<br>그래서 시간이 지나면 잉크 입자가 물 전체에 고르게 퍼진다.</p>
+</section>
+
+<!-- 6 실험 -->
+<section class="slide" id="experiment" data-sec="실험" data-title="실험: 물의 온도와 확산">
+  <h2>실험: 물의 온도와 확산</h2>
+  <div class="exp">
+    <div>
+      <p class="need">준비물: 비커 2개, 찬물(10 ℃), 따뜻한 물(60 ℃),<br>잉크, 스포이트, 초시계</p>
+      <ol>
+        <li>비커 2개에 찬물과 따뜻한 물을 200 mL씩 담는다.</li>
+        <li>물이 잔잔해질 때까지 1분 동안 기다린다.</li>
+        <li>두 비커에 잉크를 한 방울씩 동시에 떨어뜨린다.</li>
+        <li>잉크가 비커 전체에 고르게 퍼질 때까지<br>걸린 시간을 잰다.</li>
+        <li>결과를 표에 기록한다.</li>
+      </ol>
+      <p class="warn">※ 뜨거운 물에 손을 데지 않게 조심한다.</p>
+    </div>
+    <figure class="fig-plain" style="margin-top:20px">
+      <img src="media/sci-6-1.png" alt="10 ℃ 물과 60 ℃ 물이 담긴 비커 위에서 스포이트로 잉크를 떨어뜨리는 장면" width="400">
+    </figure>
+  </div>
+  <p class="tip step">비커를 흔들거나 저으면 확산이 아니라 섞기가 된다.<br>잉크는 두 비커에 동시에 떨어뜨린다.</p>
+</section>
+
+<!-- 7 실험 결과 -->
+<section class="slide res" id="result" data-sec="실험" data-title="실험 결과 (예시)">
+  <h2>실험 결과 (예시)</h2>
+  <table class="compare">
+    <thead><tr><th>물의 온도 (℃)</th><th>10</th><th>20</th><th>40</th><th>60</th></tr></thead>
+    <tbody><tr><th>잉크가 고르게<br>퍼진 시간 (초)</th><td>360</td><td>260</td><td>160</td><td>110</td></tr></tbody>
+  </table>
+  <p class="concl step">물의 온도가 높을수록<br>잉크가 퍼지는 데 걸리는 시간이 짧다.</p>
+  <p class="aside">※ 실제 실험값은 비커 크기, 잉크 양에 따라 달라질 수 있다.</p>
+</section>
+
+<!-- 8 도해 B: 온도와 입자 운동 -->
+<section class="slide" id="temp-model" data-sec="개념" data-title="도해: 왜 따뜻한 물에서 더 빨리 퍼질까?">
+  <h2>왜 따뜻한 물에서 더 빨리 퍼질까?</h2>
+  <div class="dx" data-ai="온도-입자 운동-확산 시간 모형(표 값을 직선으로 이음)">
+    <div class="dx-ctrl">
+      <p class="dx-lab">물의 온도 <b id="tp-T-out">시작</b></p>
+      <input class="dx-range" type="range" autocomplete="off" id="tp-T" min="0" max="11" value="0" aria-label="물의 온도">
+      <div class="dx-ticks"><span>시작</span><span style="--f:0.2727">20 ℃</span><span style="--f:0.6364">40 ℃</span><span>60 ℃</span></div>
+      <div class="chain">
+        <div>온도가 높다<b id="tp-c1">?</b></div>
+        <span>↓</span>
+        <div>입자의 운동이 활발하다<b id="tp-c2">?</b></div>
+        <span>↓</span>
+        <div>확산이 빠르다<b id="tp-c3">?</b></div>
+      </div>
+    </div>
+    <div class="dx-view">
+      <div class="tp-row">
+        <svg id="tp-cup" width="300" height="320" viewBox="0 0 300 320" aria-label="물 입자가 10초 동안 돌아다닌 길">
+          <rect id="tp-water" x="2" y="2" width="296" height="316" rx="6" fill="#D8EBFA" stroke="#3B4A5A" stroke-width="4"/>
+          <g id="tp-dots"></g>
+          <g id="tp-trails"></g>
+          <text id="tp-cup-t" x="150" y="40" text-anchor="middle" font-size="30" font-weight="800" fill="#1F5FA8">10 ℃</text>
+        </svg>
+        <svg id="tp-graph" width="400" height="320" viewBox="0 0 400 320" aria-label="물의 온도에 따른 잉크가 고르게 퍼진 시간 그래프"></svg>
+      </div>
+      <p class="tp-note">진한 파란 선: 입자 6개가 10초 동안 돌아다닌 길(모형) · 그래프의 점: 표의 값</p>
+      <p class="dx-out" id="tp-out"></p>
+      <div class="dx-veil" id="tp-veil"><span>온도 막대를 밀면<br>입자와 그래프가 움직인다</span></div>
+    </div>
+  </div>
+  <p class="dx-take step">온도가 높을수록 입자 운동이 활발해서 확산이 빠르다.</p>
+</section>
+
+<!-- 9 도해 C: 진공 · 기체 · 액체 -->
+<section class="slide" id="medium-model" data-sec="개념" data-title="도해: 어디에서 가장 빨리 퍼질까?">
+  <h2>어디에서 가장 빨리 퍼질까?</h2>
+  <div class="dx" data-ai="매질별 충돌 모의실험(대표 씨앗 고정)" data-activity>
+    <div class="dx-ctrl">
+      <p class="dx-lab">냄새 입자가 지나가는 곳</p>
+      <div class="md-btns" id="md-pick">
+        <button class="md-b" data-v="vac" aria-pressed="false">진공</button>
+        <button class="md-b" data-v="gas" aria-pressed="false">기체(공기)</button>
+        <button class="md-b" data-v="liq" aria-pressed="false">액체(물)</button>
+      </div>
+      <div class="md-bars">
+        <p>같은 시간 동안 멀어진 거리</p>
+        <div class="md-bar"><span>진공</span><div><i id="md-bar-vac"></i></div><em id="md-v-vac">?</em></div>
+        <div class="md-bar"><span>기체</span><div><i id="md-bar-gas"></i></div><em id="md-v-gas">?</em></div>
+        <div class="md-bar"><span>액체</span><div><i id="md-bar-liq"></i></div><em id="md-v-liq">?</em></div>
+      </div>
+    </div>
+    <div class="dx-view">
+      <svg id="md-svg" width="700" height="348" viewBox="0 0 700 348" aria-label="냄새 입자 하나가 다른 입자와 부딪히며 지나간 길"></svg>
+      <p class="dx-box" id="md-calc" style="margin:2px 0 0;padding:6px 16px">부딪힌 횟수 <b>?</b> · 처음 자리에서 멀어진 거리 <b>?</b> <span class="dx-model">(모형)</span></p>
+      <p class="dx-out" id="md-out"></p>
+      <div class="dx-veil" id="md-veil"><span>왼쪽에서 진공 · 기체 · 액체 가운데<br>하나를 고르면 냄새 입자가 출발한다</span></div>
+    </div>
+  </div>
+  <div class="dx-take step" style="margin-top:4px">확산은 액체보다 기체에서 더 빠르게 일어난다.<br>진공에서는 방해하는 다른 입자가 없어 가장 빠르다.</div>
+</section>
+
+<!-- 10 확인 문제 1 -->
+<section class="slide" id="check-1" data-sec="확인 문제" data-title="확인 문제 1">
+  <h2>확인 문제 1</h2>
+  <p class="q" data-n="1">다음 중 확산으로 설명할 수 있는 현상이 아닌 것은?</p>
+  <div class="quiz">
+    <button class="opt" data-ai="풀이" data-why="빵 냄새 입자가 공기 속으로 퍼진다. 확산이다.">빵 굽는 냄새가 집 안에 퍼진다.</button>
+    <button class="opt" data-ai="풀이" data-why="잉크 입자가 물 입자 사이로 퍼진다. 확산이다.">물에 떨어뜨린 잉크가 퍼진다.</button>
+    <button class="opt" data-ok data-why="맞다. 빨래가 마르는 것은 액체 표면의 입자가 기체로 날아가는 증발이다.">젖은 빨래가 햇볕에 마른다.</button>
+    <button class="opt" data-ai="풀이" data-why="방향제 냄새 입자가 방 안 공기 속으로 퍼진다. 확산이다.">방향제 냄새가 방 안에 퍼진다.</button>
+    <button class="opt" data-ai="풀이" data-why="홍차의 색을 내는 입자가 물속으로 퍼진다. 확산이다.">홍차 티백을 넣은 물의 색이 점점 진해진다.</button>
+  </div>
+</section>
+
+<!-- 11 확인 문제 2 -->
+<section class="slide" id="check-2" data-sec="확인 문제" data-title="확인 문제 2">
+  <h2>확인 문제 2</h2>
+  <p class="q" data-n="2">다음 현상을 확산과 증발로 분류해 보자.</p>
+  <div class="sort">
+    <div class="bin" data-bin="d"><h3>확산</h3></div>
+    <div class="bin" data-bin="e"><h3>증발</h3></div>
+    <span data-bin="d" data-ai="풀이와 실마리" data-why="꽃향기 입자가 공기 속으로 퍼진다." data-hint="향기 입자는 어디로 가는가?">ㄱ. 꽃향기가 정원 전체에 퍼진다.</span>
+    <span data-bin="e" data-ai="풀이와 실마리" data-why="어항 물 표면의 입자가 기체가 되어 날아간다." data-hint="줄어든 물은 어디로 갔을까?">ㄴ. 어항의 물이 조금씩 줄어든다.</span>
+    <span data-bin="d" data-ai="풀이와 실마리" data-why="설탕 입자가 저어 주지 않아도 물속으로 퍼진다." data-hint="설탕 입자가 스스로 움직여 어디로 가는가?">ㄷ. 물에 설탕을 넣으면 저어 주지 않아도 물 전체가 달아진다.</span>
+    <span data-bin="e" data-ai="풀이와 실마리" data-why="알코올 입자가 기체가 되어 날아간다." data-hint="액체였던 알코올은 무엇이 되었을까?">ㄹ. 손등에 바른 알코올이 금방 마른다.</span>
+    <span data-bin="d" data-ai="풀이와 실마리" data-why="모기향 냄새 입자가 방 안 공기 속으로 퍼진다." data-hint="냄새 입자가 다른 물질 속으로 퍼지는가?">ㅁ. 모기향 냄새가 방 안에 퍼진다.</span>
+    <span data-bin="e" data-ai="풀이와 실마리" data-why="마당의 물 입자가 기체가 되어 공기 중으로 날아갔다." data-hint="액체가 기체로 바뀌었는가?">ㅂ. 마당에 뿌린 물이 마른다.</span>
+  </div>
+  <p class="step aside" style="font-size:26px">확산: ㄱ, ㄷ, ㅁ · 증발: ㄴ, ㄹ, ㅂ</p>
+</section>
+
+<!-- 12 정리 -->
+<section class="slide" id="summary" data-sec="정리" data-title="정리">
+  <h2>정리</h2>
+  <ul class="sum">
+    <li><b>확산</b>: 입자가 <span class="blank">스스로</span> 움직여 퍼져 나가는 현상</li>
+    <li>온도가 높을수록 입자 운동이 <span class="blank">활발</span>해서<br>확산이 빠르다.</li>
+    <li>확산 빠르기: <span class="blank">진공 &gt; 기체 &gt; 액체</span></li>
+  </ul>
+  <p class="next">다음 시간: 증발</p>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 슬라이더는 손을 떼면 초점을 풀어 → 키·리모컨이 다시 장을 넘기게 한다
+  document.querySelectorAll('section.slide input[type=range]').forEach((r) => r.addEventListener('change', () => r.blur()));
+  const $ = (s) => document.querySelector(s);
+  const SVG = 'http://www.w3.org/2000/svg';
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(SVG, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  // 씨앗을 고정한 난수: 누가 언제 열어도 같은 그림이 나온다
+  const rng = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const gauss = (r) => () => Math.sqrt(-2 * Math.log(r() + 1e-12)) * Math.cos(2 * Math.PI * r());
+  const refl = (v, lo, hi) => { while (v < lo || v > hi) v = v < lo ? 2 * lo - v : 2 * hi - v; return v; };
+  const fmt = (v, d = 1) => v.toFixed(d).replace(/\.0+$/, '');
+
+  /* ── A 잉크 입자 상자: 잉크 36개·물 90개가 같은 무작위 걸음(10초마다 4걸음)을 한다 ── */
+  {
+    const W = 560, H = 400, R = 9, NI = 36, NW = 90, F = 31, SUB = 4, SIG = 22;
+    const r = rng(1138), g = gauss(r);
+    const ps = [];
+    for (let i = 0; i < NI; i++) ps.push([refl(80 + g() * 20, R, 180), refl(70 + g() * 18, R, 125)]);
+    for (let i = 0; i < NW; i++) ps.push([R + r() * (W - 2 * R), R + r() * (H - 2 * R)]);
+    // 길을 그릴 물 입자: 처음에 (380, 260)에서 가장 가까운 것
+    let me = NI; ps.forEach((p, i) => { if (i >= NI && Math.hypot(p[0] - 380, p[1] - 260) < Math.hypot(ps[me][0] - 380, ps[me][1] - 260)) me = i; });
+    const frames = [ps.map((p) => p.slice())], path = [ps[me].slice()];
+    for (let f = 1; f < F; f++) {
+      for (let s = 0; s < SUB; s++) { for (const p of ps) { p[0] = refl(p[0] + g() * SIG, R, W - R); p[1] = refl(p[1] + g() * SIG, R, H - R); } path.push(ps[me].slice()); }
+      frames.push(ps.map((p) => p.slice()));
+    }
+    const cellOf = ([x, y]) => Math.min(2, Math.floor(x / (W / 3))) + 3 * Math.min(2, Math.floor(y / (H / 3)));
+    const counts = frames.map((P) => new Set(P.slice(0, NI).map(cellOf)));
+    const fullAt = counts.findIndex((c) => c.size === 9);
+
+    const cells = [...Array(9)].map((_, c) => mk('rect', { x: (c % 3) * W / 3, y: Math.floor(c / 3) * H / 3, width: W / 3, height: H / 3, fill: '#E0464E', 'fill-opacity': 0 }, $('#ik-cells')));
+    const dots = ps.map((_, i) => i < NI
+      ? mk('circle', { r: R, fill: '#E0464E' }, $('#ik-ink'))
+      : mk('circle', { r: R, fill: '#9DC8F5' }, $('#ik-water')));
+    dots[me].setAttribute('visibility', 'hidden');
+    const bars = [...$('#ik-bar').children];
+    const clock = (t) => t < 60 ? t + '초' : Math.floor(t / 60) + '분' + (t % 60 ? ' ' + (t % 60) + '초' : '');
+
+    function drawInk() {
+      const k = +$('#ik-t').value;              // 0 = 시작(가림), 1 = 0초 … 31 = 5분
+      $('#ik-veil').hidden = k > 0;
+      if (!k) { $('#ik-t-out').textContent = '시작'; $('#ik-n').textContent = '?'; bars.forEach((b) => b.classList.remove('on')); $('#ik-out').textContent = ''; return; }
+      const f = k - 1, P = frames[f], n = counts[f].size;
+      $('#ik-t-out').textContent = clock(f * 10);
+      P.forEach((p, i) => { dots[i].setAttribute('cx', p[0].toFixed(1)); dots[i].setAttribute('cy', p[1].toFixed(1)); });
+      cells.forEach((c, i) => c.setAttribute('fill-opacity', counts[f].has(i) ? 0.10 : 0));
+      $('#ik-me').setAttribute('cx', P[me][0].toFixed(1)); $('#ik-me').setAttribute('cy', P[me][1].toFixed(1));
+      $('#ik-trail').setAttribute('points', path.slice(Math.max(0, f * SUB - 6 * SUB), f * SUB + 1).map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '));
+      $('#ik-n').textContent = n;
+      bars.forEach((b, i) => b.classList.toggle('on', i < n));
+      $('#ik-out').textContent = f === 0 ? '잉크 입자가 한 칸에 모여 있다.'
+        : n < 9 ? `잉크 입자가 9칸 중 ${n}칸으로 퍼졌다.`
+        : f === fullAt ? '9칸 모두에 잉크 입자가 있다. 고르게 퍼졌다.'
+        : '고르게 퍼진 뒤에도 입자는 계속 움직인다.';
+    }
+    $('#ik-t').addEventListener('input', drawInk);
+    drawInk();
+  }
+
+  /* ── B 온도: 고르게 퍼지는 시간 = 표 값(사이는 직선으로 이음), 돌아다닌 범위 = √(360 ÷ 시간)배 ── */
+  {
+    const TT = [10, 20, 40, 60], TS = [360, 260, 160, 110];
+    const tmix = (T) => { for (let i = 0; i < 3; i++) if (T <= TT[i + 1]) return TS[i] + (TS[i + 1] - TS[i]) * (T - TT[i]) / (TT[i + 1] - TT[i]); return TS[3]; };
+    const mix = (a, b, u) => '#' + [0, 2, 4].map((j) => Math.round(parseInt(a.substr(j, 2), 16) * (1 - u) + parseInt(b.substr(j, 2), 16) * u).toString(16).padStart(2, '0')).join('');
+    // 물 입자 40개(정지 그림)와 길을 그릴 입자 6개
+    const r = rng(77), g = gauss(r);
+    for (let i = 0; i < 40; i++) mk('circle', { cx: 16 + r() * 268, cy: 64 + r() * 240, r: 8, fill: '#9DC8F5' }, $('#tp-dots'));
+    const homes = [[70, 110], [200, 100], [120, 190], [235, 200], [70, 270], [190, 275]];
+    const walks = homes.map(() => { let x = 0, y = 0; const w = [[0, 0]]; for (let s = 0; s < 14; s++) { x += g(); y += g(); w.push([x, y]); } return w; });
+    const trails = homes.map(() => mk('polyline', { fill: 'none', stroke: '#1E5FA8', 'stroke-width': 3, 'stroke-linejoin': 'round' }, $('#tp-trails')));
+    const heads = homes.map(() => mk('circle', { cx: -50, cy: -50, r: 9, fill: '#1E5FA8' }, $('#tp-trails')));
+
+    // 그래프 틀
+    const G = $('#tp-graph'), X = (T) => 78 + T / 70 * 300, Y = (s) => 258 - s / 400 * 228;
+    mk('line', { x1: 78, y1: 258, x2: 388, y2: 258, stroke: '#3B4A5A', 'stroke-width': 2 }, G);
+    mk('line', { x1: 78, y1: 24, x2: 78, y2: 258, stroke: '#3B4A5A', 'stroke-width': 2 }, G);
+    [0, 100, 200, 300, 400].forEach((s) => { mk('text', { x: 68, y: Y(s) + 7, 'text-anchor': 'end', 'font-size': 20, fill: '#5C6B78' }, G).textContent = s; if (s) mk('line', { x1: 78, y1: Y(s), x2: 388, y2: Y(s), stroke: '#E3E8EC', 'stroke-width': 1.5 }, G); });
+    [10, 20, 30, 40, 50, 60].forEach((T) => { mk('text', { x: X(T), y: 284, 'text-anchor': 'middle', 'font-size': 20, fill: '#5C6B78' }, G).textContent = T; });
+    mk('text', { x: 388, y: 312, 'text-anchor': 'end', 'font-size': 20, fill: '#5C6B78' }, G).textContent = '물의 온도 (℃)';
+    mk('text', { x: 4, y: 16, 'font-size': 20, fill: '#5C6B78' }, G).textContent = '시간 (초)';
+    mk('polyline', { points: TT.map((T, i) => X(T) + ',' + Y(TS[i])).join(' '), fill: 'none', stroke: '#0F766E', 'stroke-width': 3, 'stroke-dasharray': '8 6' }, G);
+    TT.forEach((T, i) => mk('circle', { cx: X(T), cy: Y(TS[i]), r: 7, fill: '#FFFFFF', stroke: '#0F766E', 'stroke-width': 3 }, G));
+    const gv = mk('line', { stroke: '#B3261E', 'stroke-width': 2, 'stroke-dasharray': '4 5' }, G);
+    const gh = mk('line', { stroke: '#B3261E', 'stroke-width': 2, 'stroke-dasharray': '4 5' }, G);
+    const gp = mk('circle', { r: 11, fill: '#B3261E' }, G);
+    const gl = mk('text', { 'font-size': 24, 'font-weight': 800, fill: '#B3261E' }, G);
+
+    function drawTemp() {
+      const k = +$('#tp-T').value;              // 0 = 시작(가림), 1 = 10 ℃ … 11 = 60 ℃
+      $('#tp-veil').hidden = k > 0;
+      if (!k) { $('#tp-T-out').textContent = '시작'; ['#tp-c1', '#tp-c2', '#tp-c3'].forEach((s) => { $(s).textContent = '?'; }); $('#tp-out').textContent = ''; return; }
+      const T = 5 + 5 * k, t = tmix(T), sp = Math.sqrt(360 / t), fast = 360 / t, u = (T - 10) / 50;
+      const inTable = TT.includes(T);
+      $('#tp-T-out').textContent = T + ' ℃';
+      $('#tp-water').setAttribute('fill', mix('D8EBFA', 'FBE1D8', u));
+      $('#tp-cup-t').textContent = T + ' ℃';
+      $('#tp-cup-t').setAttribute('fill', mix('1F5FA8', 'B3261E', u));
+      const step = 9 * sp;                      // 10 ℃에서 한 걸음 9, 걸음 수는 같고 폭만 바뀐다
+      walks.forEach((w, i) => {
+        const pts = w.map(([x, y]) => [refl(homes[i][0] + x * step, 12, 288), refl(homes[i][1] + y * step, 60, 308)]);
+        trails[i].setAttribute('points', pts.map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '));
+        heads[i].setAttribute('cx', pts[pts.length - 1][0].toFixed(1)); heads[i].setAttribute('cy', pts[pts.length - 1][1].toFixed(1));
+      });
+      gv.setAttribute('x1', X(T)); gv.setAttribute('x2', X(T)); gv.setAttribute('y1', 258); gv.setAttribute('y2', Y(t));
+      gh.setAttribute('x1', 78); gh.setAttribute('x2', X(T)); gh.setAttribute('y1', Y(t)); gh.setAttribute('y2', Y(t));
+      gp.setAttribute('cx', X(T)); gp.setAttribute('cy', Y(t));
+      gl.setAttribute('x', X(T) + (T > 45 ? -16 : 16)); gl.setAttribute('y', Y(t) + (T > 45 ? 38 : -16)); gl.setAttribute('text-anchor', T > 45 ? 'end' : 'start');
+      gl.textContent = Math.round(t) + '초';
+      $('#tp-c1').textContent = T + ' ℃';
+      $('#tp-c2').textContent = k === 1 ? '기준' : '범위 ' + fmt(sp) + '배';
+      $('#tp-c3').textContent = Math.round(t) + '초' + (inTable ? '' : ' (모형)');
+      $('#tp-out').textContent = k === 1 ? '10 ℃: 고르게 퍼지는 데 360초가 걸린다.'
+        : `10 ℃보다 ${fmt(fast)}배 빨리 퍼진다.` + (inTable ? ' (표의 값)' : ' (표 사이 값: 모형)');
+    }
+    $('#tp-T').addEventListener('input', drawTemp);
+    drawTemp();
+  }
+
+  /* ── C 매질: 냄새 입자 하나가 같은 거리(600)를 달리는 동안 다른 입자와 부딪히는 것을 계산 ── */
+  {
+    const BW = 660, BH = 300, OX = 20, OY = 10, RT = 10, RO = 11, L = 600, X0 = 30, Y0 = 150, CELL = 60;
+    // 다른 입자의 수와 씨앗: 씨앗은 200번씩 돌려 부딪힌 횟수·거리가 중앙값에 가까운 것을 골랐다
+    const MED = { vac: { n: 0, seed: 1, name: '진공' }, gas: { n: 24, seed: 147, name: '기체' }, liq: { n: 110, seed: 44, name: '액체' } };
+    function obstacles(n, seed) {
+      const r = rng(seed), out = []; let tries = 0;
+      while (out.length < n && tries++ < 20000) {
+        const x = RO + r() * (BW - 2 * RO), y = RO + r() * (BH - 2 * RO);
+        if (Math.hypot(x - X0, y - Y0) < RT + RO + 6) continue;
+        if (out.some((o) => Math.hypot(o[0] - x, o[1] - y) < 2 * RO + 3)) continue;
+        out.push([x, y]);
+      }
+      return out;
+    }
+    function run(obs, seed) {
+      const r = rng(seed); let x = X0, y = Y0, a = 0, d = 0; const hits = [], path = [[x, y]];
+      while (d < L) {
+        const nx = x + 2 * Math.cos(a), ny = y + 2 * Math.sin(a);
+        const o = obs.find((o) => Math.hypot(o[0] - nx, o[1] - ny) < RT + RO);
+        if (o) {   // 부딪히면 그 입자에서 멀어지는 쪽으로 아무렇게나 튄다
+          const vx = x - o[0], vy = y - o[1], k = Math.hypot(vx, vy); let b;
+          do { b = r() * 2 * Math.PI; } while (Math.cos(b) * vx / k + Math.sin(b) * vy / k < 0.2);
+          a = b; hits.push([x, y]); path.push([x, y]); continue;
+        }
+        if (nx < RT || nx > BW - RT) { a = Math.PI - a; path.push([x, y]); continue; }
+        if (ny < RT || ny > BH - RT) { a = -a; path.push([x, y]); continue; }
+        x = nx; y = ny; d += 2;
+      }
+      path.push([x, y]);
+      return { obs, hits, path, dist: Math.hypot(x - X0, y - Y0) / CELL };
+    }
+    const res = {};
+    for (const m in MED) res[m] = run(obstacles(MED[m].n, 1000 * MED[m].n + MED[m].seed), MED[m].seed);
+
+    const S = $('#md-svg'), seen = new Set();
+    function drawMedium(m) {
+      $('#md-veil').hidden = true;
+      seen.add(m);
+      const q = res[m];
+      while (S.firstChild) S.firstChild.remove();
+      mk('rect', { x: OX - 1.5, y: OY - 1.5, width: BW + 3, height: BH + 3, fill: m === 'vac' ? '#F7F7FA' : m === 'gas' ? '#F4F9FF' : '#E4F0FC', stroke: '#3B4A5A', 'stroke-width': 3 }, S);
+      q.obs.forEach(([x, y]) => mk('circle', { cx: OX + x, cy: OY + y, r: RO, fill: '#9DC8F5' }, S));
+      // 자: 한 칸 = 60
+      for (let c = 0; c <= 10; c++) {
+        mk('line', { x1: OX + X0 + c * CELL, y1: OY + BH + 4, x2: OX + X0 + c * CELL, y2: OY + BH + (c % 5 ? 12 : 18), stroke: '#5C6B78', 'stroke-width': 2 }, S);
+        if (c % 2 === 0) mk('text', { x: OX + X0 + c * CELL, y: OY + BH + 36, 'text-anchor': 'middle', 'font-size': 20, fill: '#5C6B78' }, S).textContent = c === 10 ? '10칸' : c;
+      }
+      const [ex, ey] = q.path[q.path.length - 1];
+      mk('line', { x1: OX + X0, y1: OY + Y0, x2: OX + ex, y2: OY + ey, stroke: '#3B4A5A', 'stroke-width': 3, 'stroke-dasharray': '3 7', 'stroke-linecap': 'round' }, S);
+      mk('polyline', { points: q.path.map(([x, y]) => (OX + x).toFixed(1) + ',' + (OY + y).toFixed(1)).join(' '), fill: 'none', stroke: '#A64DC0', 'stroke-width': 4, 'stroke-linejoin': 'round' }, S);
+      q.hits.forEach(([x, y]) => mk('circle', { cx: OX + x, cy: OY + y, r: 6, fill: '#FFFFFF', stroke: '#D9480F', 'stroke-width': 3 }, S));
+      mk('circle', { cx: OX + X0, cy: OY + Y0, r: RT, fill: '#FFFFFF', stroke: '#A64DC0', 'stroke-width': 4 }, S);
+      mk('circle', { cx: OX + ex, cy: OY + ey, r: RT, fill: '#A64DC0' }, S);
+      if (m === 'vac') mk('text', { x: OX + BW / 2, y: OY + 70, 'text-anchor': 'middle', 'font-size': 24, fill: '#5C6B78' }, S).textContent = '부딪힐 다른 입자가 없다';
+
+      $('#md-pick').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === m)));
+      const calc = $('#md-calc');
+      calc.replaceChildren('부딪힌 횟수 ', Object.assign(document.createElement('b'), { textContent: q.hits.length + '번' }),
+        ' · 처음 자리에서 ', Object.assign(document.createElement('b'), { textContent: fmt(q.dist) + '칸' }), ' ',
+        Object.assign(document.createElement('span'), { className: 'dx-model', textContent: '(모형)' }));
+      for (const k of seen) { $('#md-bar-' + k).style.width = Math.min(100, res[k].dist / 10 * 100) + '%'; $('#md-v-' + k).textContent = fmt(res[k].dist) + '칸'; }
+      const order = [...seen].sort((a, b) => res[b].dist - res[a].dist).map((k) => MED[k].name);
+      const say = { vac: '부딪히지 않고 곧게 간다.', gas: '입자 사이가 넓어 가끔 부딪힌다.', liq: '입자가 빽빽해 자꾸 부딪힌다.' }[m];
+      $('#md-out').textContent = say + (order.length > 1 ? ` 멀리 간 순서: ${order.join(' > ')}` : '');
+    }
+    $('#md-pick').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => drawMedium(b.dataset.v)));
+  }
+});
+</script>
+</body>
+</html>

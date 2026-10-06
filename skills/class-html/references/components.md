@@ -1,6 +1,6 @@
 # 부품 사전
 
-엔진이 동작을 붙인다. 수업 HTML에는 구조와 `data-*` 속성만 쓴다. 맞춤 `<script>`는 부품으로 안 될 때만 쓴다(이 문서 끝 '맞춤 스크립트').
+엔진이 동작을 붙인다. 수업 HTML에는 구조와 `data-*` 속성만 쓴다. 퀴즈·분류 같은 확인 활동과 단계 공개는 부품으로 쓴다. 만지는 도해는 개념에 맞춰 직접 짜도 된다(`dohae.md`, 이 문서 12절).
 
 `data-why`·`data-hint`·`data-stops` 같은 속성 값은 글자만 된다(태그 없음). 위첨자·아래첨자는 유니코드로 쓴다(Na⁺, H₂O, x²).
 
@@ -23,9 +23,9 @@
 ```
 
 - 슬라이드마다 고정 `id`(판서가 붙는 열쇠), 목차용 `data-title`, 묶음 이름 `data-sec`(ppt 테마에서는 왼쪽 위 색 띠).
-- 무대는 1280×720. 안쪽 여백은 위 72(ppt 테마는 112)·좌우 80·아래 56~64. 그 밖으로 나가면 점검 오류.
-- 이 수업만의 CSS는 그냥 클래스로 쓴다(`.pts { padding: 0 }`). 엔진 기본 글 규칙은 우선순위가 낮아 늘 진다. 부품 안 모양을 바꿀 때는 부품 클래스부터 쓴다(`.sort .bin { … }`, `.quiz .opt { … }`).
-- 엔진은 어절마다 `ch-w` 요소로 감싸 낱말 중간에서 줄이 갈리지 않게 한다. `span`이 아니므로 수업 CSS의 `span` 선택자에는 걸리지 않는다.
+- 무대는 1280×720. 안쪽 여백은 위 72(ppt 테마에서 `data-sec`이 있는 장은 112)·좌우 80·아래 56~64. 점검은 장 밖으로 나간 요소(`out`)와 아래로 넘친 내용(`slide-overflow`)을 오류로 잡는다.
+- 이 수업만의 CSS는 그냥 클래스로 쓴다(`.pts { padding: 0 }`). 엔진 기본 글 규칙은 우선순위가 낮아 대개 진다. 다만 장 바탕·표지처럼 장 전체 모양은 `body[data-theme="ppt"] section.slide.cover { … }`처럼 앞에 붙여야 이긴다(`design.md`). 부품 안 모양을 바꿀 때는 부품 클래스부터 쓴다(`.sort .bin { … }`, `.quiz .opt { … }`).
+- 엔진은 어절마다 `<ch-w class="w">`로 감싸 낱말 중간에서 줄이 갈리지 않게 한다. `span`이 아니므로 수업 CSS의 `span` 선택자에는 걸리지 않지만, 수업 CSS에 `.w`라는 이름을 쓰면 모든 낱말에 걸린다.
 
 | 모양 | 작성 | 비고 |
 |---|---|---|
@@ -36,7 +36,7 @@
 | 문항 | `<p class="q" data-n="1">` | 큰 번호 + 굵은 물음. 번호 대신 기호도 된다(`data-n="●"`) |
 | 번호 목록 | `<ol class="points">` (1)(2), `<ol class="circled">` ①② | |
 | 자료 단추 | `<a class="pill" href="…" target="_blank" rel="noopener">` | 색: `style="--pill:#7B3FC4"` |
-| 비교표 | `<table class="compare">` | 첫 줄 thead, 첫 칸 th. 머리 색은 띠 색(`--tab`)을 따른다. 바꾸려면 `--table-head`, `--table-side` |
+| 비교표 | `<table class="compare">` | 첫 줄 thead, 첫 칸 th. 머리 색은 띠 색(`--tab`)을 따른다. 바꾸려면 `--table-head`, `--table-side`. 색은 `thead th`와 첫 칸 `th`에만 들어가므로 머리 칸을 `td`로 쓰지 않는다 |
 | 빈칸 | `<span class="blank">확산</span>` | 누르면 열린다. 활동으로 치지 않는다 |
 | 정답 상자 | `<div class="answer"><p>…</p></div>` | ✓ 단추나 →로 연다. `.answer.sheet`는 흰 답안지 |
 | 그림 | `<figure class="fig"><img src="data:…" alt="…"><figcaption>…</figcaption></figure>` | 오른쪽 위 확대 단추, 손 모드에서 눌러 확대. 단추가 그림 속 글자를 가리면 `data-zoom="off"` |
@@ -109,7 +109,7 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 
 - 다각형은 '가릴 곳'이다. 그 칸 이전의 영토는 다각형으로 덮지 않는다.
 - '근사' 꼬리표는 엔진이 붙인다(`data-approx`로 글을 바꾼다). 좌표는 근사여도 되지만 사실과 맞는 순서·지역이어야 한다.
-- 막대(약 100px)는 지도 바로 아래에 붙는다. 지도 폭을 정해(예: 560px) 지도 높이 + 막대가 제목 아래 약 480px 안에 들게 한다. 옆 설명은 `data-for`로 묶는다.
+- 막대(약 110px)는 지도 바로 아래에 붙는다. 지도 폭을 정해(예: 560px) 지도 높이 + 막대가 제목 아래 약 470px 안에 들게 한다. 옆 설명은 `data-for`로 묶는다.
 
 ## 4. 연표 막대 `ol.yearline`
 
@@ -160,7 +160,7 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 - 하나 고르기는 누른 보기의 이유가 아래 알림 줄에 나온다. 여러 개 고르기는 「확인」 뒤 잘못 고른 보기와 놓친 보기 아래에 그 보기의 이유가 나오고, 다 맞히면 문제의 `data-why`가 나온다.
 - 보기 안에 그림·SVG를 넣어도 된다(그래프 고르기 등).
 - 점검은 가장 긴 이유가 나온 상태(여러 개 고르기는 이유가 가장 긴 두 보기를 틀린 상태)까지 잰다. 이유는 한 문장으로 짧게.
-- 번호 ①②는 엔진이 붙인다(`data-num="off"`로 끔). `data-cols`로 열 수.
+- 번호(동그라미 배지 안의 1, 2…)는 엔진이 붙인다(`data-num="off"`로 끔). `data-cols`로 열 수.
 - 높이: 보기 한 줄 64px, 사이 12px, 아래 알림 줄 약 60px. 보기 5개면 약 380px다.
 - 처음 맞히면 문제 뒤 첫 `.step`을 연다. 인쇄는 정답 표시.
 
@@ -199,8 +199,8 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 - 식 문법: 수, `'글자'`, `+ - * / % ^`, `== != < <= > >=`, `&& || !`, `조건 ? 가 : 나`, `× ÷ − ≤ ≥ ≠`도 된다. 함수: `abs min max round(x,n) floor ceil sqrt pow exp ln log(10이 밑) sin cos tan asin acos atan rad deg clamp(x,lo,hi) if(c,a,b) fix(x,n) len(글자) sign`. 상수 `pi e true false`. 글자 + 수는 이어 붙인다.
 - 단위: 한글 단위(`초`·`원`·`인분`·`년`)는 숫자에 붙고(360초), 기호 단위(`℃`·`mL`·`%`)는 한 칸 띄운다(10 ℃). 단위 앞에 빈칸을 넣지 않는다.
 - 식이 틀리면 그 자리에 '?'가 나오고 점검(D)에 오류로 뜬다. 근거 없는 수치를 지어내지 않는다. 단위를 쓴다.
-- 계산 상자의 슬라이더는 중간값에서 시작해도 된다(단계를 여는 막대가 아니다).
-- 입자·점이 많은 모식도는 `data-attr`로 점마다 식을 쓰지 말고 입자 상자 `figure.particles`(교과 지침: 과학)를 쓰거나, 그림 몇 장을 단계 막대로 바꾼다.
+- 계산 상자의 슬라이더는 중간값에서 시작해도 된다(단계를 여는 막대가 아니다). 엔진이 손을 뗄 때 초점을 풀어 주므로 → 키가 그대로 장을 넘긴다. 0단계 가림이 필요하면 위의 `.reveal data-name`을 쓴다.
+- 입자·점이 많은 모식도는 `data-attr`로 점마다 식을 쓰지 말고 입자 상자 `figure.particles`(13절)를 쓰거나, 그림 몇 장을 단계 막대로 바꾼다.
 
 ## 9. 그래프 `figure.plot`
 
@@ -256,7 +256,7 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 </figure>
 ```
 
-## 12. 맞춤 스크립트(마지막 수단)
+## 12. 맞춤 스크립트(만지는 도해)
 
 ```html
 <script>
@@ -266,8 +266,32 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 ```
 
-- `</body>` 바로 앞에 둔다. `ClassHTML.onShow/onHide/go/next/prev/audit`를 쓴다. `innerHTML`로 학생 입력을 넣지 않는다.
+- `</body>` 바로 앞에 둔다. `ClassHTML.onShow/onHide/go/next/prev/audit`를 쓴다. `ClassHTML.go(i)`의 `i`는 0부터 센다(1쪽 = 0). `innerHTML`로 학생 입력을 넣지 않는다.
+- 설계 방법과 뼈대 코드는 `dohae.md`. 조작한 상태를 찍어 확인할 때는 `scripts/states.mjs`.
 - 펜을 든 채로 쓰는 규칙: 누르는 요소는 `button`·`a`·`label` 또는 `data-tap`, 끄는 요소(슬라이더가 아닌 것)는 `data-no-ink`.
+
+## 13. 입자 상자 `figure.particles`
+
+```html
+<div class="calc" style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start">
+  <figure class="particles" data-membrane="0.5" data-labels="세포 밖|세포 안" data-height="300">
+    <i data-kind="물" data-left="30" data-right="30" data-pass="1" data-color="#5AA9E6" data-size="4"></i>
+    <i data-kind="설탕" data-left="sugar" data-right="5" data-pass="0" data-color="#C04F15" data-size="8"></i>
+  </figure>
+  <div>
+    <p>세포 밖 설탕 <output data-expr="sugar" data-unit="개"></output></p>
+    <input type="range" name="sugar" min="0" max="40" value="20" aria-label="세포 밖 설탕 수">
+    <p data-show="sugar > 5">설탕은 막을 못 지난다. 물이 세포 밖으로 더 많이 나간다.</p>
+  </div>
+</div>
+```
+
+- `data-membrane`: 막의 가로 위치(0~1). 빼면 막이 없는 한 칸(기체 운동, 확산). 막이 없어도 `data-right`를 주면 처음에 가운데를 기준으로 나눠 놓고 양쪽 개수를 센다(잉크가 퍼지는 확산).
+- `data-labels="세포 밖|세포 안"`은 상자 안 양쪽 위와 개수 줄에 나온다.
+- 입자 종류마다 `data-left`·`data-right`(처음 개수), `data-pass`(막을 지날 확률 0~1: 반투과성막이면 물 1, 용질 0), `data-color`, `data-size`(반지름 px). 값은 식이라 계산 상자 변수를 쓸 수 있다. `data-speed`(상자 전체 속도, 기본 1)도 식.
+- 장이 보이면 움직이고 넘기면 멈춘다. 「멈추기」·「다시」 단추, 아래에 양쪽 개수. 입자는 모두 300개까지.
+- 삼투: 막을 못 지나는 입자(`data-pass="0"`, 용질)는 자기 쪽 막 구멍을 가려, 그쪽 물이 막을 지날 확률이 용질 비율만큼 줄어든다. 그래서 물은 용질이 많은 쪽으로 더 많이 모인다(교과서의 설명 모형).
+- 움직임은 모형이다. 개수의 비율이 개념과 맞는지만 지키고, '실제 분자 수'처럼 말하지 않는다.
 
 ## 점검 코드(D 키, `?audit`)
 
@@ -277,6 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
 | `clip` | 상자 안 내용이 잘림 | 상자 높이·글 양 |
 | `tiny-text` | 20px 미만 글자(SVG 안 글자는 실제 크기) | 글자 키우기, 그림 폭 키우기 |
 | `part` | 부품 작성 실수(칸 없는 카드, 정답 없는 문제, 식 오류, 어느 막대인지 모르는 data-at …) | 메시지대로 |
-| `not-veiled` | 부품 밖 슬라이더가 중간에서 시작 | 단계형이면 `.reveal`로 |
-| `few-activities` | 활동 장이 3분의 1 미만 | 개념마다 활동을 하나 더 |
+| `not-veiled` | 부품 밖 슬라이더가 중간에서 시작 | 단계·시간 막대면 첫 칸을 '시작'으로. 조건 비교 슬라이더이고 결과가 가림막으로 가려져 있으면 경고를 남겨도 된다 |
+| `few-activities` | 활동 장이 3분의 1 미만 | 엔진 부품, 슬라이더, `[data-activity]`가 있는 장을 센다. 단추만 있는 도해는 감싼 요소에 `data-activity`를 붙인다 |
 | `empty-image`, `no-alt`, `dup-id` | 빈 그림 자리, 그림 설명 없음, 중복 id | |

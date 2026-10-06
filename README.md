@@ -12,6 +12,7 @@
 - **판서가 남는다.** 장마다, 반마다 따로 저장되고 브라우저를 닫아도 남는다. 칠판 모드(흰색·모눈·초록 칠판 등)도 있다.
 - **PPT로 못 하는 활동.** 값을 바꾸면 계산해서 바뀌는 시뮬레이션과 그래프, 하나씩 열리는 지도·연표, 끌어서 나누는 카드, 보기마다 이유가 나오는 문제.
 - **0단계에서 시작.** 단계형 활동은 모두 가린 채 시작하고 한 칸씩 연다. 리모컨 →로도 연다.
+- **바로 고친다.** 툴바 「편집」을 누르면 글·상자·그림·SVG 도형을 골라 글 내용, 크기, 색, 위치를 고치고 HTML 파일로 저장한다. AI에게 다시 부탁하지 않아도 된다.
 
 ## 선생님: 3단계로 쓰기
 
@@ -29,7 +30,7 @@
 | 경로 | 내용 |
 |---|---|
 | `engine/` | 엔진(`class-html.js`·`.css`, 빌드 결과). 소스는 `engine/src`, `engine/css` |
-| `skills/class-html/` | AI 지침(스킬). `SKILL.md`, `references/`(부품 사전, 인터뷰, 패턴, 화면, 한국어, 교과별), `scripts/`(`extract_pptx.py`, `bundle.py`), `assets/template.html` |
+| `skills/class-html/` | AI 지침(스킬). `SKILL.md`, `references/`(만지는 도해 `dohae.md`, 부품 사전, 화면, 한국어, 레퍼런스 완성본 `examples/`), `scripts/`(`extract_pptx.py`, `bundle.py`, `states.mjs`), `assets/template.html` |
 | `guide/class-html-guide.md` | 채팅 AI용 합본 지침(빌드 때 자동 생성) |
 | `examples/` | 직접 만든 예시 덱(`m2-parts.html`: 모든 부품), 연수 슬라이드(`training.html`), 실습용 PPT(`practice/`: 과학 '확산', 사회 '수요와 공급', `tools/make_practice_pptx.py`로 만듦) |
 | `tests/`, `tools/` | 엔진 시험, 빌드, 화면 캡처·점검(`tools/shots.mjs`) |

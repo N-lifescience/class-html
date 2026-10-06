@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="ko" data-deck="social-supply-demand-1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>떡볶이 값은 누가 정할까? · 수요와 공급</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<style>
+/* theme.json의 css 줄 */
+body[data-theme="ppt"] { --accent: #1D4E89; --tab: #1D4E89; --tab-ink: #FFFFFF; }
+body[data-theme="ppt"] {
+  --navy: #1D4E89; --orange: #F59F00; --ink: #222222; --muted: #6B7078; --pale: #D6E2F0;
+  --dem: #1D4E89; --sup: #E8590C; --soft: #F1F5FA; --line: #C9D4E2;
+}
+
+/* 원본 PPT의 얼굴: 위 남색 머리 띠 + 오른쪽 주황 배지 */
+section.slide > h2 {
+  position: absolute; z-index: 5; left: 0; top: 0; width: 1280px; height: 100px; margin: 0;
+  padding: 0 260px 0 60px; box-sizing: border-box; display: flex; align-items: center;
+  background: var(--navy); color: #fff; font-size: 42px; line-height: 1.2; border: 0;
+  box-shadow: 0 3px 6px rgba(0,0,0,.25);
+}
+section.slide > h2::after { display: none; }
+.badge {
+  position: absolute; z-index: 6; top: 27px; right: 42px; width: 182px; height: 48px; border-radius: 8px;
+  background: var(--orange); color: var(--ink); font-size: 26px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,.3);
+}
+.key { color: var(--navy); font-weight: 800; }
+
+/* 표지: 남색 바탕 + 주황 세로 막대 */
+body[data-theme="ppt"] section.slide.cover { background: var(--navy); }
+body[data-theme="ppt"] section.slide.cover::before, body[data-theme="ppt"] section.slide.cover::after { color: #fff; }
+.cv { margin-top: 96px; border-left: 16px solid var(--orange); padding: 8px 0 8px 48px; }
+.cv .cv-k { margin: 0 0 18px; font-size: 32px; color: #fff; font-weight: 500; }
+section.slide.cover h1 { color: #fff; margin: 0; font-size: 76px; line-height: 1.2; }
+.cv .cv-s { margin: 26px 0 0; font-size: 38px; color: #fff; font-weight: 500; }
+
+/* 학습 목표 */
+.goals { list-style: none; margin: 24px 0 0; padding: 0; counter-reset: g; }
+.goals li { counter-increment: g; display: flex; align-items: center; gap: 24px; font-size: 32px; line-height: 1.4; margin-bottom: 30px; }
+.goals li::before { content: counter(g); flex: none; width: 60px; height: 60px; border-radius: 10px; background: var(--orange); color: var(--ink); font-weight: 800; font-size: 32px; display: grid; place-items: center; }
+
+/* 생각 열기 */
+.open { display: grid; grid-template-columns: 1fr 540px; gap: 40px; align-items: start; margin-top: 24px; }
+.open p { font-size: 32px; line-height: 1.5; margin: 0 0 18px; }
+.open .fig img { width: 540px; height: auto; display: block; }
+.ans { margin-top: 26px; padding: 18px 26px; border-left: 10px solid var(--orange); background: #FFF6DE; border-radius: 0 14px 14px 0; font-size: 28px; line-height: 1.5; font-weight: 700; color: var(--ink); }
+
+/* 개념 장 */
+.defs { margin: 20px 0 0; }
+.defs > div { display: grid; grid-template-columns: 170px 1fr; gap: 24px; align-items: center; padding: 18px 0; border-bottom: 2px solid var(--line); }
+.defs dt { font-size: 30px; font-weight: 800; color: var(--navy); }
+.defs dd { margin: 0; font-size: 30px; line-height: 1.45; }
+.law { margin-top: 28px; padding: 20px 28px; background: var(--soft); border-radius: 16px; font-size: 32px; line-height: 1.5; font-weight: 800; color: var(--ink); }
+.law b { display: inline-block; margin-right: 14px; padding: 2px 14px; border-radius: 8px; background: var(--navy); color: #fff; font-size: 28px; }
+.law.sup b { background: var(--sup); }
+.dir { margin-top: 26px; font-size: 32px; font-weight: 800; color: var(--navy); }
+.dir.sup { color: var(--sup); }
+
+/* 도해 공통 */
+.dh { display: grid; gap: 30px; margin-top: 4px; }
+.dh-view { position: relative; }
+.dh-veil { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; text-align: center; border: 3px dashed #B8C4CE; border-radius: 18px; background: #EEF2F5; color: #5C6B78; font-size: 28px; font-weight: 600; line-height: 1.5; }
+.dh-veil[hidden] { display: none; }
+.dh-lab { margin: 0; font-size: 26px; font-weight: 700; color: var(--ink); }
+.dh-lab b { color: var(--navy); }
+.dh-note { margin: 0; font-size: 22px; line-height: 1.4; color: var(--muted); }
+section.slide input.dh-range { width: 100%; height: 56px; margin: 0; accent-color: var(--navy); cursor: pointer; }
+.dh-ticks { display: flex; justify-content: space-between; margin-top: -6px; font-size: 20px; color: var(--muted); }
+.dh-out { margin: 4px 0 0; font-size: 25px; line-height: 1.45; font-weight: 700; color: var(--ink); white-space: pre-line; min-height: 72px; }
+.dh-svg { display: block; }
+.dh-svg text { font-family: inherit; }
+section.slide button.dh-b {
+  width: auto; margin: 0; font: inherit; font-size: 24px; font-weight: 700; line-height: 1.25;
+  min-height: 60px; padding: 8px 14px; border: 3px solid var(--line); border-radius: 14px;
+  background: #fff; color: var(--ink); cursor: pointer;
+}
+section.slide button.dh-b[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+section.slide button.dh-b:disabled { opacity: .45; cursor: default; }
+.c-dem { color: var(--dem); } .c-sup { color: var(--sup); }
+
+/* 도해 ① 표 → 그래프 */
+#td .dh { grid-template-columns: 430px 1fr; }
+.tg { border-collapse: collapse; width: 100%; margin: 8px 0 8px; font-size: 24px; text-align: center; }
+.tg th, .tg td { text-align: center; height: 41px; padding: 0 6px; border-bottom: 2px solid #fff; }
+.tg thead th { background: var(--pale); font-weight: 800; color: var(--ink); line-height: 1.2; }
+.tg tbody th { background: var(--pale); font-weight: 700; color: var(--ink); }
+.tg tbody td { background: #F7F9FC; color: var(--ink); }
+.tg tr.now th, .tg tr.now td { background: #FFE8A8; font-weight: 800; }
+
+/* 도해 ② 시장 가격 */
+#market .dh { grid-template-columns: 430px 1fr; }
+.mk-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.mk-bar p { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
+.mk-bar div { position: relative; height: 26px; border-radius: 8px; background: #E6EBF0; overflow: hidden; }
+.mk-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; transition: width .2s; }
+.mk-calc { margin: 8px 0 10px; padding: 6px 14px; border-radius: 12px; background: var(--soft); font-size: 22px; line-height: 1.4; color: var(--ink); min-height: 74px; white-space: pre-line; }
+.mk-take { margin: 12px 0 0; font-size: 25px; line-height: 1.4; }
+
+/* 도해 ③ 수요량의 변화와 수요의 변화 */
+.sh-btns { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 2px; }
+section.slide .sh-btns button.dh-b { min-height: 80px; font-size: 22px; }
+#shift .dh { grid-template-columns: 520px 1fr; margin-top: 18px; gap: 30px; }
+.st { border-collapse: collapse; width: 100%; font-size: 22px; text-align: center; table-layout: fixed; }
+.st col.h { width: 120px; }
+.st th, .st td { height: 52px; padding: 0 4px; border: 2px solid #fff; color: var(--ink); line-height: 1.15; }
+.st thead th { background: var(--pale); font-weight: 800; }
+.st tbody th { background: var(--pale); font-weight: 700; }
+.st tbody td { background: #F7F9FC; }
+.st td s { display: block; font-size: 20px; color: var(--muted); }
+.st td.chg { background: #FFE8A8; font-weight: 800; }
+.st .was { background: #EDEFF2; }
+.st .now { outline: 4px solid var(--orange); outline-offset: -4px; font-weight: 800; }
+.sh-tag { display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 10px; background: var(--orange); color: var(--ink); font-size: 24px; font-weight: 800; }
+
+/* 확인 문제 */
+#check-2 .sort .bin { min-height: 96px; }
+.q-wrap .q { font-size: 30px; line-height: 1.45; }
+
+/* 요인 표 */
+#factors table.compare { width: 1000px; margin: 24px auto 0; font-size: 28px; --table-head: var(--pale); }
+#factors table.compare th { color: var(--ink); }
+.rule { margin-top: 26px; padding: 16px 26px; border-left: 10px solid var(--navy); background: var(--soft); border-radius: 0 14px 14px 0; font-size: 28px; line-height: 1.5; font-weight: 700; color: var(--ink); }
+
+/* 정리 */
+.sum { list-style: none; margin: 18px 0 0; padding: 0; }
+.sum li { position: relative; padding: 16px 0 16px 40px; font-size: 32px; line-height: 1.45; border-bottom: 2px solid var(--line); }
+.sum li::before { content: "•"; position: absolute; left: 8px; color: var(--navy); font-weight: 800; }
+.sum b { color: var(--navy); }
+.sum b.c-sup { color: var(--sup); }
+</style>
+</head>
+<body data-theme="ppt">
+
+<!-- 1 -->
+<section class="slide cover" id="cover" data-title="표지">
+  <div class="cv">
+    <p class="cv-k">중학교 사회 · 시장 경제</p>
+    <h1>떡볶이 값은<br>누가 정할까?</h1>
+    <p class="cv-s">수요와 공급, 시장 가격의 결정</p>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="slide" id="goal" data-sec="학습 목표" data-title="학습 목표">
+  <h2>학습 목표</h2><span class="badge">학습 목표</span>
+  <ol class="goals">
+    <li>수요 법칙과 공급 법칙을 설명할 수 있다.</li>
+    <li>시장에서 균형 가격이 정해지는 과정을 설명할 수 있다.</li>
+    <li>수요와 공급을 변하게 하는 요인을 구분할 수 있다.</li>
+  </ol>
+</section>
+
+<!-- 3 -->
+<section class="slide" id="watermelon" data-sec="생각 열기" data-title="수박 값은 왜 계절마다 다를까?">
+  <h2>수박 값은 왜 계절마다 다를까?</h2><span class="badge">생각 열기</span>
+  <div class="open">
+    <div>
+      <p>같은 크기의 수박인데<br>여름에는 한 통에 15,000원,<br>겨울에는 35,000원이다.</p>
+      <p class="key">수박 값을 정하는 사람은<br>누구일까?</p>
+      <p class="ans step">값은 한 사람이 정하지 않는다.<br>사려는 사람과 팔려는 사람이<br>만나서 정한다.</p>
+    </div>
+    <figure class="fig"><img src="media/soc-3-1.png" alt="여름 해와 겨울 눈송이 사이에 놓인 수박" width="540"></figure>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide" id="demand" data-sec="1. 수요와 공급" data-title="수요와 수요 법칙">
+  <h2>수요와 수요 법칙</h2><span class="badge">개념</span>
+  <dl class="defs">
+    <div><dt>수요</dt><dd>어떤 상품을 일정한 가격에 사려고 하는 욕구</dd></div>
+    <div><dt>수요량</dt><dd>일정한 가격에서 사려고 하는 상품의 양</dd></div>
+  </dl>
+  <p class="law"><b>수요 법칙</b>가격이 오르면 수요량이 줄어들고<br>가격이 내리면 수요량이 늘어난다.</p>
+  <p class="dir step">가격과 수요량은 반대 방향으로 움직인다.</p>
+</section>
+
+<!-- 5 -->
+<section class="slide" id="supply" data-sec="1. 수요와 공급" data-title="공급과 공급 법칙">
+  <h2>공급과 공급 법칙</h2><span class="badge">개념</span>
+  <dl class="defs">
+    <div><dt>공급</dt><dd>어떤 상품을 일정한 가격에 팔려고 하는 욕구</dd></div>
+    <div><dt>공급량</dt><dd>일정한 가격에서 팔려고 하는 상품의 양</dd></div>
+  </dl>
+  <p class="law sup"><b>공급 법칙</b>가격이 오르면 공급량이 늘어나고<br>가격이 내리면 공급량이 줄어든다.</p>
+  <p class="dir sup step">가격과 공급량은 같은 방향으로 움직인다.</p>
+</section>
+
+<!-- 6 도해 ①: 표가 곡선이 된다 -->
+<section class="slide" id="td" data-sec="1. 수요와 공급" data-title="도해 ① 표를 그래프로">
+  <h2>가격이 오르면 두 양은 어떻게 움직일까?</h2><span class="badge">자료</span>
+  <div class="dh" data-ai="표를 그래프로 옮기는 도해(수치는 PPT 6쪽 표 그대로)">
+    <div>
+      <p class="dh-note">어느 마을 떡볶이 시장의 하루 거래를<br>나타낸 가상 자료이다(예시).</p>
+      <table class="tg" id="td-table">
+        <thead><tr><th>가격(원)</th><th>수요량<br>(인분)</th><th>공급량<br>(인분)</th></tr></thead>
+        <tbody>
+          <tr><th>2,000</th><td>500</td><td>100</td></tr>
+          <tr><th>2,500</th><td>400</td><td>200</td></tr>
+          <tr><th>3,000</th><td>300</td><td>300</td></tr>
+          <tr><th>3,500</th><td>200</td><td>400</td></tr>
+          <tr><th>4,000</th><td>100</td><td>500</td></tr>
+        </tbody>
+      </table>
+      <p class="dh-lab">가격 <b id="td-k-out">시작</b></p>
+      <input class="dh-range" type="range" autocomplete="off" id="td-k" min="0" max="5" value="0" aria-label="떡볶이 가격">
+      <p class="step key" style="font-size:26px;line-height:1.4;margin:8px 0 0">수요 곡선은 오른쪽 아래로,<br>공급 곡선은 오른쪽 위로 향한다.</p>
+    </div>
+    <div class="dh-view">
+      <svg class="dh-svg" id="td-svg" width="652" height="360" viewBox="0 0 652 360" aria-label="가격에 따른 수요량과 공급량 그래프"></svg>
+      <p class="dh-out" id="td-out"></p>
+      <div class="dh-veil" id="td-veil"><span>가격 막대를 밀면<br>표의 값이 그래프에 찍힌다</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 도해 ②: 시장 가격의 결정 -->
+<section class="slide" id="market" data-sec="2. 시장 가격의 결정" data-title="도해 ② 시장 가격의 결정">
+  <h2>떡볶이 값은 왜 3,000원에 자리 잡을까?</h2><span class="badge">개념</span>
+  <div class="dh" data-ai="시장 가격 결정 도해와 설명 문장">
+    <div>
+      <p class="dh-lab">가격 <b id="mk-k-out">시작</b></p>
+      <input class="dh-range" type="range" autocomplete="off" id="mk-k" min="0" max="21" value="0" aria-label="떡볶이 가격">
+      <div class="dh-ticks"><span>시작</span><span>2,000원 ~ 4,000원</span></div>
+      <p class="dh-note" data-ai="모형 수치">표 사이 가격은 두 값을 직선으로 이은 모형이다.</p>
+      <div class="mk-bars">
+        <div class="mk-bar"><p class="c-dem">수요량(사려는 양) <span id="mk-qd-t"></span></p><div><i id="mk-qd" style="background:var(--dem)"></i></div></div>
+        <div class="mk-bar"><p class="c-sup">공급량(팔려는 양) <span id="mk-qs-t"></span></p><div><i id="mk-qs" style="background:var(--sup)"></i></div></div>
+      </div>
+      <p class="mk-calc" id="mk-calc"></p>
+      <button class="dh-b" id="mk-run" type="button" disabled>시장에 맡기기 ▶</button>
+      <p class="mk-take key step">결국 수요량 = 공급량이 되는 3,000원에서<br>가격이 정해진다(균형 가격).</p>
+    </div>
+    <div class="dh-view">
+      <svg class="dh-svg" id="mk-svg" width="652" height="360" viewBox="0 0 652 360" aria-label="가격선과 초과 수요·초과 공급을 보여 주는 수요·공급 그래프"></svg>
+      <p class="dh-out" id="mk-out"></p>
+      <div class="dh-veil" id="mk-veil"><span>가격 막대를 밀어<br>떡볶이 값을 정해 보자</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 확인 문제 1 -->
+<section class="slide" id="check-1" data-sec="2. 시장 가격의 결정" data-title="확인 문제 1">
+  <h2>확인 문제 1</h2><span class="badge">확인 문제</span>
+  <div class="q-wrap">
+    <p class="q" data-n="1">6쪽의 표에서 떡볶이 1인분 가격이 2,500원일 때<br>나타나는 현상으로 옳은 것은?</p>
+    <div class="quiz" data-cols="2" data-ai="보기별 풀이(정답은 PPT 노트)">
+      <button class="opt" data-why="2,500원일 때는 수요량(400인분)이 공급량(200인분)보다 많다. 초과 공급이 아니다.">200인분의 초과 공급이 나타난다.</button>
+      <button class="opt" data-ok data-why="맞다. 수요량 400인분에서 공급량 200인분을 빼면 200인분의 초과 수요다.">200인분의 초과 수요가 나타난다.</button>
+      <button class="opt" data-why="수요량 400인분과 공급량 200인분의 차이는 200인분이다.">100인분의 초과 수요가 나타난다.</button>
+      <button class="opt" data-why="수요량과 공급량이 같아지는 가격은 3,000원이다.">수요량과 공급량이 같다.</button>
+      <button class="opt" data-why="2,500원일 때는 수요량이 공급량보다 많다. 초과 공급이 아니다.">300인분의 초과 공급이 나타난다.</button>
+    </div>
+  </div>
+  <p class="rule step">초과 수요일 때는 사려는 사람끼리,<br>초과 공급일 때는 팔려는 사람끼리 경쟁해서 가격이 움직인다.</p>
+</section>
+
+<!-- 9 도해 ③: 수요량의 변화와 수요의 변화 -->
+<section class="slide" id="shift" data-sec="3. 수요·공급의 변화" data-title="도해 ③ 수요량이 변했나, 수요가 변했나">
+  <h2>수요량이 변한 걸까, 수요가 변한 걸까?</h2><span class="badge">개념</span>
+  <div class="sh-btns" id="sh-btns" data-activity>
+    <button class="dh-b" type="button" data-v="price" aria-pressed="false">떡볶이 값이<br>3,500원으로 오름</button>
+    <button class="dh-b" type="button" data-v="income" aria-pressed="false">소비자의<br>소득이 늘어남</button>
+    <button class="dh-b" type="button" data-v="pref" aria-pressed="false">소비자의<br>선호가 줄어듦</button>
+    <button class="dh-b" type="button" data-v="cost" aria-pressed="false">재료비가<br>오름</button>
+    <button class="dh-b" type="button" data-v="tech" aria-pressed="false">생산 기술이<br>발달함</button>
+  </div>
+  <div class="dh-view">
+    <div class="dh" data-ai="수요량 변화와 수요 변화를 비교하는 도해">
+      <div>
+        <table class="st" id="sh-table">
+          <colgroup><col class="h"><col><col><col><col><col></colgroup>
+          <thead><tr><th>가격(원)</th><th>2,000</th><th>2,500</th><th>3,000</th><th>3,500</th><th>4,000</th></tr></thead>
+          <tbody>
+            <tr id="sh-rd"><th>수요량</th><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr id="sh-rs"><th>공급량</th><td></td><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+        <p class="dh-note" data-ai="모형 수치" style="margin-top:6px">회색 점선은 처음 곡선이다.<br>변화 폭 100인분은 설명을 위한 모형이다.</p>
+        <p class="dh-out" id="sh-out" style="font-size:24px"></p>
+        <p id="sh-tagline" style="margin:0"><span class="sh-tag" id="sh-tag"></span></p>
+      </div>
+      <svg class="dh-svg" id="sh-svg" width="560" height="370" viewBox="0 0 560 370" aria-label="수요 곡선과 공급 곡선의 이동"></svg>
+    </div>
+    <div class="dh-veil" id="sh-veil"><span>위 단추를 하나 골라 보자.<br>표와 그래프가 어떻게 바뀔까?</span></div>
+  </div>
+</section>
+
+<!-- 10 요인 -->
+<section class="slide" id="factors" data-sec="3. 수요·공급의 변화" data-title="수요와 공급을 변하게 하는 요인">
+  <h2>수요와 공급을 변하게 하는 요인</h2><span class="badge">개념</span>
+  <table class="compare">
+    <thead><tr><th>수요를 변하게 하는 요인</th><th>공급을 변하게 하는 요인</th></tr></thead>
+    <tbody>
+      <tr><td>소비자의 소득</td><td>생산 요소의 가격 (재료비, 임금)</td></tr>
+      <tr><td>소비자의 선호</td><td>생산 기술</td></tr>
+      <tr><td>관련 상품(대체재·보완재)의 가격</td><td>공급자의 수</td></tr>
+      <tr><td>인구 (소비자의 수)</td><td>기후 (농산물)</td></tr>
+    </tbody>
+  </table>
+  <p class="rule step">가격이 바뀌면 수요량·공급량이 움직인다.<br>가격 말고 다른 요인이 바뀌면 수요·공급 자체가 바뀐다.</p>
+</section>
+
+<!-- 11 확인 문제 2 -->
+<section class="slide" id="check-2" data-sec="3. 수요·공급의 변화" data-title="확인 문제 2">
+  <h2>확인 문제 2</h2><span class="badge">확인 문제</span>
+  <p class="q" data-n="2">다음 사례가 떡볶이의 수요를 변하게 하는지,<br>공급을 변하게 하는지 분류해 보자.</p>
+  <div class="sort" data-ai="카드별 이유와 실마리(정답은 PPT 노트)">
+    <div class="bin" data-bin="d"><h3>수요를 변하게 한다</h3></div>
+    <div class="bin" data-bin="s"><h3>공급을 변하게 한다</h3></div>
+    <span data-bin="d" data-why="맞다. 소비자의 선호가 바뀌어 수요가 변한다." data-hint="바뀐 것은 손님의 마음일까, 가게의 사정일까?">ㄱ. 떡볶이 가게가 방송에 맛집으로 소개되었다.</span>
+    <span data-bin="s" data-why="맞다. 떡의 재료인 쌀값, 곧 생산 요소의 가격이 올라 공급이 변한다." data-hint="쌀값은 사는 사람과 파는 사람 가운데 누구의 비용일까?">ㄴ. 떡의 재료인 쌀 가격이 크게 올랐다.</span>
+    <span data-bin="s" data-why="맞다. 생산 기술이 발달해 공급이 변한다." data-hint="새 기계를 쓰는 사람은 누구일까?">ㄷ. 떡을 빠르게 뽑는 새 기계가 나왔다.</span>
+    <span data-bin="d" data-why="맞다. 소비자의 소득이 늘어 수요가 변한다." data-hint="용돈은 사는 사람의 돈일까, 파는 사람의 돈일까?">ㄹ. 학생들의 용돈이 늘었다.</span>
+    <span data-bin="s" data-why="맞다. 공급자의 수가 늘어 공급이 변한다." data-hint="늘어난 것은 사는 사람일까, 파는 사람일까?">ㅁ. 동네에 떡볶이 가게가 세 곳 더 생겼다.</span>
+    <span data-bin="d" data-why="어묵은 떡볶이와 함께 먹는 보완재다. 관련 상품의 가격이 바뀌어 수요가 변한다." data-hint="어묵은 떡볶이의 재료일까, 함께 사 먹는 상품일까?">ㅂ. 떡볶이와 함께 먹는 어묵의 가격이 크게 올랐다.</span>
+  </div>
+</section>
+
+<!-- 12 정리 -->
+<section class="slide" id="summary" data-sec="정리" data-title="정리">
+  <h2>정리</h2><span class="badge">정리</span>
+  <ul class="sum">
+    <li><b>수요 법칙</b>: 가격과 수요량은 반대로 움직인다.</li>
+    <li><b class="c-sup">공급 법칙</b>: 가격과 공급량은 같은 방향으로 움직인다.</li>
+    <li>수요량과 공급량이 같아지는 곳에서<br><b>균형 가격</b>이 정해진다.</li>
+    <li>소득·선호 등은 수요를,<br>생산 비용·기술 등은 공급을 변하게 한다.</li>
+  </ul>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 슬라이더는 손을 떼면 초점을 풀어 → 키·리모컨이 다시 장을 넘기게 한다
+  document.querySelectorAll('section.slide input[type=range]').forEach((r) => r.addEventListener('change', () => r.blur()));
+  const $ = (s) => document.querySelector(s);
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const won = (n) => Math.round(n).toLocaleString('ko-KR');
+  const DEM = '#1D4E89', SUP = '#E8590C', INK = '#222222', MUTED = '#6B7078';
+
+  // 떡볶이 시장(PPT 6쪽 표): 수요량 = 900 − 0.2 × 가격, 공급량 = 0.2 × 가격 − 300
+  const qd = (p, dd = 0) => 900 + dd - 0.2 * p;
+  const qs = (p, ds = 0) => 0.2 * p - 300 + ds;
+  const PRICES = [2000, 2500, 3000, 3500, 4000];
+
+  function mk(parent, tag, attrs, text) {
+    const e = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    parent.appendChild(e);
+    return e;
+  }
+  function clear(g) { while (g.firstChild) g.removeChild(g.firstChild); }
+
+  // 그래프 틀: 가로 수량 0~600인분, 세로 가격 1,750~4,250원
+  function frame(svg, L, R, T, B, H) {
+    const X = (q) => L + q * (R - L) / 600;
+    const Y = (p) => B - (p - 1750) * (B - T) / 2500;
+    const defs = mk(svg, 'defs', {});
+    [['ah-ink', INK], ['ah-dem', DEM], ['ah-sup', SUP], ['ah-red', '#C92A2A']].forEach(([id, c]) => {
+      const m = mk(defs, 'marker', { id: svg.id + id, viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 3.6, markerHeight: 3.6, orient: 'auto-start-reverse' });
+      mk(m, 'path', { d: 'M0 0 L10 5 L0 10 Z', fill: c });
+    });
+    const ticks = [];
+    PRICES.forEach((p) => {
+      mk(svg, 'line', { x1: L, y1: Y(p), x2: R, y2: Y(p), stroke: '#E3E8EF', 'stroke-width': 2 });
+      ticks.push(mk(svg, 'text', { x: L - 10, y: Y(p) + 8, 'text-anchor': 'end', 'font-size': 22, fill: '#444' }, won(p)));
+    });
+    for (let q = 100; q <= 600; q += 100) mk(svg, 'text', { x: X(q), y: B + 30, 'text-anchor': 'middle', 'font-size': 22, fill: '#444' }, q);
+    mk(svg, 'line', { x1: L, y1: T - 10, x2: L, y2: B, stroke: INK, 'stroke-width': 3 });
+    mk(svg, 'line', { x1: L, y1: B, x2: R + 8, y2: B, stroke: INK, 'stroke-width': 3 });
+    mk(svg, 'text', { x: 6, y: T - 6, 'font-size': 22, 'font-weight': 700, fill: INK }, '가격(원)');
+    mk(svg, 'text', { x: R + 26, y: H - 4, 'text-anchor': 'end', 'font-size': 22, 'font-weight': 700, fill: INK }, '수량(인분)');
+    const g = mk(svg, 'g', {});
+    return { X, Y, g, ticks, arrow: (k) => `url(#${svg.id}ah-${k})` };
+  }
+
+  /* ① 표를 그래프로: 가격 칸을 옮길 때마다 표의 두 점을 찍는다 */
+  (() => {
+    const svg = $('#td-svg'), slider = $('#td-k');
+    const F = frame(svg, 96, 600, 40, 300, 360);
+    const rows = [...document.querySelectorAll('#td-table tbody tr')];
+    const seen = new Set();
+    let prev = 0;
+    function draw() {
+      const k = +slider.value;
+      $('#td-veil').hidden = k > 0;
+      rows.forEach((r, i) => r.classList.toggle('now', i + 1 === k));
+      clear(F.g);
+      if (!k) { seen.clear(); prev = 0; $('#td-k-out').textContent = '시작'; $('#td-out').textContent = ''; return; }
+      const from = prev || k;
+      for (let i = Math.min(from, k); i <= Math.max(from, k); i++) seen.add(i);
+      const p = PRICES[k - 1], d = qd(p), s = qs(p);
+      $('#td-k-out').textContent = won(p) + '원';
+      const idx = [...seen].sort((a, b) => a - b);
+      const pts = (f) => idx.map((i) => `${F.X(f(PRICES[i - 1]))},${F.Y(PRICES[i - 1])}`).join(' ');
+      if (idx.length > 1) {
+        mk(F.g, 'polyline', { points: pts(qd), fill: 'none', stroke: DEM, 'stroke-width': 6, 'stroke-linecap': 'round' });
+        mk(F.g, 'polyline', { points: pts(qs), fill: 'none', stroke: SUP, 'stroke-width': 6, 'stroke-linecap': 'round' });
+      }
+      idx.forEach((i) => {
+        const pi = PRICES[i - 1];
+        mk(F.g, 'circle', { cx: F.X(qd(pi)), cy: F.Y(pi), r: 8, fill: DEM });
+        mk(F.g, 'circle', { cx: F.X(qs(pi)), cy: F.Y(pi), r: 8, fill: SUP });
+      });
+      // 지금 가격의 가로선과 두 점
+      mk(F.g, 'line', { x1: F.X(0), y1: F.Y(p), x2: F.X(Math.max(d, s)), y2: F.Y(p), stroke: MUTED, 'stroke-width': 2, 'stroke-dasharray': '8 6' });
+      if (d === s) {
+        mk(F.g, 'circle', { cx: F.X(d), cy: F.Y(p), r: 13, fill: INK });
+        mk(F.g, 'text', { x: F.X(d) + 18, y: F.Y(p) - 16, 'font-size': 26, 'font-weight': 800, fill: INK }, 'E');
+      } else {
+        mk(F.g, 'circle', { cx: F.X(d), cy: F.Y(p), r: 13, fill: DEM, stroke: '#fff', 'stroke-width': 3 });
+        mk(F.g, 'circle', { cx: F.X(s), cy: F.Y(p), r: 13, fill: SUP, stroke: '#fff', 'stroke-width': 3 });
+        const lab = (q, txt, c) => mk(F.g, 'text', { x: F.X(q), y: F.Y(p) - 22, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 800, fill: c, stroke: '#fff', 'stroke-width': 6, 'paint-order': 'stroke' }, txt);
+        lab(d, '수요량 ' + d, DEM);
+        lab(s, '공급량 ' + s, SUP);
+      }
+      if (seen.size === 5) {
+        mk(F.g, 'text', { x: F.X(500) + 22, y: F.Y(4000) + 8, 'font-size': 22, 'font-weight': 800, fill: SUP }, '공급 곡선');
+        mk(F.g, 'text', { x: F.X(500) + 22, y: F.Y(2000) + 8, 'font-size': 22, 'font-weight': 800, fill: DEM }, '수요 곡선');
+      }
+      let msg;
+      if (!prev || prev === k) {
+        msg = `${won(p)}원일 때 수요량은 ${d}인분,\n공급량은 ${s}인분이다.`;
+      } else {
+        const pp = PRICES[prev - 1], up = k > prev;
+        msg = `가격이 ${won(pp)}원에서 ${won(p)}원으로 ${up ? '오르자' : '내리자'}\n` +
+              `수요량은 ${qd(pp)} → ${d}인분으로 ${up ? '줄고' : '늘고'},\n공급량은 ${qs(pp)} → ${s}인분으로 ${up ? '늘었다' : '줄었다'}.`;
+      }
+      if (d === s) msg += '\n두 양이 같다. 두 곡선이 만나는 점 E다.';
+      $('#td-out').textContent = msg;
+      prev = k;
+    }
+    slider.addEventListener('input', draw);
+    draw();
+  })();
+
+  /* ② 시장 가격의 결정: 가격선과 초과량, 그리고 가격이 움직이는 방향 */
+  (() => {
+    const svg = $('#mk-svg'), slider = $('#mk-k'), run = $('#mk-run');
+    const F = frame(svg, 96, 600, 40, 300, 360);
+    // 바탕: 두 곡선과 점 E
+    const base = mk(svg, 'g', {});
+    svg.insertBefore(base, F.g);
+    mk(base, 'line', { x1: F.X(qd(2000)), y1: F.Y(2000), x2: F.X(qd(4000)), y2: F.Y(4000), stroke: DEM, 'stroke-width': 6, 'stroke-linecap': 'round' });
+    mk(base, 'line', { x1: F.X(qs(2000)), y1: F.Y(2000), x2: F.X(qs(4000)), y2: F.Y(4000), stroke: SUP, 'stroke-width': 6, 'stroke-linecap': 'round' });
+    mk(base, 'text', { x: F.X(500) + 4, y: F.Y(3750) + 8, 'font-size': 22, 'font-weight': 800, fill: SUP }, '공급 곡선');
+    mk(base, 'text', { x: F.X(500) + 4, y: F.Y(2250) + 8, 'font-size': 22, 'font-weight': 800, fill: DEM }, '수요 곡선');
+    let timer = null;
+    const price = (k) => 2000 + (k - 1) * 100;
+    function stop() { if (timer) { clearInterval(timer); timer = null; } run.textContent = '시장에 맡기기 ▶'; }
+    function draw() {
+      const k = +slider.value;
+      $('#mk-veil').hidden = k > 0;
+      clear(F.g);
+      if (!k) {
+        stop(); run.disabled = true;
+        $('#mk-k-out').textContent = '시작';
+        $('#mk-qd-t').textContent = ''; $('#mk-qs-t').textContent = '';
+        $('#mk-qd').style.width = '0'; $('#mk-qs').style.width = '0';
+        $('#mk-calc').textContent = '수요량 − 공급량 = ?\n→ ?';
+        $('#mk-out').textContent = '';
+        return;
+      }
+      const p = price(k), d = Math.round(qd(p)), s = Math.round(qs(p)), gap = d - s;
+      run.disabled = false;
+      $('#mk-k-out').textContent = won(p) + '원';
+      $('#mk-qd-t').textContent = d + '인분';
+      $('#mk-qs-t').textContent = s + '인분';
+      $('#mk-qd').style.width = (d / 500 * 100) + '%';
+      $('#mk-qs').style.width = (s / 500 * 100) + '%';
+      const kind = gap > 0 ? '초과 수요' : gap < 0 ? '초과 공급' : '균형';
+      $('#mk-calc').textContent = `수요량 ${d} − 공급량 ${s} = ${gap < 0 ? '−' + -gap : gap}인분\n→ ` + (gap ? `${kind} ${Math.abs(gap)}인분` : '균형');
+      const y = F.Y(p);
+      // 세로축 가격 상자에 가리는 눈금 글은 숨긴다
+      F.ticks.forEach((t, i) => t.setAttribute('opacity', Math.abs(F.Y(PRICES[i]) - y) < 30 ? 0 : 1));
+      mk(F.g, 'line', { x1: F.X(0), y1: y, x2: F.X(600), y2: y, stroke: MUTED, 'stroke-width': 3, 'stroke-dasharray': '10 7' });
+      mk(F.g, 'rect', { x: 8, y: y - 17, width: 82, height: 34, rx: 8, fill: INK });
+      mk(F.g, 'text', { x: 49, y: y + 8, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 800, fill: '#fff' }, won(p));
+      if (gap) {
+        const c = gap > 0 ? DEM : SUP;
+        mk(F.g, 'line', { x1: F.X(Math.min(d, s)), y1: y, x2: F.X(Math.max(d, s)), y2: y, stroke: c, 'stroke-width': 14, opacity: 0.35 });
+        // 곡선이 벌어지는 쪽(초과 수요는 아래, 초과 공급은 위)에, 글이 들어갈 만큼 벌어졌을 때만
+        if (Math.abs(gap) >= 200) mk(F.g, 'text', { x: F.X(300), y: y + (gap > 0 ? 40 : -18), 'text-anchor': 'middle', 'font-size': 24, 'font-weight': 800, fill: c, stroke: '#fff', 'stroke-width': 6, 'paint-order': 'stroke' }, `${kind} ${Math.abs(gap)}인분`);
+        // 가격이 움직이는 방향
+        const ax = F.X(0) + 22, dy = gap > 0 ? -56 : 56;
+        mk(F.g, 'line', { x1: ax, y1: y, x2: ax, y2: y + dy, stroke: '#C92A2A', 'stroke-width': 6, 'marker-end': F.arrow('red') });
+        mk(F.g, 'text', { x: ax - 8, y: gap > 0 ? y + dy - 14 : y + dy + 28, 'font-size': 22, 'font-weight': 800, fill: '#C92A2A', stroke: '#fff', 'stroke-width': 6, 'paint-order': 'stroke' }, gap > 0 ? '가격 상승' : '가격 하락');
+      }
+      mk(F.g, 'circle', { cx: F.X(d), cy: y, r: 11, fill: DEM, stroke: '#fff', 'stroke-width': 3 });
+      mk(F.g, 'circle', { cx: F.X(s), cy: y, r: 11, fill: SUP, stroke: '#fff', 'stroke-width': 3 });
+      if (!gap) {
+        mk(F.g, 'circle', { cx: F.X(300), cy: y, r: 14, fill: INK });
+        mk(F.g, 'text', { x: F.X(300) + 20, y: y - 18, 'font-size': 24, 'font-weight': 800, fill: INK, stroke: '#fff', 'stroke-width': 6, 'paint-order': 'stroke' }, '균형점 E');
+      }
+      $('#mk-out').textContent = gap > 0
+        ? `사려는 양이 ${gap}인분 더 많다(초과 수요).\n사려는 사람끼리 경쟁해 가격이 오른다.`
+        : gap < 0
+        ? `팔려는 양이 ${-gap}인분 더 많다(초과 공급).\n팔려는 사람끼리 경쟁해 가격이 내린다.`
+        : `수요량과 공급량이 ${d}인분으로 같다.\n가격이 더 움직이지 않는다. 균형 가격이다.`;
+      if (!gap) stop();
+    }
+    function tick() {
+      const k = +slider.value, p = price(k), gap = qd(p) - qs(p);
+      if (!k || Math.abs(gap) < 1e-9) { stop(); return; }
+      slider.value = k + (gap > 0 ? 1 : -1);
+      draw();
+    }
+    run.addEventListener('click', () => {
+      if (timer) { stop(); return; }
+      run.textContent = '멈추기 ■';
+      timer = setInterval(tick, 500);
+      tick();
+    });
+    slider.addEventListener('input', () => { stop(); draw(); });
+    if (window.ClassHTML && ClassHTML.onHide) ClassHTML.onHide((slide) => { if (slide && slide.id === 'market') stop(); });
+    draw();
+  })();
+
+  /* ③ 수요량의 변화와 수요의 변화: 고른 사건이 표와 곡선을 다시 계산한다 */
+  (() => {
+    const svg = $('#sh-svg');
+    const F = frame(svg, 96, 520, 40, 310, 370);
+    const CASES = {
+      price:  { dd: 0, ds: 0, p: 3500 },
+      income: { dd: 100, ds: 0 },
+      pref:   { dd: -100, ds: 0 },
+      cost:   { dd: 0, ds: -100 },
+      tech:   { dd: 0, ds: 100 },
+    };
+    const rd = [...document.querySelectorAll('#sh-rd td')], rs = [...document.querySelectorAll('#sh-rs td')];
+    const heads = [...document.querySelectorAll('#sh-table thead th')].slice(1);
+    const btns = [...document.querySelectorAll('#sh-btns button')];
+    function cell(td, oldV, newV) {
+      clear(td);
+      td.classList.toggle('chg', oldV !== newV);
+      if (oldV !== newV) { const s = document.createElement('s'); s.textContent = oldV; td.appendChild(s); }
+      td.appendChild(document.createTextNode(newV));
+    }
+    function curve(dd, ds, isDem, style) {
+      const f = isDem ? (p) => qd(p, dd) : (p) => qs(p, ds);
+      return mk(F.g, 'line', Object.assign({ x1: F.X(f(2000)), y1: F.Y(2000), x2: F.X(f(4000)), y2: F.Y(4000), 'stroke-linecap': 'round' }, style));
+    }
+    function draw(key) {
+      const c = CASES[key];
+      $('#sh-veil').hidden = true;
+      btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === key)));
+      // 표 다시 계산
+      PRICES.forEach((p, i) => {
+        cell(rd[i], qd(p), qd(p, c.dd));
+        cell(rs[i], qs(p), qs(p, c.ds));
+        [heads[i], rd[i], rs[i]].forEach((e) => { e.classList.remove('was', 'now'); });
+        if (c.p) {
+          if (p === 3000) [heads[i], rd[i], rs[i]].forEach((e) => e.classList.add('was'));
+          if (p === c.p) [heads[i], rd[i], rs[i]].forEach((e) => e.classList.add('now'));
+        }
+      });
+      // 그래프
+      clear(F.g);
+      const shiftD = c.dd !== 0, shiftS = c.ds !== 0;
+      const ghost = { stroke: '#AAB4C0', 'stroke-width': 4, 'stroke-dasharray': '10 8' };
+      curve(0, 0, true, shiftD ? ghost : { stroke: DEM, 'stroke-width': 6 });
+      curve(0, 0, false, shiftS ? ghost : { stroke: SUP, 'stroke-width': 6 });
+      const lab = (x, y, txt, col, anchor = 'middle') => mk(F.g, 'text', { x, y, 'text-anchor': anchor, 'font-size': 22, 'font-weight': 800, fill: col, stroke: '#fff', 'stroke-width': 6, 'paint-order': 'stroke' }, txt);
+      const top = (q) => Math.min(Math.max(F.X(q), F.X(0) + 50), F.X(600) - 40);
+      if (!shiftD) lab(top(qd(4000)), F.Y(4000) - 14, '수요', DEM);
+      if (!shiftS) lab(top(qs(4000)), F.Y(4000) - 14, '공급', SUP);
+      if (shiftD) {
+        curve(c.dd, 0, true, { stroke: DEM, 'stroke-width': 6 });
+        lab(top(qd(4000, c.dd)), F.Y(4000) - 14, '새 수요', DEM);
+        mk(F.g, 'line', { x1: F.X(qd(3700)), y1: F.Y(3700), x2: F.X(qd(3700, c.dd)), y2: F.Y(3700), stroke: DEM, 'stroke-width': 5, 'marker-end': F.arrow('dem') });
+      }
+      if (shiftS) {
+        curve(0, c.ds, false, { stroke: SUP, 'stroke-width': 6 });
+        lab(top(qs(4000, c.ds)), F.Y(4000) - 14, '새 공급', SUP);
+        mk(F.g, 'line', { x1: F.X(qs(2300)), y1: F.Y(2300), x2: F.X(qs(2300, c.ds)), y2: F.Y(2300), stroke: SUP, 'stroke-width': 5, 'marker-end': F.arrow('sup') });
+      }
+      // 처음 균형점 E
+      mk(F.g, 'circle', { cx: F.X(300), cy: F.Y(3000), r: 10, fill: shiftD || shiftS ? '#AAB4C0' : INK });
+      lab(F.X(300) - 22, F.Y(3000) + 8, 'E', shiftD || shiftS ? MUTED : INK, 'end');
+      let lines, tag;
+      if (c.p) {
+        const y = F.Y(c.p);
+        mk(F.g, 'line', { x1: F.X(0), y1: y, x2: F.X(qs(c.p)), y2: y, stroke: MUTED, 'stroke-width': 2, 'stroke-dasharray': '8 6' });
+        mk(F.g, 'line', { x1: F.X(300), y1: F.Y(3000), x2: F.X(qd(c.p)), y2: y, stroke: DEM, 'stroke-width': 7, 'marker-end': F.arrow('dem') });
+        mk(F.g, 'line', { x1: F.X(300), y1: F.Y(3000), x2: F.X(qs(c.p)), y2: y, stroke: SUP, 'stroke-width': 7, 'marker-end': F.arrow('sup') });
+        mk(F.g, 'circle', { cx: F.X(qd(c.p)), cy: y, r: 10, fill: DEM });
+        mk(F.g, 'circle', { cx: F.X(qs(c.p)), cy: y, r: 10, fill: SUP });
+        lab(F.X(qd(c.p)) - 14, y - 16, '수요량 ' + qd(c.p), DEM, 'end');
+        lab(F.X(qs(c.p)) + 14, y + 34, '공급량 ' + qs(c.p), SUP, 'start');
+        lines = `가격이 3,000원에서 ${won(c.p)}원으로 올랐다.\n수요량 300 → ${qd(c.p)}, 공급량 300 → ${qs(c.p)}인분.\n표의 숫자와 곡선은 그대로다.`;
+        tag = '수요량·공급량의 변화 (곡선 위의 이동)';
+      } else {
+        const pe = (1200 + c.dd - c.ds) / 0.4, qe = qd(pe, c.dd);
+        mk(F.g, 'line', { x1: F.X(0), y1: F.Y(pe), x2: F.X(qe), y2: F.Y(pe), stroke: INK, 'stroke-width': 2, 'stroke-dasharray': '6 6' });
+        mk(F.g, 'line', { x1: F.X(qe), y1: F.Y(pe), x2: F.X(qe), y2: F.Y(1750), stroke: INK, 'stroke-width': 2, 'stroke-dasharray': '6 6' });
+        mk(F.g, 'circle', { cx: F.X(qe), cy: F.Y(pe), r: 11, fill: INK });
+        lab(F.X(qe) + 18, F.Y(pe) + 8, 'E′', INK, 'start');
+        const who = shiftD ? '수요' : '공급', amt = shiftD ? c.dd : c.ds;
+        lines = `모든 가격에서 ${who}량이 ${Math.abs(amt)}인분씩 ${amt > 0 ? '늘었다' : '줄었다'}.\n` +
+                `${who} 곡선이 ${amt > 0 ? '오른쪽' : '왼쪽'}으로 옮겨 갔다.\n` +
+                `새로 만나는 점 E′: ${won(pe)}원, ${qe}인분 (모형)`;
+        tag = `${who}의 변화 (곡선 자체의 이동)`;
+      }
+      $('#sh-out').textContent = lines;
+      $('#sh-tag').textContent = tag;
+    }
+    btns.forEach((b) => b.addEventListener('click', () => draw(b.dataset.v)));
+  })();
+});
+</script>
+</body>
+</html>

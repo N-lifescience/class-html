@@ -775,12 +775,13 @@ html:not(.ch-editing) .ch-ed-ui { display: none !important; }
 .ch-live-btns { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* 학생 값 분포: 아래 가운데. 막대 하나가 값 하나(또는 값 묶음) */
-.ch-live-dist { position: fixed; z-index: 8500; left: 50%; bottom: 16px; transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 14px; border-radius: 14px; background: var(--ch-ui); box-shadow: 0 12px 32px rgba(0, 0, 0, .35); }
+.ch-live-dist { position: fixed; z-index: 8500; left: 50%; bottom: calc(var(--ch-reserve-bottom, 0px) + 24px); transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 14px; border-radius: 14px; background: var(--ch-ui); box-shadow: 0 12px 32px rgba(0, 0, 0, .35); }
 .ch-live-dhead { display: flex; align-items: center; gap: 12px; }
 .ch-live-dhead span { flex: 1; font-size: 13px; color: var(--ch-ui-mute); }
-.ch-live-dist .ch-live-row { display: grid; grid-template-columns: 120px 1fr 52px; align-items: end; gap: 10px; }
-.ch-live-name { align-self: center; overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.ch-live-n { align-self: center; text-align: right; color: var(--ch-ui-mute); }
+.ch-live-dist .ch-live-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; }
+.ch-live-name { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.ch-live-n { text-align: right; color: var(--ch-ui-mute); }
+.ch-live-dist .ch-live-bins { grid-column: 1 / -1; }
 .ch-live-bins { display: flex; align-items: flex-end; gap: 2px; height: 72px; }
 .ch-live-ui .ch-live-bin { flex: 1; min-width: 0; min-height: 0; height: calc(6px + var(--h, 0) * 66px); padding: 0; border: 0; border-radius: 4px 4px 0 0; background: #6B8DE8; }
 .ch-live-ui .ch-live-bin:disabled { height: 6px; opacity: 1; background: #2E323A; }

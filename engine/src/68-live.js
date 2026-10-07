@@ -10,6 +10,7 @@ const LIVE_HI_MS = 10000;     // 학생이 '여기 있어요'를 보내는 간�
 const LIVE_GONE_MS = 30000;   // 이만큼 소식이 없으면 참여 인원에서 뺀다
 const LIVE_WAIT_MS = 15000;   // 이만큼 교사 상태가 없으면 학생에게 '기다리는 중'
 const LIVE_VAL_MS = 300;      // 슬라이더를 끄는 동안은 멈춘 뒤에 한 번 보낸다(손을 떼면 바로)
+const LIVE_SEND_MS = 400;     // 교사 상태를 보내는 가장 짧은 간격
 const LIVE_BINS = 20;         // 값이 40개를 넘는 슬라이더는 이만큼 칸으로 묶는다
 const LIVE_SKIP = '.ch-stops, .ch-yearline';   // 엔진의 단계 막대·연표 막대는 교사를 따라가는 것이라 모으지 않는다
 
@@ -160,6 +161,8 @@ const Live = {
   distOn: false,
   distRaf: 0,
   lastSlide: -1,
+  sentAt: 0,
+  stateTimer: 0,
   // 학생
   sid: '',
   teacher: null,       // 마지막으로 받은 교사 상태(clean을 거친 것)
@@ -181,7 +184,7 @@ const Live = {
     }
     Toolbar.slots.misc.prepend(Toolbar.btn('live', '실시간', () => (this.role ? this.showPanel(true) : this.startTeacher())));
     on('nav', () => this.onNav());
-    Stage.deck.addEventListener('ch-stepper', () => { if (this.role === 'teacher') this.sendState(); });
+    Stage.deck.addEventListener('ch-stepper', () => { if (this.role === 'teacher') { this.track(); this.sendState(); } });
   },
 
   link() { return this.local ? LocalLink : SupaLink; },
@@ -231,10 +234,17 @@ const Live = {
     this.renderPanel();
   },
 
-  stateNow() {
+  // 교사가 연 범위를 지금 화면으로 넓힌다. 보내기를 미뤄도 지나간 장이 빠지지 않게 넘길 때마다 부른다.
+  track() {
     const { slide, shown } = Nav.state;
     const steps = (Stepper.bySlide[slide] || []).map((st) => st.pos);
     this.reach = LiveCore.reach(this.reach, Stage.slides.length, slide, shown, steps);
+    return steps;
+  },
+
+  stateNow() {
+    const { slide, shown } = Nav.state;
+    const steps = this.track();
     return {
       slide, shown, steps, reach: this.reach,
       lesson: { key: Session.deck, n: Stage.slides.length, title: document.title.slice(0, 120) },
@@ -248,11 +258,22 @@ const Live = {
     return /^https?:$/.test(location.protocol) && m ? m[1] : null;
   },
 
-  sendState() { if (this.role === 'teacher' && this.main) this.main.send('state', this.stateNow()); },
+  // 상태 하나가 학생 수만큼 퍼지므로(무료 한도 초당 100개) LIVE_SEND_MS에 한 번만 보내고, 미룬 것은 마지막 상태로 보낸다.
+  sendState() {
+    if (this.role !== 'teacher' || !this.main) return;
+    const wait = this.sentAt + LIVE_SEND_MS - Date.now();
+    if (wait > 0) {
+      if (!this.stateTimer) this.stateTimer = setTimeout(() => { this.stateTimer = 0; this.sendState(); }, wait);
+      return;
+    }
+    this.sentAt = Date.now();
+    this.main.send('state', this.stateNow());
+  },
 
   onNav() {
     if (this.role !== 'teacher') return;
     if (Nav.state.slide !== this.lastSlide) { this.lastSlide = Nav.state.slide; this.peek = null; }
+    this.track();
     this.sendState();
     this.renderDist();
   },
@@ -360,9 +381,10 @@ const Live = {
     this.renderDist();
   },
 
+  // 값이 몰려 와도 한 번에 그린다. requestAnimationFrame은 창이 가려지면 멈추므로 타이머로 묶는다.
   renderDist() {
     if (!this.dist || this.distRaf) return;
-    this.distRaf = requestAnimationFrame(() => { this.distRaf = 0; this.drawDist(); });
+    this.distRaf = setTimeout(() => { this.distRaf = 0; this.drawDist(); }, 50);
   },
 
   // 지금 장의 슬라이더마다 학생 값 분포. 막대를 누르면 그 값을 교사 도해에 넣는다(누가 맞췄는지는 모른다).
@@ -439,6 +461,8 @@ const Live = {
     if (this.main) this.main.send('end', {});
     setTimeout(() => { for (const l of links) if (l) l.close(); }, 500);   // 끝 메시지가 나간 뒤에 닫는다
     this.stop();
+    clearTimeout(this.stateTimer);
+    this.stateTimer = 0;
     this.unpeek();
     this.main = null;
     this.inbox = null;

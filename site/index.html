@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수업 HTML</title>
+<meta name="description" content="수업 PPT를 만지는 도해가 있는 수업 HTML로. 전자칠판에서 펜을 든 채로 수업하고, 학생은 자기 기기에서 함께 만진다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root {
+    --paper: #F4F1EA; --ink: #1F2328; --mute: #62666D; --line: #DDD7CC; --card: #FFFFFF;
+    --accent: #E8541A; --info: #2563EB; --ok: #2E7D4F; --bad: #C2362F;
+    --font: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    --mono: ui-monospace, Consolas, "D2Coding", monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 var(--font); word-break: keep-all; }
+  .wrap { width: min(960px, 100%); margin: 0 auto; padding: 0 16px; }
+  header { padding: 40px 0 8px; }
+  .mark { display: inline-block; margin: 0 0 14px; font-weight: 800; font-size: 15px; letter-spacing: .02em; color: var(--accent); }
+  h1 { margin: 0; font-size: clamp(28px, 5.4vw, 44px); line-height: 1.25; letter-spacing: -.01em; }
+  .lead { margin: 14px 0 0; max-width: 40em; color: var(--mute); font-size: 18px; }
+  main { display: grid; gap: 28px; padding: 28px 0 48px; }
+  h2 { margin: 0 0 12px; font-size: 20px; }
+  .join { padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); }
+  .join p { margin: 0 0 14px; color: var(--mute); }
+  .field { display: flex; gap: 8px; }
+  .field input { flex: 1; min-width: 0; min-height: 56px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--paper);
+    font: 700 28px var(--mono); letter-spacing: .24em; text-align: center; color: var(--ink); }
+  .field input:focus-visible { outline: 3px solid var(--info); outline-offset: 2px; }
+  button { min-height: 56px; padding: 0 22px; border: 0; border-radius: 12px; background: var(--ink); color: #fff; font: 700 17px var(--font); cursor: pointer; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--info); outline-offset: 2px; }
+  #msg { min-height: 1.6em; margin: 12px 0 0; }
+  #msg.is-bad { color: var(--bad); }
+  .lessons { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
+  .lessons a { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: inherit; text-decoration: none; }
+  .lessons a:hover { border-color: var(--ink); }
+  .lessons small { color: var(--accent); font-weight: 700; }
+  .lessons b { font-size: 18px; line-height: 1.4; }
+  .lessons span { color: var(--mute); font-size: 15px; }
+  .note { margin: 10px 0 0; color: var(--mute); font-size: 15px; }
+  footer { padding: 20px 0 40px; border-top: 1px solid var(--line); color: var(--mute); font-size: 14px; }
+  footer a { color: inherit; }
+  @media (max-width: 480px) { .field { flex-direction: column; } button { width: 100%; } }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <p class="mark">수업 HTML</p>
+  <h1>수업 PPT 말고, 만지는 수업 HTML</h1>
+  <p class="lead">전자칠판에서는 펜을 든 채로 넘기고, 학생은 자기 웨일북에서 같은 도해를 직접 움직입니다. 학생이 맞춘 값은 선생님 화면에 모입니다.</p>
+</header>
+
+<main class="wrap">
+  <section class="join" aria-labelledby="join-h">
+    <h2 id="join-h">실시간 수업 참여</h2>
+    <p>선생님 화면에 나온 코드 6자리를 넣어 주세요.</p>
+    <form id="join" class="field" autocomplete="off">
+      <input id="code" inputmode="numeric" maxlength="6" placeholder="000000" aria-label="방 코드 6자리">
+      <button type="submit">들어가기</button>
+    </form>
+    <p id="msg" role="status" aria-live="polite"></p>
+  </section>
+
+  <section aria-labelledby="lessons-h">
+    <h2 id="lessons-h">예시 수업 (선생님 화면)</h2>
+    <ul class="lessons">
+      <li><a href="lessons/sci-diffusion.html"><small>과학</small><b>냄새는 어떻게 퍼질까?</b><span>확산과 입자의 운동 · 잉크 입자 상자, 온도와 확산</span></a></li>
+      <li><a href="lessons/soc-supply-demand.html"><small>사회</small><b>떡볶이 값은 누가 정할까?</b><span>수요와 공급 · 표를 그래프로, 시장 가격의 결정</span></a></li>
+      <li><a href="lessons/eth-dohae.html"><small>윤리</small><b>윤리 만지는 도해</b><span>이성과 정서의 저울, 조상 마을 시뮬레이터 등 활동 다섯</span></a></li>
+    </ul>
+    <p class="note">수업을 연 뒤 도구 막대의 「실시간」을 누르면 코드와 QR이 나옵니다.</p>
+  </section>
+</main>
+
+<footer class="wrap">
+  저장 안 함 · 이름 안 받음 — 학생 값은 수업 중 선생님 화면에만 있다가 창을 닫으면 사라집니다.
+  · <a href="https://github.com/N-lifescience/class-html">GitHub</a> (MIT)
+</footer>
+
+<script src="live-config.js"></script>
+<script>
+// 코드로 교사 상태를 한 번 들은 뒤, 사이트의 예시 수업이면 그 수업으로 보낸다(학생 역할로).
+(function () {
+  const SUPA = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.min.js';
+  const cfg = window.CLASS_HTML_LIVE || {};
+  const q = new URLSearchParams(location.search);
+  const forceLocal = q.get('live') === 'local';
+  const local = forceLocal || !(cfg.url && cfg.key);
+  const form = document.getElementById('join');
+  const input = document.getElementById('code');
+  const msg = document.getElementById('msg');
+  let close = null;
+  let timer = 0;
+
+  const say = (text, bad) => { msg.textContent = text; msg.classList.toggle('is-bad', !!bad); };
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.append(s);
+    });
+  }
+
+  async function listen(code, onState) {
+    const topic = `ch-live-${code}`;
+    if (local) {
+      const bc = new BroadcastChannel(topic);
+      bc.onmessage = (e) => { if (e.data && e.data.event === 'state') onState(e.data.payload); };
+      return () => bc.close();
+    }
+    if (!window.supabase) await loadScript(SUPA);
+    const client = window.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: false, autoRefreshToken: false } });
+    const ch = client.channel(topic, { config: { broadcast: { self: false } } });
+    ch.on('broadcast', { event: 'state' }, (m) => onState(m && m.payload));
+    await new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('TIMED_OUT')), 10000);
+      ch.subscribe((s) => {
+        if (s === 'SUBSCRIBED') { clearTimeout(t); resolve(); }
+        else if (s === 'CHANNEL_ERROR' || s === 'TIMED_OUT') { clearTimeout(t); reject(new Error(s)); }
+      });
+    });
+    return () => client.removeChannel(ch);
+  }
+
+  async function join(code) {
+    if (close) close();
+    clearTimeout(timer);
+    say('선생님을 찾는 중… (5초쯤 걸려요)');
+    try {
+      close = await listen(code, (p) => {
+        if (!p || typeof p !== 'object') return;
+        clearTimeout(timer);
+        if (close) { close(); close = null; }
+        if (typeof p.site === 'string' && /^[\w-]{1,60}$/.test(p.site)) {
+          location.href = `lessons/${p.site}.html?join=${code}${forceLocal ? '&live=local' : ''}`;
+        } else {
+          say('이 수업은 선생님이 웨일 클래스에 올린 학생용 파일로 들어가요. 그 파일을 열고 같은 코드를 넣어 주세요.');
+        }
+      });
+    } catch (err) {
+      say('연결하지 못했어요. 인터넷 연결을 확인해 주세요.', true);
+      return;
+    }
+    timer = setTimeout(() => say('선생님을 찾지 못했어요. 코드와, 선생님 화면에서 실시간이 켜져 있는지 확인해 주세요.', true), 12000);
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = input.value.replace(/\D/g, '');
+    if (!/^\d{6}$/.test(code)) { say('코드 6자리를 확인해 주세요.', true); input.focus(); return; }
+    join(code);
+  });
+
+  const pre = (q.get('join') || '').replace(/\D/g, '');
+  if (/^\d{6}$/.test(pre)) { input.value = pre; join(pre); }
+}());
+</script>
+</body>
+</html>

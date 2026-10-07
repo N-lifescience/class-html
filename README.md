@@ -25,6 +25,15 @@
 수업 중 단축키: → ← 넘기기 · P 펜 · H 형광펜 · E 지우개 · L 레이저 · Esc 손 · C 칠판 · T 목차 · F 전체 화면 · B 검정 화면 · ? 도움말 · D 자동 점검.
 학교 PC가 재부팅 때 저장소를 지운다면, 반 메뉴의 「판서 백업 파일로 저장」을 쓴다.
 
+## 실시간 수업: 학생이 자기 기기에서 함께 만진다
+
+1. 교사: 툴바 「실시간」을 누르면 방 코드 6자리와 QR이 나온다.
+2. 학생: 웨일북·휴대폰에서 QR을 찍거나 사이트(`https://n-lifescience.github.io/class-html/`)에 코드를 넣는다. 교사 PC에 있는 수업 파일이면 「학생용 파일 저장」으로 받은 파일을 웨일 클래스에 올리고, 학생은 그 파일을 열어 코드를 넣는다.
+3. 학생 화면은 교사 장을 따라가고, 교사가 연 범위 안에서는 지난 장으로 돌아가 볼 수 있다(「선생님 화면으로」로 복귀). 도해 슬라이더는 학생이 직접 움직인다.
+4. 교사 「학생 보기」: 슬라이더마다 학생 값이 막대로 모인다. 막대를 누르면 그 값이 칠판 도해에 들어가고(누가 맞췄는지는 모른다), 「내 값으로」로 되돌린다.
+
+저장 안 함 · 이름 안 받음: 학생 값은 수업 중 교사 화면 메모리에만 있다가 창을 닫으면 사라진다. 전송은 Supabase Realtime(broadcast, DB 안 씀)이고, 주소와 공개 키는 `live.config.json`에 넣고 다시 빌드한다. 비어 있으면 같은 PC 탭끼리만 된다(시험용, 주소 뒤 `?live=local`).
+
 ## 저장소 구성
 
 | 경로 | 내용 |
@@ -33,7 +42,8 @@
 | `skills/class-html/` | AI 지침(스킬). `SKILL.md`, `references/`(만지는 도해 `dohae.md`, 부품 사전, 화면, 한국어, 레퍼런스 완성본 `examples/`), `scripts/`(`extract_pptx.py`, `bundle.py`, `states.mjs`), `assets/template.html` |
 | `guide/class-html-guide.md` | 채팅 AI용 합본 지침(빌드 때 자동 생성) |
 | `examples/` | 직접 만든 예시 덱(`m2-parts.html`: 모든 부품), 연수 슬라이드(`training.html`), 실습용 PPT(`practice/`: 과학 '확산', 사회 '수요와 공급', `tools/make_practice_pptx.py`로 만듦) |
-| `tests/`, `tools/` | 엔진 시험, 빌드, 화면 캡처·점검(`tools/shots.mjs`) |
+| `tests/`, `tools/` | 엔진 시험, 빌드, 화면 캡처·점검(`tools/shots.mjs`), 사이트 묶기(`tools/site.mjs` → `_site/`) |
+| `site/`, `live.config.json` | 배포 사이트 첫 화면(실시간 수업 참여·예시 수업), 실시간 설정. `.github/workflows/pages.yml`이 main에 올라오면 Pages로 배포한다 |
 
 ## 개발
 

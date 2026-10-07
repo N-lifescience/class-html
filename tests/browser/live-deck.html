@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko" data-deck="test-live">
+<head>
+<meta charset="utf-8">
+<title>실시간 시험 덱</title>
+<link rel="stylesheet" href="../../engine/class-html.css">
+<script defer src="../../engine/class-html.js"></script>
+</head>
+<body>
+<!-- live.test.html이 iframe으로 띄우는 덱(교사 하나, 학생 여럿) -->
+<section class="slide" id="cover"><h1>실시간 시험</h1></section>
+<section class="slide" id="steps">
+  <h2>단계 둘</h2>
+  <p class="step" id="s2a">첫 단계</p>
+  <p class="step" id="s2b">둘째 단계(답)</p>
+</section>
+<section class="slide" id="reveal">
+  <h2>단계 막대</h2>
+  <div class="reveal" id="r3" data-stops="시작|가|나">
+    <p data-at="1" id="r3a">가부터</p>
+    <p data-at="2" id="r3b">나부터</p>
+  </div>
+</section>
+<section class="slide" id="dohae">
+  <h2>도해</h2>
+  <input type="range" id="t" min="0" max="10" value="5" aria-label="시간">
+  <output id="t-out">5</output>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const t = document.getElementById('t');
+  t.addEventListener('input', () => { document.getElementById('t-out').textContent = t.value; });
+});
+</script>
+</body>
+</html>

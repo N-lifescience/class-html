@@ -15,8 +15,10 @@ function concat(dir, ext) {
 }
 
 const banner = `/*! class-html engine v${VERSION} | MIT | https://github.com/N-lifescience/class-html */`;
+// 실시간 수업 설정(Supabase 주소·공개 키, 사이트 주소). 브라우저에 넣으라고 만든 공개 키만 둔다.
+const live = JSON.parse(readFileSync(join(root, 'live.config.json'), 'utf8'));
 writeFileSync(join(root, 'engine/class-html.js'),
-  `${banner}\n(function () {\n'use strict';\nconst VERSION = '${VERSION}';\n${concat('engine/src', '.js')}\n})();\n`);
+  `${banner}\n(function () {\n'use strict';\nconst VERSION = '${VERSION}';\nconst LIVE_CONFIG = ${JSON.stringify(live)};\n${concat('engine/src', '.js')}\n})();\n`);
 writeFileSync(join(root, 'engine/class-html.css'), `${banner}\n${concat('engine/css', '.css')}`);
 console.log(`built class-html v${VERSION}`);
 

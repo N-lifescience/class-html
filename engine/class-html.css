@@ -748,3 +748,58 @@ html:not(.ch-editing) .ch-ed-ui { display: none !important; }
 .ch-ed-keys dt { color: var(--ch-ui-fg); font-weight: 600; white-space: nowrap; }
 .ch-ed-keys dd { margin: 0; color: var(--ch-ui-mute); }
 @media print { .ch-ed-ui, .ch-ed-box { display: none !important; } }
+
+/* ---- 86-live.css ---- */
+/* 실시간 수업(68-live.js): 교사 창·학생 값 분포, 학생 입장 화면·위 띠. 학생 화면에서는 판서 도구를 모두 숨긴다. */
+.ch-live-ui { box-sizing: border-box; color: var(--ch-ui-fg); font: 15px/1.5 var(--ch-font); }
+.ch-live-ui * { box-sizing: border-box; }
+.ch-live-ui[hidden] { display: none !important; }
+.ch-live-ui button { min-height: 44px; padding: 8px 14px; font: inherit; color: var(--ch-ui-fg); background: var(--ch-ui-2); border: 1px solid #3A3E47; border-radius: 9px; cursor: pointer; }
+.ch-live-ui button:hover:not(:disabled) { border-color: #6B8DE8; }
+.ch-live-ui button:disabled { opacity: .4; cursor: default; }
+.ch-live-ui :is(.ch-live-go, .ch-live-back, .ch-live-dist-btn[aria-pressed="true"]) { background: #2563EB; border-color: #2563EB; color: #fff; font-weight: 700; }
+.ch-live-ui :focus-visible { outline: 2px solid #6B8DE8; outline-offset: 2px; }
+.ch-live-ui .ch-live-x { min-height: 36px; padding: 2px 12px; font-size: 18px; line-height: 1; }
+
+/* 교사 창: 오른쪽 위 */
+.ch-live { position: fixed; z-index: 8600; top: 16px; right: 16px; width: 300px; max-width: calc(100vw - 32px); display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 16px; border-radius: 14px; background: var(--ch-ui); box-shadow: 0 12px 32px rgba(0, 0, 0, .35); }
+.ch-live-head { display: flex; align-items: center; justify-content: space-between; }
+.ch-live h2 { margin: 0; font-size: 16px; }
+.ch-live :is(.ch-live-status, .ch-live-how, .ch-live-count) { margin: 0; font-size: 13px; color: var(--ch-ui-mute); }
+.ch-live .ch-live-count { font-size: 15px; font-weight: 700; color: var(--ch-ui-fg); }
+.ch-live-code { font: 800 44px/1.1 var(--ch-mono); letter-spacing: .06em; text-align: center; }
+.ch-live-code:empty, .ch-live-qr:empty, .ch-live :is(.ch-live-how, .ch-live-count):empty { display: none; }
+.ch-live-qr { align-self: center; padding: 8px; border-radius: 8px; background: #fff; }
+.ch-live-qr img { display: block; width: 164px; height: 164px; image-rendering: pixelated; }
+.ch-live-qr small { display: block; max-width: 220px; color: #1F2328; word-break: break-all; }
+.ch-live-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* 학생 값 분포: 아래 가운데. 막대 하나가 값 하나(또는 값 묶음) */
+.ch-live-dist { position: fixed; z-index: 8500; left: 50%; bottom: 16px; transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 14px; border-radius: 14px; background: var(--ch-ui); box-shadow: 0 12px 32px rgba(0, 0, 0, .35); }
+.ch-live-dhead { display: flex; align-items: center; gap: 12px; }
+.ch-live-dhead span { flex: 1; font-size: 13px; color: var(--ch-ui-mute); }
+.ch-live-dist .ch-live-row { display: grid; grid-template-columns: 120px 1fr 52px; align-items: end; gap: 10px; }
+.ch-live-name { align-self: center; overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.ch-live-n { align-self: center; text-align: right; color: var(--ch-ui-mute); }
+.ch-live-bins { display: flex; align-items: flex-end; gap: 2px; height: 72px; }
+.ch-live-ui .ch-live-bin { flex: 1; min-width: 0; min-height: 0; height: calc(6px + var(--h, 0) * 66px); padding: 0; border: 0; border-radius: 4px 4px 0 0; background: #6B8DE8; }
+.ch-live-ui .ch-live-bin:disabled { height: 6px; opacity: 1; background: #2E323A; }
+.ch-live-ui .ch-live-bin[aria-pressed="true"] { background: var(--ch-hl); }
+.ch-live-empty { margin: 0; color: var(--ch-ui-mute); }
+
+/* 학생: 입장 화면, 위 띠 */
+.ch-live-join { position: fixed; z-index: 9500; inset: 0; display: grid; place-items: center; padding: 16px; background: rgba(22, 24, 29, .78); }
+.ch-live-card { width: min(420px, 100%); display: flex; flex-direction: column; gap: 10px; padding: 24px; border-radius: 16px; background: var(--ch-ui); text-align: center; }
+.ch-live-card h2 { margin: 0; font-size: 22px; }
+.ch-live-card p { margin: 0; color: var(--ch-ui-mute); }
+.ch-live-field { display: flex; gap: 8px; }
+.ch-live-field input { flex: 1; min-width: 0; min-height: 52px; padding: 0 12px; font: 700 28px var(--ch-mono); letter-spacing: .2em; text-align: center; color: var(--ch-ui-fg); background: var(--ch-ui-2); border: 1px solid #3A3E47; border-radius: 10px; }
+.ch-live-msg { min-height: 1.5em; }
+.ch-live-bar { position: fixed; z-index: 8700; top: 10px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; max-width: calc(100vw - 20px); padding: 6px 8px 6px 18px; border-radius: 999px; background: var(--ch-ui); box-shadow: 0 8px 24px rgba(0, 0, 0, .3); white-space: nowrap; }
+
+/* 학생 모드: 판서·넘기기 도구는 없다. 단계 막대는 교사를 따라가므로 잠겨 있지만 흐리게 하지 않는다. */
+html.ch-live-student { --ch-reserve-left: 0px !important; --ch-reserve-right: 0px !important; --ch-reserve-bottom: 0px !important; }
+html.ch-live-student :is(.ch-toolbar, .ch-tb-handle, .ch-hud, .ch-progress, .ch-ink, .ch-ink-live, .ch-dropzone) { display: none !important; }
+html.ch-live-student :is(.ch-stops, .ch-yearline) input:disabled, html.ch-live-student .ch-switch-btn:disabled { opacity: 1; cursor: default; }
+
+@media print { .ch-live-ui { display: none !important; } }

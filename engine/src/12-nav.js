@@ -80,6 +80,7 @@ const Nav = {
       emit('show', Stage.slides[slide], slide);
       try { history.replaceState(null, '', `#${slide + 1}`); } catch (err) { /* 잦은 호출을 막는 브라우저가 있다 */ }
     }
+    emit('nav', this.state);   // 장이나 단계가 바뀔 때마다(실시간 수업이 학생에게 알린다)
   },
 
   onKey(e) {

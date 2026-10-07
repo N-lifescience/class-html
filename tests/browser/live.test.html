@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>live</title>
+<!-- 부모 페이지에는 엔진이 없다. 교사 하나와 학생 둘을 iframe으로 띄우고 로컬 전송(BroadcastChannel)으로 잇는다. -->
+<script>window.ClassHTML = { ready: Promise.resolve() };</script>
+<script src="harness.js"></script>
+<style>iframe { width: 640px; height: 360px; border: 1px solid #ccc; }</style>
+</head>
+<body>
+<pre id="results"></pre>
+<script>
+const frames = {};
+let T, A, B;
+
+function frame(name, src) {
+  return new Promise((resolve) => {
+    const f = document.createElement('iframe');
+    f.src = src;
+    f.onload = () => resolve(f);
+    document.body.append(f);
+    frames[name] = f;
+  });
+}
+
+async function until(fn, ms) {
+  const t0 = Date.now();
+  let last = '';
+  while (Date.now() - t0 < (ms || 4000)) {
+    try { if (fn()) return; } catch (err) { last = err.message; }   // 아직 준비 안 됨
+    await wait(50);
+  }
+  throw new Error(`시간 초과: ${fn}${last ? ` (${last})` : ''}`);
+}
+
+async function open(name, query) {
+  const f = await frame(name, `live-deck.html?live=local${query || ''}`);
+  await until(() => f.contentWindow.ClassHTML && f.contentWindow.ClassHTML.ready);
+  await f.contentWindow.ClassHTML.ready;
+  return f.contentWindow.ClassHTML._internal;
+}
+
+const doc = (name) => frames[name].contentDocument;
+const shown = (name, id) => doc(name).getElementById(id).classList.contains('is-shown');
+const bar = (name) => doc(name).querySelector('.ch-live-bar');
+const visible = (el) => !!el && !el.hidden && getComputedStyle(el).display !== 'none';
+
+test('교사가 실시간을 켜면 6자리 코드가 생긴다(로컬 전송)', async () => {
+  T = await open('t');
+  assert(T.Live.local, '설정이 없으면 로컬 전송');
+  assert(doc('t').querySelector('.ch-tb-btn[data-name="live"]'), '툴바에 「실시간」');
+  T.Live.startTeacher();
+  await until(() => /^\d{6}$/.test(T.Live.code), 5000);
+});
+
+test('학생 둘이 코드로 들어와 교사 장을 따라간다', async () => {
+  A = await open('a', `&join=${T.Live.code}`);
+  B = await open('b', `&join=${T.Live.code}`);
+  await until(() => A.Live.teacher && B.Live.teacher);
+  assert(!visible(doc('a').querySelector('.ch-live-join')), '입장 화면이 닫힌다');
+  eq(A.Nav.state.slide, 0);
+  assert(doc('a').documentElement.classList.contains('ch-live-student'), '학생 모드');
+  eq(getComputedStyle(doc('a').querySelector('.ch-toolbar')).display, 'none', '학생은 툴바가 없다');
+});
+
+test('교사가 넘기면 장과 단계를 따라가고, 열지 않은 답은 가린다', async () => {
+  T.Nav.next();
+  T.Nav.next();
+  await until(() => A.Nav.state.slide === 1 && A.Nav.state.shown === 1);
+  assert(shown('a', 's2a'), '연 단계는 보임');
+  assert(!shown('a', 's2b'), '열지 않은 단계는 가림');
+});
+
+test('단계 막대도 따라가고, 학생은 막대를 못 움직인다', async () => {
+  T.Nav.go(2);
+  T.Nav.next();
+  eq(T.Stepper.bySlide[2][0].pos, 1, '교사 막대 한 칸');
+  await until(() => A.Nav.state.slide === 2 && A.Stepper.bySlide[2][0].pos === 1);
+  assert(A.Stepper.bySlide[2][0].input.disabled, '학생 막대는 잠김');
+});
+
+test('학생은 지난 장으로 갈 수 있고, 교사가 연 만큼만 보인다', async () => {
+  A.Nav.prev();
+  await until(() => A.Nav.state.slide === 1);
+  eq(A.Nav.state.shown, 1, '교사가 연 단계까지만');
+  assert(!shown('a', 's2b'), '지난 장에서도 열지 않은 답은 가림');
+  assert(visible(bar('a')), '띠가 보인다');
+  assert(bar('a').textContent.includes('3장'), `띠 글: ${bar('a').textContent}`);
+});
+
+test('교사가 넘겨도 지난 장을 보는 학생은 머물고, 따라가는 학생은 간다', async () => {
+  T.Nav.next();
+  T.Nav.next();
+  eq(T.Nav.state.slide, 3, '교사 4장');
+  await until(() => B.Nav.state.slide === 3);
+  await wait(200);
+  eq(A.Nav.state.slide, 1, '지난 장에 머문다');
+  assert(bar('a').textContent.includes('4장'), `띠 글: ${bar('a').textContent}`);
+});
+
+test('「선생님 화면으로」를 누르면 교사 장으로, 교사보다 앞으로는 못 간다', async () => {
+  bar('a').querySelector('button').click();
+  await until(() => A.Nav.state.slide === 3);
+  assert(!visible(bar('a')), '따라가면 띠가 사라진다');
+  A.Nav.next();
+  await wait(100);
+  eq(A.Nav.state.slide, 3, '앞으로 못 간다');
+});
+
+test('지난 장의 단계 막대는 교사가 연 가장 먼 칸까지', async () => {
+  A.Nav.prev();
+  await until(() => A.Nav.state.slide === 2);
+  eq(A.Stepper.bySlide[2][0].pos, 2, '교사가 「나」까지 열었다');
+  bar('a').querySelector('button').click();
+  await until(() => A.Nav.state.slide === 3);
+});
+
+// 학생 iframe 안 슬라이더를 손으로 움직인 것처럼
+function slide(name, id, v) {
+  const el = doc(name).getElementById(id);
+  el.value = String(v);
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+test('학생 값이 교사에게 모이고 참여 인원이 보인다', async () => {
+  slide('a', 't', 3);
+  slide('b', 't', 7);
+  await until(() => (T.Live.vals.get('3|t') || new Map()).size === 2);
+  T.Live.renderCount();
+  assert(doc('t').querySelector('.ch-live-count').textContent.includes('2명'), doc('t').querySelector('.ch-live-count').textContent);
+});
+
+test('「학생 보기」 분포, 막대를 누르면 칠판 도해에 띄우고 「내 값으로」 되돌린다', async () => {
+  doc('t').querySelector('.ch-live-dist-btn').click();
+  await until(() => doc('t').querySelectorAll('.ch-live-dist .ch-live-row').length === 1);
+  const bins = doc('t').querySelectorAll('.ch-live-dist .ch-live-bin');
+  eq(bins.length, 11, '0~10 값마다 한 칸');
+  assert(!bins[3].disabled && !bins[7].disabled && bins[5].disabled, '학생 값이 있는 칸만 누를 수 있다');
+  bins[3].click();
+  eq(doc('t').getElementById('t').value, '3');
+  eq(doc('t').getElementById('t-out').textContent, '3', '도해가 다시 그린다');
+  await until(() => doc('t').querySelector('.ch-live-back'));
+  doc('t').querySelector('.ch-live-back').click();
+  eq(doc('t').getElementById('t').value, '5', '내 값으로');
+  eq(doc('t').getElementById('t-out').textContent, '5');
+});
+
+test('범위 밖 값은 슬라이더 끝으로 자르고, 모양이 틀린 값은 버린다', async () => {
+  B.Live.inbox.send('val', { sid: B.Live.sid, slide: 3, key: 't', v: 99 });
+  B.Live.inbox.send('val', { sid: 'zzzz9999', slide: 3, key: 'none', v: 1 });
+  B.Live.inbox.send('val', { sid: 'BAD', slide: 3, key: 't', v: 1 });
+  await until(() => T.Live.vals.get('3|t').get(B.Live.sid) === 10);
+  eq(T.Live.vals.get('3|t').size, 2, '모르는 슬라이더·틀린 sid는 모으지 않는다');
+});
+
+test('학생용 파일에는 학생 표시만 붙고 엔진 흔적은 없다', () => {
+  const html = T.Live.studentHtml();
+  assert(html.includes('data-live="student"'), '학생 표시');
+  assert(!html.includes('ch-toolbar') && !html.includes('ch-live-ui'), '툴바·실시간 창은 들어가지 않는다');
+});
+
+test('코드 없이 학생 역할이면 입장 화면에서 코드를 넣고 들어간다', async () => {
+  const C = await open('c', '&join=');
+  assert(visible(doc('c').querySelector('.ch-live-join')), '입장 화면');
+  const input = doc('c').querySelector('.ch-live-join input');
+  eq(input.value, '');
+  input.value = '12';
+  doc('c').querySelector('.ch-live-go').click();
+  assert(doc('c').querySelector('.ch-live-msg').textContent.includes('6자리'), '코드 확인 글');
+  input.value = T.Live.code;
+  doc('c').querySelector('.ch-live-go').click();
+  await until(() => C.Live.teacher && C.Nav.state.slide === T.Nav.state.slide);
+  assert(!visible(doc('c').querySelector('.ch-live-join')));
+});
+
+test('교사가 끝내면 학생 화면에 "수업이 끝났어요"', async () => {
+  T.Live.endTeacher();
+  for (const n of ['a', 'b', 'c']) {
+    await until(() => visible(doc(n).querySelector('.ch-live-join')) && doc(n).querySelector('.ch-live-join h2').textContent === '수업이 끝났어요');
+  }
+  eq(T.Live.role, null);
+  eq(T.Live.vals.size, 0, '모은 값은 지운다');
+});
+</script>
+</body>
+</html>

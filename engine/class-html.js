@@ -5739,6 +5739,9 @@ const LIVE_GONE_MS = 30000;   // 이만큼 소식이 없으면 참여 인원에�
 const LIVE_WAIT_MS = 15000;   // 이만큼 교사 상태가 없으면 학생에게 '기다리는 중'
 const LIVE_VAL_MS = 300;      // 슬라이더를 끄는 동안은 멈춘 뒤에 한 번 보낸다(손을 떼면 바로)
 const LIVE_SEND_MS = 400;     // 교사 상태를 보내는 가장 짧은 간격
+const LIVE_JOIN_MS = 2000;    // 새 학생이 들어와서 보내는 상태는 이 간격에 한 번(가짜 학생을 쏟아내도 퍼지는 양이 묶인다)
+const LIVE_FORGET_MS = 120000;   // 이만큼 소식이 없으면 그 학생 값을 분포에서 지운다(가려진 탭은 타이머가 1분까지 늦다)
+const LIVE_MAX = 300;         // 한 방이 기억하는 학생 수(새로 고침하면 새 sid라 반 인원보다 넉넉히)
 const LIVE_BINS = 20;         // 값이 40개를 넘는 슬라이더는 이만큼 칸으로 묶는다
 const LIVE_SKIP = '.ch-stops, .ch-yearline';   // 엔진의 단계 막대·연표 막대는 교사를 따라가는 것이라 모으지 않는다
 
@@ -5789,16 +5792,17 @@ const LiveCore = {
     const int = (x, lo, hi) => Number.isInteger(x) && x >= lo && x <= hi;
     const sid = (x) => typeof x === 'string' && /^[a-z0-9]{8}$/.test(x);
     if (event === 'hi') return sid(p.sid) ? { sid: p.sid } : null;
-    if (event === 'end') return {};
+    if (event === 'end') return sid(p.tid) ? { tid: p.tid } : null;
     if (event === 'val') {
       const ok = sid(p.sid) && int(p.slide, 0, n - 1) && typeof p.key === 'string' && p.key.length > 0 && p.key.length <= 60 && Number.isFinite(p.v);
       return ok ? { sid: p.sid, slide: p.slide, key: p.key, v: p.v } : null;
     }
     if (event === 'state') {
-      if (!int(p.slide, 0, 999) || !int(p.shown, 0, 999) || !Array.isArray(p.reach) || p.reach.length > 1000) return null;
+      if (!sid(p.tid) || !int(p.slide, 0, 999) || !int(p.shown, 0, 999) || !Array.isArray(p.reach) || p.reach.length > 1000) return null;
       const steps = (a) => (Array.isArray(a) && a.length <= 50 && a.every((x) => int(x, -1, 999)) ? a.slice() : []);
       const L = p.lesson && typeof p.lesson === 'object' ? p.lesson : {};
       return {
+        tid: p.tid,
         slide: p.slide,
         shown: p.shown,
         steps: steps(p.steps),
@@ -5912,7 +5916,14 @@ const Live = {
     }
     Toolbar.slots.misc.prepend(Toolbar.btn('live', '실시간', () => (this.role ? this.showPanel(true) : this.startTeacher())));
     on('nav', () => this.onNav());
-    Stage.deck.addEventListener('ch-stepper', () => { if (this.role === 'teacher') { this.track(); this.sendState(); } });
+    // 점검(D)·인쇄는 단계 막대를 잠깐 모두 연다. 그 상태가 학생에게 가거나 연 범위로 남지 않게 한다.
+    on('print-before', () => { this.frozen = true; });
+    on('print-after', () => { this.frozen = false; });
+    Stage.deck.addEventListener('ch-stepper', (e) => {
+      if (this.role !== 'teacher' || /^(audit|print)$/.test((e.detail && e.detail.src) || '')) return;
+      this.track();
+      this.sendState();
+    });
   },
 
   link() { return this.local ? LocalLink : SupaLink; },
@@ -5932,19 +5943,27 @@ const Live = {
   async startTeacher() {
     if (this.role) return;
     this.role = 'teacher';
+    this.tid = LiveCore.sid();   // 이 수업(방)의 표시. 학생은 처음 받은 tid의 상태·끝만 믿는다.
     this.showPanel(true);
     this.say('연결하는 중…');
     try {
-      for (let tries = 0; !this.main; tries++) {
+      for (let tries = 0; !this.main && this.role === 'teacher'; tries++) {
         if (tries >= 5) throw new Error('코드를 만들지 못했어요');
         const code = LiveCore.code();
-        let taken = false;   // 다른 교사가 이미 쓰는 코드인지 1.5초 들어 본다
+        // 이미 쓰는 코드인지: 그 방 교사에게 '새 학생'처럼 인사하면 바로 상태가 온다(1.5초 기다림)
+        let taken = false;
         const main = await this.link().open(`ch-live-${code}`, (ev) => { if (ev === 'state') taken = true; }, true);
+        const probe = await this.link().open(`ch-live-${code}-in`, () => {}, false);
+        probe.send('hi', { sid: LiveCore.sid() });
         await new Promise((r) => setTimeout(r, 1500));
-        if (taken) main.close();
+        probe.close();
+        if (taken || this.role !== 'teacher') main.close();
         else { this.code = code; this.main = main; }
       }
-      this.inbox = await this.link().open(`ch-live-${this.code}-in`, (ev, p) => this.onInbox(ev, p), true);
+      if (this.role !== 'teacher') return;   // 연결하는 사이에 끝냈다
+      const inbox = await this.link().open(`ch-live-${this.code}-in`, (ev, p) => this.onInbox(ev, p), true);
+      if (this.role !== 'teacher') { inbox.close(); return; }
+      this.inbox = inbox;
     } catch (err) {
       console.error('[class-html] live', err);
       if (this.main) this.main.close();
@@ -5966,7 +5985,7 @@ const Live = {
   track() {
     const { slide, shown } = Nav.state;
     const steps = (Stepper.bySlide[slide] || []).map((st) => st.pos);
-    this.reach = LiveCore.reach(this.reach, Stage.slides.length, slide, shown, steps);
+    if (!this.frozen) this.reach = LiveCore.reach(this.reach, Stage.slides.length, slide, shown, steps);
     return steps;
   },
 
@@ -5974,27 +5993,36 @@ const Live = {
     const { slide, shown } = Nav.state;
     const steps = this.track();
     return {
-      slide, shown, steps, reach: this.reach,
+      tid: this.tid, slide, shown, steps, reach: this.reach,
       lesson: { key: Session.deck, n: Stage.slides.length, title: document.title.slice(0, 120) },
       site: this.siteName(),
     };
   },
 
-  // 사이트(…/lessons/이름.html)에서 연 수업이면 그 이름. 사이트 첫 화면이 학생을 이 수업으로 보낸다.
+  // 배포 사이트(또는 이 PC의 미리보기)의 …/lessons/이름.html이면 그 이름. 사이트 첫 화면이 학생을 이 수업으로 보낸다.
   siteName() {
     const m = /\/lessons\/([\w-]{1,60})\.html$/.exec(location.pathname);
-    return /^https?:$/.test(location.protocol) && m ? m[1] : null;
+    const ours = (LIVE.site && location.href.startsWith(LIVE.site)) || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    return /^https?:$/.test(location.protocol) && ours && m ? m[1] : null;
   },
 
-  // 상태 하나가 학생 수만큼 퍼지므로(무료 한도 초당 100개) LIVE_SEND_MS에 한 번만 보내고, 미룬 것은 마지막 상태로 보낸다.
-  sendState() {
-    if (this.role !== 'teacher' || !this.main) return;
-    const wait = this.sentAt + LIVE_SEND_MS - Date.now();
-    if (wait > 0) {
-      if (!this.stateTimer) this.stateTimer = setTimeout(() => { this.stateTimer = 0; this.sendState(); }, wait);
+  // 상태 하나가 학생 수만큼 퍼지므로(무료 한도는 프로젝트 전체 초당 100개) gap에 한 번만 보내고, 미룬 것은 그때의 상태로 보낸다.
+  // 더 이른 요청(넘기기)이 오면 늦은 예약(새 학생)을 앞당긴다.
+  sendState(gap) {
+    if (this.role !== 'teacher' || !this.main || this.frozen) return;
+    const now = Date.now();
+    const due = this.sentAt + (gap || LIVE_SEND_MS);
+    if (due > now) {
+      if (!this.stateTimer || due < this.stateDue) {
+        clearTimeout(this.stateTimer);
+        this.stateDue = due;
+        this.stateTimer = setTimeout(() => { this.stateTimer = 0; this.sendState(); }, due - now);
+      }
       return;
     }
-    this.sentAt = Date.now();
+    clearTimeout(this.stateTimer);
+    this.stateTimer = 0;
+    this.sentAt = now;
     this.main.send('state', this.stateNow());
   },
 
@@ -6010,8 +6038,9 @@ const Live = {
     const p = LiveCore.clean(event, raw, Stage.slides.length);
     if (!p || !p.sid) return;
     const fresh = !this.seen.has(p.sid);
+    if (fresh && this.prune() >= LIVE_MAX) return;   // 코드를 아는 누군가가 가짜 학생을 쏟아내도 메모리가 무한히 늘지 않게
     this.seen.set(p.sid, Date.now());
-    if (fresh) this.sendState();   // 새로 들어온 학생이 다음 상태(5초)를 기다리지 않게
+    if (fresh) this.sendState(LIVE_JOIN_MS);   // 새로 들어온 학생이 다음 상태(5초)를 기다리지 않게
     if (event === 'val') {
       const input = this.rangeOf(p.slide, p.key);
       if (input) {
@@ -6025,10 +6054,24 @@ const Live = {
     this.renderCount();
   },
 
-  count() {
+  // 오래 소식이 없는 학생(창을 닫음, 새로 고침 전 sid, 가짜 sid)은 분포에서도 지운다. 남은 수를 돌려준다.
+  prune() {
     const now = Date.now();
-    for (const [sid, t] of this.seen) if (now - t > LIVE_GONE_MS) this.seen.delete(sid);
+    for (const [sid, t] of this.seen) {
+      if (now - t <= LIVE_FORGET_MS) continue;
+      this.seen.delete(sid);
+      for (const m of this.vals.values()) m.delete(sid);
+    }
     return this.seen.size;
+  },
+
+  // 참여 인원: 최근 LIVE_GONE_MS 안에 소식이 온 학생
+  count() {
+    this.prune();
+    const now = Date.now();
+    let n = 0;
+    for (const t of this.seen.values()) if (now - t <= LIVE_GONE_MS) n++;
+    return n;
   },
 
   showPanel(open) {
@@ -6084,14 +6127,16 @@ const Live = {
   },
 
   async drawQr(url) {
+    const code = this.code;
     try {
       if (!window.qrcode) await loadScript(LIVE_QR_JS);
+      if (this.code !== code) return;   // 불러오는 사이에 끝냈거나 새 코드가 생겼다
       const qr = window.qrcode(0, 'M');
       qr.addData(url);
       qr.make();
       this.ui.qr.replaceChildren(h('img', { src: qr.createDataURL(4, 2), alt: `QR 코드: ${url}` }));
     } catch (err) {
-      this.ui.qr.replaceChildren(h('small', { text: url }));   // QR을 못 그리면 주소라도
+      if (this.code === code) this.ui.qr.replaceChildren(h('small', { text: url }));   // QR을 못 그리면 주소라도
     }
   },
 
@@ -6104,6 +6149,15 @@ const Live = {
     if (!this.dist) {
       this.dist = h('div', { class: 'ch-live-dist ch-live-ui', 'data-no-ink': '', role: 'region', 'aria-label': '학생 값', hidden: true });
       document.body.append(this.dist);
+      // 누르는 도중에 막대를 다시 만들면 click이 사라진다. 손을 뗀 뒤에 다시 그린다.
+      this.dist.addEventListener('pointerdown', () => { this.distHold = true; });
+      const release = () => {
+        if (!this.distHold) return;
+        this.distHold = false;
+        if (this.distLate) { this.distLate = false; setTimeout(() => this.renderDist(), 0); }
+      };
+      window.addEventListener('pointerup', release, true);
+      window.addEventListener('pointercancel', release, true);
     }
     if (this.ui) this.ui.distBtn.setAttribute('aria-pressed', String(this.distOn));
     this.renderDist();
@@ -6112,7 +6166,11 @@ const Live = {
   // 값이 몰려 와도 한 번에 그린다. requestAnimationFrame은 창이 가려지면 멈추므로 타이머로 묶는다.
   renderDist() {
     if (!this.dist || this.distRaf) return;
-    this.distRaf = setTimeout(() => { this.distRaf = 0; this.drawDist(); }, 50);
+    this.distRaf = setTimeout(() => {
+      this.distRaf = 0;
+      if (this.distHold) this.distLate = true;
+      else this.drawDist();
+    }, 50);
   },
 
   // 지금 장의 슬라이더마다 학생 값 분포. 막대를 누르면 그 값을 교사 도해에 넣는다(누가 맞췄는지는 모른다).
@@ -6173,9 +6231,17 @@ const Live = {
   },
 
   // 학생용 파일: 원본(그림 포함)에 학생 표시만 붙인다. 판서·편집 흔적은 들어가지 않는다.
+  // 엔진을 상대 주소로 부르는 수업(사이트·시험 폴더)이면 학생용 파일은 CDN 엔진을 부르게 바꾼다(웨일 클래스에서 연 파일은 옆에 엔진이 없다).
   studentHtml() {
     const doc = PptFill.buildDoc();
     doc.documentElement.setAttribute('data-live', 'student');
+    const cdn = 'https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/';
+    for (const [sel, attr] of [['link[rel~="stylesheet"][href]', 'href'], ['script[src]', 'src']]) {
+      for (const el of qsa(sel, doc)) {
+        const m = /^(?![a-z]+:|\/\/)(?:[^?#]*\/)?(class-html\.(?:css|js))(?:[?#].*)?$/i.exec(el.getAttribute(attr));
+        if (m) el.setAttribute(attr, cdn + m[1]);
+      }
+    }
     return PptFill.serialize(doc);
   },
 
@@ -6186,7 +6252,7 @@ const Live = {
 
   endTeacher() {
     const links = [this.main, this.inbox];
-    if (this.main) this.main.send('end', {});
+    if (this.main) this.main.send('end', { tid: this.tid });
     setTimeout(() => { for (const l of links) if (l) l.close(); }, 500);   // 끝 메시지가 나간 뒤에 닫는다
     this.stop();
     clearTimeout(this.stateTimer);
@@ -6211,6 +6277,11 @@ const Live = {
     document.documentElement.classList.add('ch-live-student');
     Nav.override = { next: () => this.move(1), prev: () => this.move(-1), close() {} };
     Nav.revealTo = () => false;   // 정답 상자 ✓ 등이 교사보다 먼저 단계를 열지 않게
+    // 차례 장의 단추·ClassHTML.go도 교사가 연 장으로만
+    Nav.go = (index) => {
+      const i = Math.round(Number(index));
+      if (this.teacher && this.teacher.reach[i]) this.showSlide(i);
+    };
     for (const st of Stepper.all) {
       if (st.input) st.input.disabled = true;
       for (const b of st.buttons) b.disabled = true;
@@ -6256,22 +6327,31 @@ const Live = {
 
   async connect(code) {
     if (this.teacher) return;
+    // 같은 코드로 이미 연결했거나 연결하는 중이면(주소의 ?join으로 들어가는 중에 「들어가기」) 그대로 둔다.
+    // 같은 이름의 채널을 두 번 구독하면 Supabase가 오류를 낸다.
+    if (code === this.code && (this.main || this.attempt)) return;
     this.disconnect();   // 다른 코드로 다시 들어가는 경우
     const mine = {};
     this.attempt = mine;
     this.code = code;
+    this.mismatch = false;
     this.joinSay('연결하는 중…');
     let main = null;
     try {
       main = await this.link().open(`ch-live-${code}`, (ev, p) => this.onMain(ev, p), true);
       const inbox = await this.link().open(`ch-live-${code}-in`, () => {}, false);
       if (this.attempt !== mine) { main.close(); inbox.close(); return; }   // 그사이 다른 코드를 넣었다
+      this.attempt = null;
       this.main = main;
       this.inbox = inbox;
     } catch (err) {
       console.error('[class-html] live', err);
       if (main) main.close();
-      if (this.attempt === mine) this.joinSay('인터넷 연결을 확인해 주세요');
+      if (this.attempt === mine) {
+        this.attempt = null;
+        this.code = '';
+        this.joinSay('인터넷 연결을 확인해 주세요');
+      }
       return;
     }
     this.joinSay('선생님을 기다리는 중…');
@@ -6279,7 +6359,7 @@ const Live = {
     const t0 = Date.now();
     this.every(() => this.hi(), LIVE_HI_MS);
     this.every(() => {
-      if (!this.teacher && Date.now() - t0 > 10000) this.joinSay('선생님 화면에서 실시간이 켜져 있는지, 코드가 맞는지 확인해 주세요');
+      if (!this.teacher && !this.mismatch && Date.now() - t0 > 10000) this.joinSay('선생님 화면에서 실시간이 켜져 있는지, 코드가 맞는지 확인해 주세요');
       this.renderBar();
     }, 1000);
   },
@@ -6291,30 +6371,35 @@ const Live = {
     for (const l of [this.main, this.inbox]) if (l) l.close();
     this.main = null;
     this.inbox = null;
+    this.attempt = null;
   },
 
   hi() { if (this.inbox) this.inbox.send('hi', { sid: this.sid }); },
 
+  // 처음 받아들인 교사(tid)의 상태·끝만 믿는다. 코드를 아는 다른 사람이 보낸 가짜 상태·끝은 버린다.
+  // ponytail: 채널을 엿들어 tid까지 흉내 내면 막지 못한다. 막으려면 교사 인증(웨일 스페이스 로그인)이 필요하다.
   onMain(event, raw) {
     const p = LiveCore.clean(event, raw, Stage.slides.length);
-    if (!p) return;
-    if (event === 'end') { this.ended(); return; }
+    if (!p || (this.teacher && p.tid !== this.teacher.tid)) return;
+    if (event === 'end') { if (this.teacher) this.ended(); return; }
     if (event !== 'state') return;
-    if (p.reach.length !== Stage.slides.length || p.slide >= Stage.slides.length) {
-      if (!this.teacher) this.joinSay('다른 수업 파일이에요. 선생님이 올린 파일을 열어 주세요');
+    const same = p.reach.length === Stage.slides.length && p.slide < Stage.slides.length
+      && p.lesson.key === Session.deck && p.lesson.n === Stage.slides.length;
+    if (!same) {
+      if (!this.teacher) {
+        this.mismatch = true;
+        this.joinSay('다른 수업 파일이에요. 선생님이 올린 파일을 열어 주세요');
+      }
       return;
     }
     if (!this.teacher) {
-      if (p.lesson.key !== Session.deck || p.lesson.n !== Stage.slides.length) {
-        this.joinSay('다른 수업 파일이에요. 선생님이 올린 파일을 열어 주세요');
-        return;
-      }
       this.join.hidden = true;
       this.follow = true;
     }
     this.teacher = p;
     this.heard = Date.now();
-    if (this.follow) this.showSlide(p.slide);
+    // 교사가 학생이 보던 장으로 오면 다시 따라간다
+    if (this.follow || p.slide === Nav.state.slide) this.showSlide(p.slide);
     else this.renderBar();
   },
 
@@ -6348,8 +6433,11 @@ const Live = {
     this.barKey = key;
     this.bar.hidden = !key;
     if (!key) return;
-    if (waiting) this.bar.replaceChildren(h('span', { text: '선생님 연결을 기다리는 중' }));
-    else {
+    if (waiting) {
+      // 교사가 새로 고침하면 코드가 바뀐다. 새 코드를 넣을 길을 둔다.
+      this.bar.replaceChildren(h('span', { text: '선생님 연결을 기다리는 중' }),
+        h('button', { type: 'button', text: '코드 다시 넣기', onclick: () => this.rejoin() }));
+    } else {
       this.bar.replaceChildren(h('span', { text: `선생님은 ${t.slide + 1}장` }),
         h('button', { type: 'button', text: '선생님 화면으로', onclick: (e) => { this.showSlide(this.teacher.slide); e.currentTarget.blur(); } }));
     }
@@ -6372,12 +6460,26 @@ const Live = {
   },
 
   ended() {
+    this.reset();
+    this.joinUi.form.replaceChildren(h('h2', { text: '수업이 끝났어요' }), h('p', { text: '선생님이 실시간 수업을 끝냈어요' }),
+      h('button', { type: 'button', text: '다른 코드로 들어가기', onclick: () => this.rejoin() }));
+  },
+
+  // 연결을 끊고 입장 화면을 다시 띄운다(교사 새로 고침, 다음 수업)
+  rejoin() {
+    this.reset();
+    this.join.remove();
+    this.buildJoin('');
+    this.joinSay('선생님 화면의 새 코드를 넣어 주세요');
+    this.joinUi.input.focus();
+  },
+
+  reset() {
     this.disconnect();
     this.teacher = null;
     this.barKey = '';
     this.bar.hidden = true;
     this.join.hidden = false;
-    this.joinUi.form.replaceChildren(h('h2', { text: '수업이 끝났어요' }), h('p', { text: '선생님이 실시간 수업을 끝냈어요' }));
   },
 };
 

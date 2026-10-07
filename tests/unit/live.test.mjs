@@ -49,13 +49,16 @@ test('clean: 모양이 맞는 메시지만 받는다', () => {
   assert.deepStrictEqual(plain(LiveCore.clean('hi', { sid: 'abcd1234' }, 3)), { sid: 'abcd1234' });
   assert.equal(LiveCore.clean('nope', {}, 3), null);
   assert.equal(LiveCore.clean('hi', null, 3), null);
+  assert.deepStrictEqual(plain(LiveCore.clean('end', { tid: 'abcd1234' }, 3)), { tid: 'abcd1234' });
+  assert.equal(LiveCore.clean('end', {}, 3), null, '교사 표시 없는 끝은 버린다');
   const s = LiveCore.clean('state', {
-    slide: 1, shown: 0, steps: [2], reach: [null, { shown: 1, steps: [2, 'x'] }], lesson: { key: 'd', n: 2, title: 't' }, site: '../x',
+    tid: 'tttt0000', slide: 1, shown: 0, steps: [2], reach: [null, { shown: 1, steps: [2, 'x'] }], lesson: { key: 'd', n: 2, title: 't' }, site: '../x',
   }, 2);
   assert.deepStrictEqual(plain(s), {
-    slide: 1, shown: 0, steps: [2], reach: [null, { shown: 1, steps: [] }], lesson: { key: 'd', n: 2, title: 't' }, site: null,
+    tid: 'tttt0000', slide: 1, shown: 0, steps: [2], reach: [null, { shown: 1, steps: [] }], lesson: { key: 'd', n: 2, title: 't' }, site: null,
   });
-  assert.equal(LiveCore.clean('state', { slide: -1, shown: 0, reach: [] }, 2), null);
+  assert.equal(LiveCore.clean('state', { tid: 'tttt0000', slide: -1, shown: 0, reach: [] }, 2), null);
+  assert.equal(LiveCore.clean('state', { slide: 0, shown: 0, reach: [] }, 2), null, '교사 표시 없는 상태는 버린다');
 });
 
 test('code·sid 모양', () => {

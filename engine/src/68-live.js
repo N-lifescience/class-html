@@ -167,6 +167,13 @@ const Live = {
   lastSlide: -1,
   sentAt: 0,
   stateTimer: 0,
+  stateDue: 0,
+  run: null,           // 지금 진행 중인 startTeacher의 표시
+  tid: '',
+  frozen: false,       // 인쇄 중(단계 막대를 모두 연 상태)
+  distHold: null,      // 분포 막대를 누르고 있는 포인터
+  distLate: false,
+  distHoldTimer: 0,
   // 학생
   sid: '',
   teacher: null,       // 마지막으로 받은 교사 상태(clean을 거친 것)
@@ -190,7 +197,7 @@ const Live = {
     on('nav', () => this.onNav());
     // 점검(D)·인쇄는 단계 막대를 잠깐 모두 연다. 그 상태가 학생에게 가거나 연 범위로 남지 않게 한다.
     on('print-before', () => { this.frozen = true; });
-    on('print-after', () => { this.frozen = false; });
+    on('print-after', () => { this.frozen = false; this.sendState(); });
     Stage.deck.addEventListener('ch-stepper', (e) => {
       if (this.role !== 'teacher' || /^(audit|print)$/.test((e.detail && e.detail.src) || '')) return;
       this.track();
@@ -216,30 +223,36 @@ const Live = {
     if (this.role) return;
     this.role = 'teacher';
     this.tid = LiveCore.sid();   // 이 수업(방)의 표시. 학생은 처음 받은 tid의 상태·끝만 믿는다.
+    const run = {};   // 이 시작의 표시: 연결하는 사이에 끝내고 다시 시작하면 옛 시작은 아무것도 붙이지 않는다
+    this.run = run;
+    const alive = () => this.run === run;
     this.showPanel(true);
     this.say('연결하는 중…');
+    let main = null;
     try {
-      for (let tries = 0; !this.main && this.role === 'teacher'; tries++) {
+      for (let tries = 0; !main && alive(); tries++) {
         if (tries >= 5) throw new Error('코드를 만들지 못했어요');
         const code = LiveCore.code();
-        // 이미 쓰는 코드인지: 그 방 교사에게 '새 학생'처럼 인사하면 바로 상태가 온다(1.5초 기다림)
+        // 이미 쓰는 코드인지: 그 방 교사에게 '새 학생'처럼 인사하면 2초 안에 상태가 온다
         let taken = false;
-        const main = await this.link().open(`ch-live-${code}`, (ev) => { if (ev === 'state') taken = true; }, true);
+        const cand = await this.link().open(`ch-live-${code}`, (ev) => { if (ev === 'state') taken = true; }, true);
         const probe = await this.link().open(`ch-live-${code}-in`, () => {}, false);
         probe.send('hi', { sid: LiveCore.sid() });
-        await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, LIVE_JOIN_MS + 200));
         probe.close();
-        if (taken || this.role !== 'teacher') main.close();
-        else { this.code = code; this.main = main; }
+        if (taken || !alive()) cand.close();
+        else { main = cand; this.code = code; }
       }
-      if (this.role !== 'teacher') return;   // 연결하는 사이에 끝냈다
+      if (!alive()) { if (main) main.close(); return; }   // 연결하는 사이에 끝냈다
       const inbox = await this.link().open(`ch-live-${this.code}-in`, (ev, p) => this.onInbox(ev, p), true);
-      if (this.role !== 'teacher') { inbox.close(); return; }
+      if (!alive()) { main.close(); inbox.close(); return; }
+      this.main = main;
       this.inbox = inbox;
     } catch (err) {
       console.error('[class-html] live', err);
-      if (this.main) this.main.close();
-      this.main = null;
+      if (main) main.close();
+      if (!alive()) return;
+      this.run = null;
       this.code = '';
       this.role = null;
       this.renderPanel();
@@ -421,13 +434,19 @@ const Live = {
     if (!this.dist) {
       this.dist = h('div', { class: 'ch-live-dist ch-live-ui', 'data-no-ink': '', role: 'region', 'aria-label': '학생 값', hidden: true });
       document.body.append(this.dist);
-      // 누르는 도중에 막대를 다시 만들면 click이 사라진다. 손을 뗀 뒤에 다시 그린다.
-      this.dist.addEventListener('pointerdown', () => { this.distHold = true; });
-      const release = () => {
-        if (!this.distHold) return;
-        this.distHold = false;
+      // 누르는 도중에 막대를 다시 만들면 click이 사라진다. 누른 손가락을 뗀 뒤에 다시 그린다.
+      // 칠판에서 pointerup이 빠지는 일이 있어 1초가 지나면 그냥 푼다.
+      const release = (e) => {
+        if (this.distHold == null || (e && e.pointerId !== this.distHold)) return;
+        this.distHold = null;
+        clearTimeout(this.distHoldTimer);
         if (this.distLate) { this.distLate = false; setTimeout(() => this.renderDist(), 0); }
       };
+      this.dist.addEventListener('pointerdown', (e) => {
+        this.distHold = e.pointerId;
+        clearTimeout(this.distHoldTimer);
+        this.distHoldTimer = setTimeout(() => release(null), 1000);
+      });
       window.addEventListener('pointerup', release, true);
       window.addEventListener('pointercancel', release, true);
     }
@@ -440,7 +459,7 @@ const Live = {
     if (!this.dist || this.distRaf) return;
     this.distRaf = setTimeout(() => {
       this.distRaf = 0;
-      if (this.distHold) this.distLate = true;
+      if (this.distHold != null) this.distLate = true;
       else this.drawDist();
     }, 50);
   },
@@ -527,6 +546,7 @@ const Live = {
     if (this.main) this.main.send('end', { tid: this.tid });
     setTimeout(() => { for (const l of links) if (l) l.close(); }, 500);   // 끝 메시지가 나간 뒤에 닫는다
     this.stop();
+    this.run = null;
     clearTimeout(this.stateTimer);
     this.stateTimer = 0;
     this.unpeek();

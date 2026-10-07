@@ -1,4 +1,42 @@
 // 목차, 단축키 도움말, 화면 가리기(검정·흰색), 전체 화면.
+
+// 툴바·HUD의 단추: 창을 닫는 바깥 누름이어도 제 할 일을 한다.
+const UI_CONTROLS = '.ch-toolbar, .ch-tb-handle, .ch-hud';
+
+// 화면 안 확인창. 브라우저 기본 confirm·alert·prompt는 전자칠판에서 작게 뜨거나 엉뚱한 화면에 뜨고,
+// 「이 페이지의 대화상자 차단」을 한 번 누르면 이후로는 묻지도 않고 '취소'가 돼 버튼이 먹통처럼 보인다.
+// opts: { ok: '단추 글자', alert: true(확인 단추만), input: '처음 값'(글자 입력, 확인하면 그 글자) }
+const Ask = {
+  ask(message, opts) {
+    const o = opts || {};
+    return new Promise((resolve) => {
+      const input = o.input != null ? h('input', { type: 'text', class: 'ch-ask-input', value: o.input, placeholder: o.placeholder || '' }) : null;
+      const no = input ? null : false;
+      const done = (v) => { box.remove(); resolve(v); };
+      const ok = h('button', { type: 'button', class: 'ch-ask-ok', text: o.ok || '확인', onclick: () => done(input ? input.value : true) });
+      const cancel = o.alert ? null : h('button', { type: 'button', class: 'ch-ask-no', text: '취소', onclick: () => done(no) });
+      const box = h('div', { class: 'ch-ask', role: 'dialog', 'aria-modal': 'true', 'aria-label': message },
+        h('div', { class: 'ch-ask-card' }, h('p', { text: message }), input, h('div', { class: 'ch-ask-row' }, cancel, ok)));
+      box.addEventListener('keydown', (e) => {
+        e.stopPropagation();                                // 넘기기 단축키로 가지 않게
+        if (e.key === 'Escape') done(o.alert ? true : no);
+        else if (e.key === 'Enter' && e.target === input) done(input.value);
+      });
+      box.addEventListener('pointerdown', (e) => { if (e.target === box) done(o.alert ? true : no); });
+      document.body.append(box);
+      (input || ok).focus();
+    });
+  },
+};
+
+// 창을 닫는 데 쓴 누름이 아래로 내려가 판서·클릭이 되지 않게 삼킨다.
+function swallowTap(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const kill = (ev) => { ev.preventDefault(); ev.stopPropagation(); };
+  window.addEventListener('click', kill, { capture: true, once: true });
+  setTimeout(() => window.removeEventListener('click', kill, true), 600);
+}
 const Panels = {
   toc: null,
   help: null,
@@ -32,6 +70,15 @@ const Panels = {
     document.body.append(this.toc, this.help, this.shade);
     on('show', (_, i) => this.markToc(i));
     on('key', (e) => this.onKey(e));
+    // 목차·도움말이 열려 있을 때 바깥을 누르면 닫기만 한다(그 누름으로 판서·단추가 작동하지 않게).
+    document.addEventListener('pointerdown', (e) => {
+      const open = [this.toc, this.help].find((p) => p.classList.contains('is-open'));
+      if (!open || open.contains(e.target)) return;
+      const t = e.target.closest ? e.target : document.body;
+      if (t.closest('[data-name="toc"]')) return;   // 목차 단추는 스스로 여닫는다
+      this.close();
+      if (!t.closest(UI_CONTROLS)) swallowTap(e);
+    }, true);
   },
 
   buildToc() {

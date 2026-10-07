@@ -31,21 +31,30 @@ const draw = (x = 100, y = 300) => {
   drag(null, [x, y], [x + 200, y + 20]);
 };
 
-test('칠판 버튼: 같은 요소에서 칠판 ↔ 슬라이드', () => {
+test('슬라이드 | 칠판 두 칸: 지금 보는 쪽에 불이 들어오고 글자는 바뀌지 않는다', () => {
   const toggle = btn('board');
+  const slides = btn('slides');
+  assert(toggle.parentNode === slides.parentNode, 'same segmented group');
   eq(toggleLabel(), '칠판');
+  eq(slides.querySelector('span').textContent, '슬라이드');
   eq(toggle.getAttribute('aria-pressed'), 'false');
+  eq(slides.getAttribute('aria-pressed'), 'true');
+  slides.click();                                   // 이미 슬라이드: 그대로
+  assert(!I().Board.active, 'still slides');
   toggle.click();
   assert(I().Board.active, 'active');
-  assert(btn('board') === toggle, 'same toggle element');
-  eq(toggleLabel(), '슬라이드');
+  eq(toggleLabel(), '칠판');
   eq(toggle.getAttribute('aria-pressed'), 'true');
+  eq(slides.getAttribute('aria-pressed'), 'false');
+  toggle.click();                                   // 이미 칠판: 그대로
+  assert(I().Board.active, 'still board');
   assert(document.body.classList.contains('ch-board-on'), 'body class');
   assert(!I().Board.el.hidden, 'board visible');
   assert(I().Nav.override === I().Board, 'nav override');
   assert(getComputedStyle(document.querySelector('.slide.is-active')).visibility === 'hidden', 'slide hidden');
-  toggle.click();
+  slides.click();
   assert(!I().Board.active, 'closed');
+  eq(slides.getAttribute('aria-pressed'), 'true');
   eq(toggleLabel(), '칠판');
   assert(I().Board.el.hidden, 'board hidden');
   eq(I().Nav.override, null);
@@ -189,19 +198,18 @@ test('획 있는 칠판 삭제는 확인을 받고 취소 시 그대로', async 
   I().Board.open();
   I().Board.add();
   draw();
-  const original = window.confirm;
-  let confirms = 0;
-  try {
-    window.confirm = () => { confirms += 1; return false; };
-    btn('boardDel').click();
-    eq(I().Session.doc.boards.length, 2);
-    eq(board().strokes.length, 1);
-    window.confirm = () => { confirms += 1; return true; };
-    btn('boardDel').click();
-    eq(I().Session.doc.boards.length, 1);
-    eq(boardLabel(), '칠판 1 / 1');
-    eq(confirms, 2);
-  } finally { window.confirm = original; }
+  btn('boardDel').click();
+  await wait(20);
+  document.querySelector('.ch-ask-no').click();      // 화면 안 확인창에서 취소
+  await wait(20);
+  eq(I().Session.doc.boards.length, 2);
+  eq(board().strokes.length, 1);
+  btn('boardDel').click();
+  await wait(20);
+  document.querySelector('.ch-ask-ok').click();
+  await wait(20);
+  eq(I().Session.doc.boards.length, 1);
+  eq(boardLabel(), '칠판 1 / 1');
 });
 
 test('빈 칠판은 확인 없이 삭제하고 남은 쪽 번호를 보정', async () => {
@@ -209,13 +217,10 @@ test('빈 칠판은 확인 없이 삭제하고 남은 쪽 번호를 보정', asy
   I().Board.open();
   I().Board.add();
   I().Board.add();
-  const original = window.confirm;
-  try {
-    window.confirm = () => { throw new Error('empty board confirmation'); };
-    I().Board.remove();
-    eq(boardLabel(), '칠판 2 / 2');
-    eq(I().Ink.ref, { kind: 'board', index: 1 });
-  } finally { window.confirm = original; }
+  I().Board.remove();
+  assert(!document.querySelector('.ch-ask'), 'no confirmation for empty board');
+  eq(boardLabel(), '칠판 2 / 2');
+  eq(I().Ink.ref, { kind: 'board', index: 1 });
 });
 
 test('마지막 칠판 삭제는 한 장을 남기고 이전 undo를 버린다', async () => {
@@ -223,15 +228,15 @@ test('마지막 칠판 삭제는 한 장을 남기고 이전 undo를 버린다',
   I().Board.open();
   I().Board.setBg('green');
   draw();
-  const original = window.confirm;
+  const original = I().Ask.ask;
   try {
-    window.confirm = () => true;
-    I().Board.remove();
+    I().Ask.ask = async () => true;
+    await I().Board.remove();
     eq(I().Session.doc.boards.length, 1);
     eq(boardLabel(), '칠판 1 / 1');
     eq(board().strokes.length, 0);
     eq(I().Ink.undo(), false);
-  } finally { window.confirm = original; }
+  } finally { I().Ask.ask = original; }
 });
 
 test('칠판 이 장 지우기는 undo로 복구', async () => {
@@ -239,14 +244,10 @@ test('칠판 이 장 지우기는 undo로 복구', async () => {
   I().Board.open();
   draw();
   draw(400, 500);
-  const original = window.confirm;
-  try {
-    window.confirm = () => true;
-    btn('clear').click();
-    eq(board().strokes.length, 0);
-    btn('undo').click();
-    eq(board().strokes.length, 2);
-  } finally { window.confirm = original; }
+  btn('clear').click();
+  eq(board().strokes.length, 0);
+  btn('undo').click();
+  eq(board().strokes.length, 2);
 });
 
 test('C는 토글하고 반복·조합·수정키·입력칸에서는 토글하지 않는다', async () => {

@@ -6,3 +6,7 @@
 .ch-dark-page .ch-ink-hl { opacity: .55; mix-blend-mode: screen; }
 body:not([data-tool="hand"]) .ch-deck { cursor: crosshair; user-select: none; -webkit-user-select: none; }
 body[data-tool="eraser"] .ch-deck { cursor: cell; }
+/* 판서 도구일 때 슬라이더 위를 지나가는 획이 값을 바꾸지 않게: 손잡이를 잡는 것은 24-ink가 맡는다 */
+body:not([data-tool="hand"]) .ch-deck input[type="range"] { pointer-events: none; }
+/* 그리는 중인 펜 획(24-ink의 저지연 캔버스): 무대 바깥, 툴바·HUD 아래 */
+.ch-ink-live { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 45; pointer-events: none; }

@@ -12,7 +12,7 @@
 <section class="slide" id="i1">
   <h2>판서</h2>
   <button id="tap" type="button">눌러 보기</button>
-  <input id="rng" type="range" min="0" max="10" value="5">
+  <input id="rng" type="range" min="0" max="10" value="5" style="width:300px"> <input id="txt" type="text" size="4">
   <p>빈 곳 <a id="lnk" href="#x">링크</a></p>
 </section>
 <section class="slide" id="i2"><h2>둘째</h2></section>
@@ -27,6 +27,30 @@ test('캔버스는 무대 × 배율 × 화면 밀도 크기', () => {
   const { Ink, Stage } = I();
   eq(Ink.cv.pen.width, Math.round(1280 * Stage.scale * devicePixelRatio));
   eq(Ink.cv.hl.height, Math.round(720 * Stage.scale * devicePixelRatio));
+});
+test('그리는 중인 펜 획은 무대 밖 맨 위 캔버스에 그려지고, 떼면 판서층으로 옮겨 비운다', async () => {
+  const { Tools, Ink } = I();
+  Tools.set('pen');
+  const live = document.querySelector('.ch-ink-live');
+  assert(live && live.parentNode === document.body, 'live canvas outside deck');
+  eq(live.width, Math.round(innerWidth * devicePixelRatio));
+  const lit = () => {
+    const d = Ink.lctx.getImageData(0, 0, live.width, live.height).data;
+    for (let i = 3; i < d.length; i += 4) if (d[i]) return true;
+    return false;
+  };
+  ptr('pointerdown', null, 640, 600);
+  ptr('pointermove', null, 700, 610);
+  ptr('pointermove', null, 760, 620);
+  assert(lit(), 'drawn on live canvas while drawing');
+  ptr('pointerup', null, 760, 620);
+  await wait(100);
+  assert(!lit(), 'live canvas cleared after commit');
+  const k = I().Stage.scale * devicePixelRatio;
+  const px = Ink.ctx.pen.getImageData(Math.round(700 * k), Math.round(610 * k), 1, 1).data;
+  assert(px[3] > 0, 'stroke on pen layer');
+  Ink.undo();
+  Tools.set('hand');
 });
 test('형광펜층은 슬라이드 글자와 곱하기로 섞인다', () => {
   const { Ink } = I();
@@ -49,6 +73,8 @@ test('펜으로 끌면 획 하나', () => {
   assert(page()[0].p.length >= 4, 'points');
 });
 test('펜을 든 채로 버튼을 톡 누르면 버튼이 눌린다', () => {
+  I().Ink.lastUp = -1e9;   // 쓰다 멈춘 뒤
+  I().Ink.suppressClick = false;   // 앞 테스트의 마우스 획 뒤 클릭 막기는 실제로는 같은 차례에 풀린다
   const btn = document.getElementById('tap');
   const before = page().length;
   ptr('pointerdown', btn, 200, 200);
@@ -58,6 +84,8 @@ test('펜을 든 채로 버튼을 톡 누르면 버튼이 눌린다', () => {
   eq(page().length, before);
 });
 test('버튼 위에서 끌면 판서가 되고 클릭은 취소된다', () => {
+  I().Ink.lastUp = -1e9;
+  I().Ink.suppressClick = false;
   const btn = document.getElementById('tap');
   const before = page().length;
   drag(btn, [200, 200], [260, 240]);
@@ -65,10 +93,75 @@ test('버튼 위에서 끌면 판서가 되고 클릭은 취소된다', () => {
   eq(taps, 1);
   eq(page().length, before + 1);
 });
-test('슬라이더는 펜 상태에서도 조작용', () => {
+// 화면 좌표로 보내는 포인터(슬라이더는 판서 도구일 때 꺼져 있어 무대에 보낸다)
+const at = (type, cx, cy, opts) => I().Stage.deck.dispatchEvent(new PointerEvent(type, Object.assign({
+  bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: cx, clientY: cy,
+}, opts || {})));
+test('펜으로 슬라이더 손잡이를 끌면 값이 바뀌고 판서는 생기지 않는다', () => {
+  I().Ink.lastUp = -1e9;
+  const rng = document.getElementById('rng');
+  rng.value = '5';
+  let inputs = 0, changes = 0;
+  rng.oninput = () => { inputs += 1; };
+  rng.onchange = () => { changes += 1; };
+  eq(getComputedStyle(rng).pointerEvents, 'none');
+  const r = rng.getBoundingClientRect();
   const before = page().length;
-  drag(document.getElementById('rng'), [400, 400], [500, 400]);
+  const y = r.top + r.height / 2;
+  at('pointerdown', r.left + r.width / 2, y);           // 값 5 = 가운데 손잡이
+  at('pointermove', r.right - 2, y);
+  at('pointerup', r.right - 2, y);
+  eq(rng.value, '10');
+  assert(inputs >= 1, 'input fired');
+  eq(changes, 1);
   eq(page().length, before);
+  rng.oninput = rng.onchange = null;
+});
+test('손잡이가 아닌 슬라이더 위를 지나가는 획은 판서이고 값은 그대로', () => {
+  I().Ink.lastUp = -1e9;
+  const rng = document.getElementById('rng');
+  rng.value = '0';
+  const r = rng.getBoundingClientRect();
+  const before = page().length;
+  const y = r.top + r.height / 2;
+  at('pointerdown', r.right - 20, y - 40);
+  at('pointermove', r.right - 20, y);
+  at('pointermove', r.right - 60, y + 2);
+  at('pointerup', r.right - 60, y + 2);
+  I().Ink.lastUp = -1e9;
+  at('pointerdown', r.right - 30, y);                    // 손잡이(0, 왼쪽 끝)와 먼 곳을 바로 누름
+  at('pointermove', r.right - 80, y);
+  at('pointerup', r.right - 80, y);
+  eq(rng.value, '0');
+  eq(page().length, before + 2);
+});
+test('쓰는 중(획을 뗀 직후)에 버튼에 닿으면 누름이 아니라 판서', async () => {
+  const btn = document.getElementById('tap');
+  const t0 = taps;
+  drag(null, [100, 640], [160, 650]);
+  const before = page().length;
+  ptr('pointerdown', btn, 200, 200, { pointerType: 'touch' });
+  ptr('pointerup', btn, 200, 200, { pointerType: 'touch' });
+  btn.click();                                            // 터치 뒤에 늦게 오는 클릭
+  eq(taps, t0);
+  eq(page().length, before + 1);                          // 점 하나
+  await wait(800);
+  ptr('pointerdown', btn, 200, 200, { pointerType: 'touch' });
+  ptr('pointerup', btn, 200, 200, { pointerType: 'touch' });
+  btn.click();
+  eq(taps, t0 + 1);                                       // 멈췄다 누르면 다시 버튼
+});
+test('판서 입력은 아래 요소의 포인터 처리기로 내려가지 않는다', () => {
+  I().Ink.lastUp = -1e9;
+  const h2 = document.querySelector('#i1 h2');
+  let seen = 0;
+  const count = () => { seen += 1; };
+  for (const t of ['pointerdown', 'pointermove', 'pointerup']) h2.addEventListener(t, count);
+  const before = page().length;
+  drag(h2, [100, 60], [300, 70]);
+  eq(page().length, before + 1);
+  eq(seen, 0);
+  for (const t of ['pointerdown', 'pointermove', 'pointerup']) h2.removeEventListener(t, count);
 });
 test('두 번째 손가락은 무시한다', () => {
   const before = page().length;
@@ -81,6 +174,7 @@ test('두 번째 손가락은 무시한다', () => {
   eq(page().length, before + 1);
 });
 test('덱 밖에서 손을 떼도 획이 끝나고 다음 클릭·획은 정상', async () => {
+  I().Ink.lastUp = -1e9;
   const { Ink } = I();
   const btn = document.getElementById('tap');
   const t0 = taps;
@@ -114,7 +208,7 @@ test('펜을 든 채로는 링크·그림의 끌어 놓기가 시작되지 않�
     return ev.defaultPrevented;
   };
   eq(fire('lnk'), true);
-  eq(fire('rng'), false);
+  eq(fire('txt'), false);
   Tools.set('hand');
   eq(fire('lnk'), false);
   Tools.set('pen');
@@ -176,6 +270,31 @@ test('손바닥 지우기가 켜지면 넓은 터치는 지우개', () => {
   drag(null, [100, 300], [300, 320], { pointerType: 'touch', width: 80, height: 80 });
   eq(page().length, before - 1);
   Ink.palmErase = false;
+});
+test('손등 지우기: 처음엔 작게 닿다 문지르며 넓어져도 지우개로 바뀐다(그리던 선은 남지 않음)', () => {
+  const { Tools, Ink } = I();
+  Tools.set('pen');
+  drag(null, [1100, 420], [1250, 420]);
+  const before = page().length;
+  Ink.palmErase = true;
+  Ink.palmSize = 20;
+  const o = { pointerType: 'touch', pointerId: 7 };
+  ptr('pointerdown', null, 1180, 370, Object.assign({ width: 8, height: 8 }, o));
+  ptr('pointermove', null, 1180, 390, Object.assign({ width: 9, height: 9 }, o));
+  ptr('pointermove', null, 1180, 420, Object.assign({ width: 26, height: 22 }, o));
+  ptr('pointermove', null, 1180, 440, Object.assign({ width: 26, height: 22 }, o));
+  ptr('pointerup', null, 1180, 440, o);
+  eq(page().length, before - 1);
+  Ink.palmErase = false;
+  Ink.palmSize = 0;
+});
+test('펜 뒤쪽 지우개(버튼 32)는 지우개', () => {
+  const { Tools } = I();
+  Tools.set('pen');
+  drag(null, [1100, 650], [1250, 650]);
+  const before = page().length;
+  drag(null, [1180, 610], [1180, 690], { pointerType: 'pen', buttons: 32 });
+  eq(page().length, before - 1);
 });
 test('빠르게 문질러 표본 사이가 벌어져도 지운다', () => {
   const { Tools } = I();
@@ -248,9 +367,12 @@ test('지우던 중 저장이 끝나도 취소한 획이 다시 저장된다', a
 
 test('완성된 획이 없어도 되돌리기·지우기는 미완성 펜 흔적을 지운다', async () => {
   const { Session, Tools, Ink } = I();
-  const alpha = () => {
+  const alpha = () => {                       // 그리는 중인 펜은 맨 위 캔버스에, 끝난 획은 판서층에
     const ratio = Ink.cv.pen.width / 1280;
-    return Ink.ctx.pen.getImageData(Math.round(350 * ratio), Math.round(300 * ratio), 1, 1).data[3];
+    const r = I().Stage.deck.getBoundingClientRect();
+    const dpr = devicePixelRatio;
+    const live = Ink.lctx.getImageData(Math.round((r.left + 350 * r.width / 1280) * dpr), Math.round((r.top + 300 * r.height / 720) * dpr), 1, 1).data[3];
+    return live + Ink.ctx.pen.getImageData(Math.round(350 * ratio), Math.round(300 * ratio), 1, 1).data[3];
   };
   for (const method of ['undo', 'clear']) {
     await Session.clearCurrent();

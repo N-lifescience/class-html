@@ -5,13 +5,18 @@ const Board = {
   active: false,
   el: null,
   label: null,
-  toggleBtn: null,
+  toggleBtn: null,   // 슬라이드·칠판 두 칸 묶음
+  slidesBtn: null,
+  boardBtn: null,
 
   init() {
     this.label = h('div', { class: 'ch-board-label', role: 'status', 'aria-live': 'polite' });
     this.el = h('div', { class: 'ch-board', 'data-bg': 'white', 'aria-label': '칠판', hidden: true }, this.label);
     Stage.deck.append(this.el);
-    this.toggleBtn = Toolbar.btn('board', '칠판', () => this.toggle());
+    // 지금 보는 쪽에 불이 들어오는 두 칸 전환(누르면 그쪽으로 간다). 한 단추가 글자를 바꾸면 지금 상태인지 갈 곳인지 헷갈린다.
+    this.slidesBtn = Toolbar.btn('slides', '슬라이드', () => this.close(), { 'aria-pressed': 'true' });
+    this.boardBtn = Toolbar.btn('board', '칠판', () => this.open(), { 'aria-pressed': 'false' });
+    this.toggleBtn = h('div', { class: 'ch-seg', role: 'group', 'aria-label': '슬라이드 · 칠판' }, this.slidesBtn, this.boardBtn);
     const add = Toolbar.btn('boardAdd', '칠판 추가', () => this.add());
     const del = Toolbar.btn('boardDel', '칠판 삭제', () => this.remove());
     const bg = Toolbar.btn('bg', '바탕', (e) => {
@@ -105,10 +110,11 @@ const Board = {
     Session.changed();
   },
 
-  remove() {
+  async remove() {
     if (!this.active) return;
     const b = this.doc.boards[this.doc.board];
-    if (b.strokes.length && !confirm('이 칠판을 지울까요? 판서도 함께 사라져요.')) return;
+    if (b.strokes.length && !await Ask.ask('이 칠판을 지울까요? 판서도 함께 사라져요.', { ok: '삭제' })) return;
+    if (!this.active || this.doc.boards[this.doc.board] !== b) return;   // 묻는 사이 반·칠판이 바뀌었으면 그만둔다
     InkModel.deleteBoard(this.doc);
     this.render();
     Session.changed();
@@ -122,11 +128,9 @@ const Board = {
   },
 
   setToggle() {
-    const label = this.active ? '슬라이드' : '칠판';
-    this.toggleBtn.replaceChildren(icon(this.active ? 'slides' : 'board'), h('span', { text: label }));
-    this.toggleBtn.title = this.active ? '슬라이드로 돌아가기' : '칠판 열기';
-    this.toggleBtn.setAttribute('aria-label', this.toggleBtn.title);
-    this.toggleBtn.setAttribute('aria-pressed', String(this.active));
+    this.slidesBtn.setAttribute('aria-pressed', String(!this.active));
+    this.boardBtn.setAttribute('aria-pressed', String(this.active));
+    emit('board-mode', this.active);   // 양옆 HUD의 전환 단추도 맞춘다
   },
 
   bgPanel() {

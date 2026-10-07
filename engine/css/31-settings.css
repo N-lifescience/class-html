@@ -9,3 +9,8 @@
 .ch-switch b { display: block; font-size: 15px; }
 .ch-switch small { display: block; margin-top: 2px; font-size: 12px; color: var(--ch-ui-mute); }
 .slide .w { white-space: nowrap; }
+/* 손등 지우개 맞추기: 화면 전체를 덮고 닿은 크기를 잰다 */
+.ch-calib { position: fixed; inset: 0; z-index: 95; display: grid; place-content: center; justify-items: center; gap: 18px; padding: 24px; background: rgba(22, 24, 29, .92); color: #fff; font-family: var(--ch-font); text-align: center; touch-action: none; user-select: none; -webkit-user-select: none; }
+.ch-calib-msg { margin: 0; font-size: 34px; font-weight: 800; line-height: 1.4; }
+.ch-calib-read { margin: 0; min-height: 1.4em; font-size: 22px; color: #C9D1DC; }
+.ch-calib-close { all: unset; box-sizing: border-box; margin-top: 12px; padding: 14px 32px; border-radius: 14px; background: var(--accent); color: #fff; font-size: 20px; font-weight: 700; cursor: pointer; }

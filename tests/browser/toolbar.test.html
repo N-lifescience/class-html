@@ -66,10 +66,43 @@ test('되돌리기 버튼과 Ctrl+Z', () => {
   btn('undo').click(); eq(I().Ink.page.length, 1);
   key('z', { ctrlKey: true }); eq(I().Ink.page.length, 0);
 });
-test('이 장 지우기는 확인 후', () => {
+test('이 장 지우기는 묻지 않고 지우고, 되돌리기 한 번에 모두 돌아온다', () => {
+  window.confirm = () => { throw new Error('native confirm'); };   // 기본 확인창은 쓰지 않는다
   drag(null, [100, 300], [300, 320]);
-  window.confirm = () => false; btn('clear').click(); eq(I().Ink.page.length, 1);
-  window.confirm = () => true; btn('clear').click(); eq(I().Ink.page.length, 0);
+  drag(null, [100, 400], [300, 420]);
+  btn('clear').click();
+  eq(I().Ink.page.length, 0);
+  btn('undo').click();
+  eq(I().Ink.page.length, 2);
+  btn('clear').click();
+  eq(I().Ink.page.length, 0);
+});
+test('화면 안 확인창: 확인·취소·Esc·글자 입력', async () => {
+  const { Ask } = I();
+  let p = Ask.ask('지울까요?', { ok: '지우기' });
+  const box = document.querySelector('.ch-ask');
+  assert(box, 'dialog shown');
+  eq(box.querySelector('.ch-ask-ok').textContent, '지우기');
+  box.querySelector('.ch-ask-ok').click();
+  eq(await p, true);
+  assert(!document.querySelector('.ch-ask'), 'closed');
+  p = Ask.ask('지울까요?');
+  document.querySelector('.ch-ask-no').click();
+  eq(await p, false);
+  p = Ask.ask('지울까요?');
+  document.querySelector('.ch-ask').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  eq(await p, false);
+  p = Ask.ask('반 이름', { input: '' });
+  const input = document.querySelector('.ch-ask-input');
+  input.value = '5반';
+  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  eq(await p, '5반');
+  const slide = I().Nav.state.slide;
+  p = Ask.ask('알림', { alert: true });
+  document.querySelector('.ch-ask-ok').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  eq(I().Nav.state.slide, slide);                   // 창 안의 키는 장을 넘기지 않는다
+  document.querySelector('.ch-ask-ok').click();
+  eq(await p, true);
 });
 test('위치 바꾸기: 아래 → 왼쪽, 화면 여백도 옮긴다', () => {
   btn('dock').click();
@@ -88,9 +121,11 @@ test('접기와 펼치기', () => {
   assert(!document.querySelector('.ch-toolbar').hidden, 'shown again');
 });
 test('반 메뉴: 반을 추가하면 그 반으로 바뀌고 이름이 보인다', async () => {
-  window.prompt = () => '3반';
   btn('class').click();
   [...document.querySelectorAll('.ch-pop .ch-menu-item')].find((b) => b.textContent.includes('반 추가')).click();
+  await wait(50);
+  document.querySelector('.ch-ask-input').value = '3반';
+  document.querySelector('.ch-ask-ok').click();
   await wait(300);
   eq(I().Session.current, '3반');
   eq(btn('class').querySelector('span').textContent, '3반');
@@ -149,6 +184,132 @@ test('좌우 도킹의 도구 버튼도 최소 52px이다', () => {
   }
   T.prefs.dock = 'bottom';
   T.applyDock();
+});
+test('양옆 HUD: 탭을 누르면 판서 도구가 나오고, 고르면 들어간다', async () => {
+  const T = I().Toolbar;
+  for (const side of ['left', 'right']) {
+    const hud = document.querySelector('.ch-hud[data-side="' + side + '"]');
+    assert(hud && !hud.hidden, side + ' hud');
+    const tab = hud.querySelector('.ch-hud-tab');
+    const r = tab.getBoundingClientRect();
+    assert(side === 'left' ? r.left <= 1 : r.right >= innerWidth - 1, side + ' edge');
+    assert(r.width <= 24 && r.height <= 64, side + ' small tab ' + r.width + '×' + r.height);
+    eq(hud.dataset.edge, side);
+    eq(getComputedStyle(hud.querySelector('.ch-hud-panel')).display, 'none');
+    tab.click();
+    eq(tab.getAttribute('aria-expanded'), 'true');
+    hud.querySelector('[data-tool="pen"]').click();
+    eq(I().Tools.current, 'pen');
+    assert(!hud.classList.contains('is-open'), 'closes after pick');
+    eq(btn('pen').getAttribute('aria-pressed'), 'true');   // 아래 툴바와 같이 맞춘다
+    await wait(400);                                       // 두 번 톡(모드 전환)으로 읽히지 않게
+    tab.click();
+    hud.querySelector('[data-tool="pen"]').click();       // 고른 펜을 다시: 색 고르기
+    assert(document.querySelector('.ch-pop .ch-swatches'), 'style pop');
+    T.closePop();
+    hud.querySelector('[data-tool="hand"]').click();
+    await wait(400);
+  }
+  eq(I().Tools.current, 'hand');
+});
+test('HUD의 슬라이드 | 칠판도 지금 쪽에 불이 들어온다', () => {
+  const hud = document.querySelector('.ch-hud[data-side="left"]');
+  hud.querySelector('.ch-hud-tab').click();
+  hud.querySelector('[data-name="board"]').click();
+  assert(I().Board.active, 'board on');
+  eq(hud.querySelector('[data-name="board"]').getAttribute('aria-pressed'), 'true');
+  eq(hud.querySelector('[data-name="slides"]').getAttribute('aria-pressed'), 'false');
+  hud.querySelector('[data-name="slides"]').click();
+  assert(!I().Board.active, 'board off');
+  eq(hud.querySelector('[data-name="slides"]').getAttribute('aria-pressed'), 'true');
+  I().Toolbar.setHud(hud, false);
+});
+test('툴바가 왼쪽에 붙어 펼쳐져 있으면 왼쪽 HUD는 숨고, 접으면 다시 나온다', () => {
+  const T = I().Toolbar;
+  const left = document.querySelector('.ch-hud[data-side="left"]');
+  T.prefs.dock = 'left';
+  T.applyDock();
+  eq(left.hidden, true);
+  T.setCollapsed(true);
+  eq(left.hidden, false);
+  T.setCollapsed(false);
+  T.prefs.dock = 'bottom';
+  T.applyDock();
+  eq(left.hidden, false);
+});
+test('HUD 탭을 끌면 화면 어디로든 옮겨지고(동그란 단추), 끝에 놓으면 다시 붙으며 자리는 저장된다', async () => {
+  const T = I().Toolbar;
+  const hud = document.querySelector('.ch-hud[data-side="left"]');
+  const tab = hud.querySelector('.ch-hud-tab');
+  const at = (type, x, y) => tab.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 9, pointerType: 'touch', isPrimary: true, clientX: x, clientY: y, buttons: type === 'pointerup' ? 0 : 1 }));
+  const r = tab.getBoundingClientRect();
+  at('pointerdown', r.left + 5, r.top + 10);
+  at('pointermove', 400, 300);
+  at('pointermove', 500, 260);
+  at('pointerup', 500, 260);
+  tab.click();                                      // 끌기 끝의 클릭은 도구판을 열지 않는다
+  assert(!hud.classList.contains('is-open'), 'not opened by drag');
+  eq(hud.dataset.edge, '');
+  await wait(400);
+  const f = tab.getBoundingClientRect();
+  assert(Math.abs(f.width - 44) < 1 && f.left > 300, 'floating ' + f.left);
+  tab.click();
+  assert(hud.classList.contains('is-open'), 'tap opens');
+  const panel = hud.querySelector('.ch-hud-panel').getBoundingClientRect();
+  assert(panel.left >= f.right, 'panel opens toward center');
+  assert(panel.top >= 0 && panel.bottom <= innerHeight, 'panel inside screen');
+  T.setHud(hud, false);
+  await wait(100);
+  const saved = await I().Store.get('toolbar');
+  assert(saved.hud.left.x > 0 && saved.hud.left.x < 1, 'saved float x');
+  // 오른쪽 끝 가까이 놓으면 오른쪽에 붙는다
+  const g = tab.getBoundingClientRect();
+  at('pointerdown', g.left + 10, g.top + 10);
+  at('pointermove', innerWidth - 20, 200);
+  at('pointerup', innerWidth - 20, 200);
+  eq(hud.dataset.edge, 'right');
+  assert(tab.getBoundingClientRect().right >= innerWidth - 1, 'snapped right');
+  // 원래 자리로
+  T.prefs.hud.left = { x: 0, y: 0.5 };
+  T.placeHud(hud);
+  T.savePrefs();
+  eq(hud.dataset.edge, 'left');
+});
+test('HUD 탭을 두 번 톡 누르면 가장자리 ↔ 떠 있기가 바뀌고, 떠 있던 자리를 기억한다', async () => {
+  const T = I().Toolbar;
+  const hud = document.querySelector('.ch-hud[data-side="right"]');
+  const tab = hud.querySelector('.ch-hud-tab');
+  await wait(400);
+  eq(hud.dataset.edge, 'right');
+  tab.click(); tab.click();
+  eq(hud.dataset.edge, '');
+  assert(!hud.classList.contains('is-open'), 'panel closed after double tap');
+  assert(tab.getBoundingClientRect().right < innerWidth - 20, 'floating away from edge');
+  T.prefs.hud.right = { x: 0.5, y: 0.3 };                 // 떠 있는 자리를 옮겨 둔다
+  T.placeHud(hud);
+  await wait(400);
+  tab.click(); tab.click();
+  eq(hud.dataset.edge, 'right');
+  eq(T.prefs.hudFloat.right, { x: 0.5, y: 0.3 });
+  await wait(400);
+  tab.click(); tab.click();
+  eq(T.prefs.hud.right, { x: 0.5, y: 0.3 });             // 기억한 자리로 다시 뜬다
+  await wait(400);
+  tab.click(); tab.click();
+  eq(hud.dataset.edge, 'right');
+  await wait(100);
+  eq((await I().Store.get('toolbar')).hudFloat.right, { x: 0.5, y: 0.3 });
+  await wait(400);
+});
+test('색 창이 열려 있을 때 무대를 누르면 닫기만 하고 판서가 되지 않는다', () => {
+  I().Tools.set('pen');
+  btn('style').click();
+  assert(document.querySelector('.ch-pop'), 'pop open');
+  const before = I().Ink.page.length;
+  drag(null, [300, 300], [400, 320]);
+  assert(!document.querySelector('.ch-pop'), 'pop closed');
+  eq(I().Ink.page.length, before);
+  I().Tools.set('hand');
 });
 </script>
 </body>

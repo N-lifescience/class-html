@@ -19,3 +19,14 @@
 .ch-shade[data-mode="black"] { display: block; background: #000; }
 .ch-shade[data-mode="white"] { display: block; background: #fff; }
 @keyframes ch-pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* 화면 안 확인창(Ask): 칠판에서도 손가락으로 누르기 쉬운 큰 단추 */
+.ch-ask { position: fixed; inset: 0; z-index: 96; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .45); font-family: var(--ch-font); }
+.ch-ask-card { width: min(460px, 100%); padding: 24px; border-radius: 18px; background: var(--ch-ui); color: var(--ch-ui-fg); box-shadow: 0 20px 60px rgba(0, 0, 0, .45); animation: ch-pop .2s var(--ch-ease-out); }
+.ch-ask-card p { margin: 0 0 18px; font-size: 20px; font-weight: 700; line-height: 1.5; }
+.ch-ask-input { box-sizing: border-box; width: 100%; margin-bottom: 18px; padding: 12px 14px; border: 2px solid var(--ch-ui-2); border-radius: 12px; background: var(--ch-ui-2); color: inherit; font: 600 20px/1.3 var(--ch-font); }
+.ch-ask-input:focus { outline: none; border-color: var(--accent); }
+.ch-ask-row { display: flex; justify-content: flex-end; gap: 10px; }
+.ch-ask-ok, .ch-ask-no { all: unset; box-sizing: border-box; min-width: 96px; padding: 14px 20px; border-radius: 12px; text-align: center; font-size: 18px; font-weight: 700; cursor: pointer; }
+.ch-ask-ok { background: var(--accent); color: #fff; }
+.ch-ask-no { background: var(--ch-ui-2); }
+.ch-ask-ok:focus-visible, .ch-ask-no:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }

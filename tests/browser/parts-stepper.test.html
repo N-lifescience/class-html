@@ -148,9 +148,10 @@ test('펜을 든 채로 슬라이더를 끌면 판서가 아니라 막대가 움
   I().Tools.set('pen');
   const s = st('r1');
   const r = s.input.getBoundingClientRect();
-  ptr('pointerdown', s.input, 0, 0, { clientX: r.left + 5, clientY: r.top + r.height / 2 });
-  eq(I().Ink.gesture, null, 'no ink gesture on slider');
-  ptr('pointerup', s.input, 0, 0, { clientX: r.left + 5, clientY: r.top + r.height / 2 });
+  I().Ink.lastUp = -1e9;
+  ptr('pointerdown', null, 0, 0, { clientX: r.left + 5, clientY: r.top + r.height / 2 });
+  assert(I().Ink.gesture && I().Ink.gesture.range === s.input, 'slider gesture, not ink');
+  ptr('pointerup', null, 0, 0, { clientX: r.left + 5, clientY: r.top + r.height / 2 });
   slideInput(s, 1);
   eq(s.pos, 1);
   eq(I().Ink.page.length, 0);

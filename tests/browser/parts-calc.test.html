@@ -136,10 +136,17 @@ test('단계 막대의 칸 번호를 계산 상자 변수로 쓴다(data-name), 
 test('펜을 든 채로 슬라이더를 움직여도 판서가 생기지 않는다', () => {
   ClassHTML.go(0);
   I().Tools.set('pen');
+  I().Ink.lastUp = -1e9;
   const r = $('v').getBoundingClientRect();
-  ptr('pointerdown', $('v'), 0, 0, { clientX: r.left + 10, clientY: r.top + r.height / 2 });
-  eq(I().Ink.gesture, null);
-  ptr('pointerup', $('v'), 0, 0, { clientX: r.left + 10, clientY: r.top + r.height / 2 });
+  const y = r.top + r.height / 2;
+  const deck = I().Stage.deck;
+  const at = (type, cx) => deck.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: cx, clientY: y }));
+  set('v', 1.1);
+  at('pointerdown', r.left + r.width / 2);   // 1.1 = 가운데 손잡이를 잡고 오른쪽 끝까지
+  assert(I().Ink.gesture && I().Ink.gesture.range === $('v'), 'slider gesture');
+  at('pointermove', r.right);
+  at('pointerup', r.right);
+  eq(txt('vOut'), '1.35');                    // 계산 칸이 input 이벤트로 따라온다
   set('v', 1.2);
   eq(txt('vOut'), '1.20');
   eq(I().Ink.page.length, 0);

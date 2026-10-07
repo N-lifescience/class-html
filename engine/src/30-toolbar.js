@@ -49,6 +49,10 @@ function saveText(filename, text, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+const HUD_DOUBLE_MS = 350;   // 이 시간 안에 탭을 두 번 누르면 가장자리 ↔ 떠 있기 전환
+const HUD_SNAP = 40;   // HUD를 화면 끝에서 이만큼(px) 안에 놓으면 가장자리에 붙인다
+const TOOL_LIST = [['hand', '손'], ['pen', '펜'], ['hl', '형광펜'], ['eraser', '지우개'], ['laser', '레이저']];
+
 const Toolbar = {
   el: null,
   handle: null,
@@ -56,14 +60,21 @@ const Toolbar = {
   pop: null,
   popAnchor: null,
   styleBtn: null,
+  huds: {},
   classBtn: null,
-  prefs: { dock: 'bottom', collapsed: false },
+  prefs: { dock: 'bottom', collapsed: false, hud: { left: { x: 0, y: 0.5 }, right: { x: 1, y: 0.5 } }, hudFloat: {} },
 
   async init() {
     const saved = await Store.get('toolbar');
     if (saved && typeof saved === 'object') {
       if (['bottom', 'left', 'right'].includes(saved.dock)) this.prefs.dock = saved.dock;
       this.prefs.collapsed = !!saved.collapsed;
+      for (const side of ['left', 'right']) {
+        const p = saved.hud && saved.hud[side];
+        if (p && [p.x, p.y].every((v) => typeof v === 'number' && v >= 0 && v <= 1)) this.prefs.hud[side] = { x: p.x, y: p.y };
+        const q = saved.hudFloat && saved.hudFloat[side];
+        if (q && [q.x, q.y].every((v) => typeof v === 'number' && v > 0 && v < 1)) this.prefs.hudFloat[side] = { x: q.x, y: q.y };
+      }
       if (PEN_COLORS.includes(saved.penColor)) Tools.penColor = saved.penColor;
       if (PEN_WIDTHS.includes(saved.penWidth)) Tools.penWidth = saved.penWidth;
       if (HL_COLORS.includes(saved.hlColor)) Tools.hlColor = saved.hlColor;
@@ -86,10 +97,16 @@ const Toolbar = {
     on('key', (e) => this.onKey(e));
     on('panels-close', () => this.closePop());
     document.addEventListener('pointerdown', (e) => {
-      if (!this.pop || this.pop.contains(e.target)) return;
-      if (this.popAnchor && this.popAnchor.contains(e.target)) return;
+      const t = e.target.closest ? e.target : document.body;
+      const inPop = this.pop && this.pop.contains(t);
+      for (const hud of Object.values(this.huds)) {
+        if (hud.classList.contains('is-open') && !hud.contains(t) && !inPop) this.setHud(hud, false);
+      }
+      if (!this.pop || inPop || (this.popAnchor && this.popAnchor.contains(t))) return;
       this.closePop();
+      if (!t.closest(UI_CONTROLS)) swallowTap(e);   // 창 닫으려고 누른 것이 판서·클릭이 되지 않게
     }, true);
+    this.buildHud();
     this.applyDock();
     Tools.set('hand');
   },
@@ -111,16 +128,15 @@ const Toolbar = {
   build() {
     const S = this.slots;
     S.nav.append(this.btn('prev', '이전', () => Nav.prev()), this.btn('next', '다음', () => Nav.next()));
-    for (const [tool, label] of [['hand', '손'], ['pen', '펜'], ['hl', '형광펜'], ['eraser', '지우개'], ['laser', '레이저']]) {
+    for (const [tool, label] of TOOL_LIST) {
       S.tools.append(this.btn(tool, label, () => Tools.set(tool), { 'data-tool': tool, 'aria-pressed': 'false' }));
     }
     this.styleBtn = this.btn('style', '색', (e) => this.togglePop(e.currentTarget, () => this.stylePanel()));
     S.style.append(this.styleBtn);
     S.edit.append(
       this.btn('undo', '되돌리기', () => Ink.undo()),
-      this.btn('clear', '이 장 지우기', () => {
-        if (Ink.page && Ink.page.length && confirm('이 장의 판서를 모두 지울까요?')) Ink.clear();
-      }),
+      // 묻지 않고 지운다: 되돌리기 한 번이면 모두 돌아온다(기본 확인창은 칠판에서 막혀 먹통이 되곤 했다)
+      this.btn('clear', '이 장 지우기', () => Ink.clear()),
     );
     this.classBtn = this.btn('class', '반', (e) => this.togglePop(e.currentTarget, () => this.classPanel()));
     S.class.append(this.classBtn);
@@ -132,8 +148,141 @@ const Toolbar = {
     );
   },
 
+  // 양옆 HUD: 화면 가장자리의 작은 탭(‹ ›)을 누르면 판서 도구판이 나온다. 탭을 끌면 화면 어디로든 옮길 수 있고,
+  // 가장자리 가까이 놓으면 가장자리에 붙는다. 자리는 이 PC에 저장한다.
+  buildHud() {
+    for (const side of ['left', 'right']) {
+      const panel = h('div', { class: 'ch-hud-panel', role: 'toolbar', 'aria-label': '판서 도구' });
+      const hud = h('div', { class: 'ch-hud', 'data-side': side });
+      const tab = h('button', { type: 'button', class: 'ch-hud-tab', title: '판서 도구 (끌어서 옮기기)', 'aria-label': '판서 도구 꺼내기', 'aria-expanded': 'false' });
+      let lastTap = 0;
+      tab.addEventListener('click', () => {
+        if (tab.dataset.dragged) { delete tab.dataset.dragged; return; }   // 끌어 옮긴 끝의 클릭은 열지 않는다
+        const now = performance.now();
+        // 두 번 톡: 가장자리 HUD ↔ 떠 있는 단추. 첫 톡에 열린 도구판은 닫는다.
+        if (now - lastTap < HUD_DOUBLE_MS) { lastTap = 0; this.setHud(hud, false); this.toggleHudMode(hud); return; }
+        lastTap = now;
+        this.setHud(hud, !hud.classList.contains('is-open'));
+      });
+      this.bindHudDrag(hud, tab);
+      for (const [tool, label] of TOOL_LIST) {
+        panel.append(this.btn(tool, label, (e) => {
+          // 이미 고른 펜·형광펜을 다시 누르면 색 고르기
+          if (Tools.current === tool && (tool === 'pen' || tool === 'hl')) { this.togglePop(e.currentTarget, () => this.stylePanel()); return; }
+          Tools.set(tool);
+          this.setHud(hud, false);
+        }, { 'data-tool': tool, 'aria-pressed': 'false' }));
+      }
+      const seg = h('div', { class: 'ch-seg' },
+        this.btn('slides', '슬라이드', () => Board.close(), { 'aria-pressed': 'true' }),
+        this.btn('board', '칠판', () => Board.open(), { 'aria-pressed': 'false' }));
+      panel.append(this.btn('undo', '되돌리기', () => Ink.undo()), seg,
+        this.btn('prev', '이전', () => Nav.prev()), this.btn('next', '다음', () => Nav.next()));
+      panel.addEventListener('keydown', (e) => this.buttonKeys(e));
+      hud.append(tab, panel);
+      this.huds[side] = hud;
+      document.body.append(hud);
+      this.placeHud(hud);
+    }
+    on('board-mode', (active) => {
+      for (const b of qsa('.ch-hud [data-name="slides"]')) b.setAttribute('aria-pressed', String(!active));
+      for (const b of qsa('.ch-hud [data-name="board"]')) b.setAttribute('aria-pressed', String(active));
+    });
+    on('resize', () => { for (const hud of Object.values(this.huds)) this.placeHud(hud); });
+    this.sync();
+  },
+
+  // prefs.hud[side] = { x, y }: 0~1 비율. x가 0이면 왼쪽 끝, 1이면 오른쪽 끝에 붙는다.
+  placeHud(hud) {
+    const pos = this.prefs.hud[hud.dataset.side];
+    hud.dataset.edge = pos.x === 0 ? 'left' : pos.x === 1 ? 'right' : '';
+    const tab = hud.firstChild;
+    tab.replaceChildren(icon(pos.x === 0 ? 'next' : pos.x === 1 ? 'prev' : 'tools'));
+    const w = tab.offsetWidth;
+    const hgt = tab.offsetHeight;
+    const left = pos.x * Math.max(0, window.innerWidth - w);
+    hud.style.left = `${left}px`;
+    hud.style.top = `${pos.y * Math.max(0, window.innerHeight - hgt)}px`;
+    hud.dataset.open = left + w / 2 < window.innerWidth / 2 ? 'right' : 'left';   // 도구판은 화면 가운데 쪽으로 연다
+    if (hud.classList.contains('is-open')) this.fitHudPanel(hud);
+  },
+
+  bindHudDrag(hud, tab) {
+    let d = null;
+    tab.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const r = hud.getBoundingClientRect();
+      d = { id: e.pointerId, x: e.clientX, y: e.clientY, left: r.left, top: r.top, moved: false };
+      try { tab.setPointerCapture(e.pointerId); } catch (err) { /* 합성 이벤트 */ }
+    });
+    tab.addEventListener('pointermove', (e) => {
+      if (!d || e.pointerId !== d.id) return;
+      const dx = e.clientX - d.x;
+      const dy = e.clientY - d.y;
+      if (!d.moved && Math.hypot(dx, dy) < 8) return;
+      if (!d.moved) { d.moved = true; this.setHud(hud, false); hud.dataset.edge = ''; tab.replaceChildren(icon('tools')); }
+      e.preventDefault();
+      hud.style.left = `${clamp(d.left + dx, 0, window.innerWidth - tab.offsetWidth)}px`;
+      hud.style.top = `${clamp(d.top + dy, 0, window.innerHeight - tab.offsetHeight)}px`;
+    });
+    const end = (e) => {
+      if (!d || e.pointerId !== d.id) return;
+      const moved = d.moved;
+      d = null;
+      if (!moved) return;
+      tab.dataset.dragged = '1';
+      setTimeout(() => { delete tab.dataset.dragged; }, 400);   // 클릭이 오지 않는 경우(터치 취소)를 대비
+      const r = hud.getBoundingClientRect();
+      const frac = (at, room) => (room > 0 ? clamp(at / room, 0, 1) : 0);
+      let x = frac(r.left, window.innerWidth - r.width);
+      if (r.left < HUD_SNAP) x = 0;                                   // 가장자리 가까이 놓으면 붙인다
+      else if (r.right > window.innerWidth - HUD_SNAP) x = 1;
+      const pos = { x, y: frac(r.top, window.innerHeight - r.height) };
+      this.prefs.hud[hud.dataset.side] = pos;
+      if (x > 0 && x < 1) this.prefs.hudFloat[hud.dataset.side] = { ...pos };   // 두 번 톡으로 돌아올 자리
+      this.placeHud(hud);
+      this.applyDock();
+      this.savePrefs();
+    };
+    tab.addEventListener('pointerup', end);
+    tab.addEventListener('pointercancel', end);
+  },
+
+  // 가장자리에 붙어 있으면 마지막으로 떠 있던 자리로, 떠 있으면 제 쪽 가장자리(왼쪽 HUD는 왼쪽)로 보낸다.
+  toggleHudMode(hud) {
+    const side = hud.dataset.side;
+    const pos = this.prefs.hud[side];
+    if (pos.x === 0 || pos.x === 1) {
+      this.prefs.hud[side] = this.prefs.hudFloat[side] || { x: side === 'left' ? 0.06 : 0.94, y: pos.y };
+    } else {
+      this.prefs.hudFloat[side] = { ...pos };
+      this.prefs.hud[side] = { x: side === 'left' ? 0 : 1, y: pos.y };
+    }
+    this.placeHud(hud);
+    this.applyDock();
+    this.savePrefs();
+  },
+
+  // 열린 도구판이 화면 위아래로 넘치지 않게 끌어 올리거나 내린다.
+  fitHudPanel(hud) {
+    const panel = hud.lastChild;
+    panel.style.setProperty('--dy', '0px');
+    const r = panel.getBoundingClientRect();
+    let dy = 0;
+    if (r.top < 8) dy = 8 - r.top;
+    else if (r.bottom > window.innerHeight - 8) dy = window.innerHeight - 8 - r.bottom;
+    panel.style.setProperty('--dy', `${dy}px`);
+  },
+
+  setHud(hud, open) {
+    if (!open && this.pop && hud.contains(this.popAnchor)) this.closePop();
+    hud.classList.toggle('is-open', open);
+    hud.firstChild.setAttribute('aria-expanded', String(open));
+    if (open) this.fitHudPanel(hud);
+  },
+
   sync() {
-    for (const b of qsa('[data-tool]', this.slots.tools)) b.setAttribute('aria-pressed', String(b.dataset.tool === Tools.current));
+    for (const b of qsa('.ch-toolbar [data-tool], .ch-hud [data-tool]')) b.setAttribute('aria-pressed', String(b.dataset.tool === Tools.current));
     this.styleBtn.style.setProperty('--swatch', Tools.current === 'hl' ? Tools.hlColor : Tools.penColor);
     this.classBtn.querySelector('span').textContent = Session.current;
   },
@@ -147,13 +296,15 @@ const Toolbar = {
     document.body.append(this.pop);
     const a = anchor.getBoundingClientRect();
     const p = this.pop.getBoundingClientRect();
-    // 툴바가 아래면 버튼 위로, 왼쪽이면 오른편으로, 오른쪽이면 왼편으로 띄운다.
+    // 툴바가 아래면 버튼 위로, 왼쪽이면 오른편으로, 오른쪽이면 왼편으로 띄운다(HUD는 그 HUD의 쪽).
+    const hud = anchor.closest('.ch-hud');
+    const side = hud ? hud.dataset.side : this.prefs.dock;
     let x = a.left + a.width / 2 - p.width / 2;
     let y = a.top - p.height - 10;
-    if (this.prefs.dock === 'left') {
+    if (side === 'left') {
       x = a.right + 10;
       y = a.top + a.height / 2 - p.height / 2;
-    } else if (this.prefs.dock === 'right') {
+    } else if (side === 'right') {
       x = a.left - p.width - 10;
       y = a.top + a.height / 2 - p.height / 2;
     }
@@ -205,11 +356,11 @@ const Toolbar = {
       if (!f) return;
       const text = await f.text();
       const parsed = InkModel.parseBackup(text);
-      if (!parsed.ok) { alert(parsed.error); return; }
-      if (parsed.deck && parsed.deck !== Session.deck && !confirm('다른 수업의 백업이에요. 그래도 불러올까요?')) return;
+      if (!parsed.ok) { await Ask.ask(parsed.error, { alert: true }); return; }
+      if (parsed.deck && parsed.deck !== Session.deck && !await Ask.ask('다른 수업의 백업이에요. 그래도 불러올까요?', { ok: '불러오기' })) return;
       await Session.importBackup(text);
       this.closePop();
-      alert('판서 백업을 불러왔어요.');
+      await Ask.ask('판서 백업을 불러왔어요.', { alert: true });
     });
     return h('div', { class: 'ch-pop-class' },
       h('h3', { text: '반 고르기' }),
@@ -218,18 +369,18 @@ const Toolbar = {
         onclick: async () => { this.closePop(); await Session.switchTo(c); },
       }))),
       this.menuItem('＋ 반 추가', async () => {
-        const name = prompt('반 이름 (예: 2반)');
         this.closePop();
+        const name = await Ask.ask('반 이름 (예: 2반)', { input: '', ok: '추가' });
         if (name && await Session.addClass(name)) await Session.switchTo(name.trim().slice(0, 20));
       }),
       this.menuItem('이 반 판서 모두 지우기', async () => {
         this.closePop();
-        if (confirm(`${Session.current}: 이 수업의 판서를 모두 지울까요?`)) await Session.clearCurrent();
+        if (await Ask.ask(`${Session.current}: 이 수업의 판서를 모두 지울까요?`, { ok: '모두 지우기' })) await Session.clearCurrent();
       }),
       this.menuItem('이 반 삭제', async () => {
         this.closePop();
-        if (Session.classes.length <= 1) { alert('반이 하나뿐이라 지울 수 없어요.'); return; }
-        if (confirm(`${Session.current}을(를) 반 목록에서 지울까요? 이 수업의 그 반 판서도 지워져요.`)) await Session.removeClass(Session.current);
+        if (Session.classes.length <= 1) { await Ask.ask('반이 하나뿐이라 지울 수 없어요.', { alert: true }); return; }
+        if (await Ask.ask(`${Session.current}을(를) 반 목록에서 지울까요? 이 수업의 그 반 판서도 지워져요.`, { ok: '삭제' })) await Session.removeClass(Session.current);
       }),
       this.menuItem('판서 백업 파일로 저장', async () => {
         this.closePop();
@@ -263,12 +414,17 @@ const Toolbar = {
     root.setProperty('--ch-reserve-bottom', dock === 'bottom' ? size : '0px');
     root.setProperty('--ch-reserve-left', dock === 'left' ? size : '0px');
     root.setProperty('--ch-reserve-right', dock === 'right' ? size : '0px');
+    // 툴바가 펼쳐져 붙은 가장자리에 붙은 HUD는 겹치므로 숨긴다
+    for (const hud of Object.values(this.huds)) {
+      hud.hidden = !collapsed && dock === hud.dataset.edge;
+      if (hud.hidden) this.setHud(hud, false);
+    }
     this.closePop();
     Stage.fit();
   },
 
   savePrefs() {
-    Store.set('toolbar', { dock: this.prefs.dock, collapsed: this.prefs.collapsed, penColor: Tools.penColor, penWidth: Tools.penWidth, hlColor: Tools.hlColor });
+    Store.set('toolbar', { dock: this.prefs.dock, collapsed: this.prefs.collapsed, hud: this.prefs.hud, hudFloat: this.prefs.hudFloat, penColor: Tools.penColor, penWidth: Tools.penWidth, hlColor: Tools.hlColor });
   },
 
   onKey(e) {

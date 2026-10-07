@@ -91,6 +91,33 @@ test('키를 누르고 있어도(반복 입력) 깜박이지 않는다', () => {
   key('b');
   eq($('.ch-shade').dataset.mode, '');
 });
+test('목차가 열려 있을 때 화면 아무 데나 누르면 닫히고, 그 누름은 아래로 가지 않는다', () => {
+  const I = () => ClassHTML._internal;
+  const deck = I().Stage.deck;
+  key('t');
+  assert($('.ch-toc').classList.contains('is-open'), 'open');
+  let clicked = 0;
+  const h2 = $('#p1 h2');
+  h2.onclick = () => { clicked += 1; };
+  const down = new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 3, clientX: 50, clientY: 50 });
+  h2.dispatchEvent(down);
+  assert(!$('.ch-toc').classList.contains('is-open'), 'closed');
+  eq(down.defaultPrevented, true);
+  h2.click();                                // 닫으려고 누른 그 클릭
+  eq(clicked, 0);
+  h2.click();                                // 다음 클릭은 정상
+  eq(clicked, 1);
+  h2.onclick = null;
+  // 목차 안을 누르면 닫히지 않는다
+  key('t');
+  $('.ch-toc h2').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+  assert($('.ch-toc').classList.contains('is-open'), 'inside keeps open');
+  key('t');
+  // 도움말도 같다
+  key('?');
+  deck.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+  assert(!$('.ch-help').classList.contains('is-open'), 'help closed');
+});
 </script>
 </body>
 </html>

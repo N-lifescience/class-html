@@ -2,7 +2,7 @@
 (function () {
 'use strict';
 const VERSION = '1.1.0';
-const LIVE_CONFIG = {"url":"","key":"","site":"https://n-lifescience.github.io/class-html/"};
+const LIVE_CONFIG = {"url":"https://qtwigpxinccudhprrdnb.supabase.co","key":"sb_publishable_-3KCWch7Q7sBQbcdVzxR4g_imovkZv5","site":"https://n-lifescience.github.io/class-html/"};
 /* ---- 00-core.js ---- */
 // 공통 상수, 작은 DOM 도우미, 이벤트 훅, 공개 객체 ClassHTML.
 const STAGE_W = 1280;

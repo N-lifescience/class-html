@@ -41,7 +41,7 @@
 | `engine/` | 엔진(`class-html.js`·`.css`, 빌드 결과). 소스는 `engine/src`, `engine/css` |
 | `skills/class-html/` | AI 지침(스킬). `SKILL.md`, `references/`(만지는 도해 `dohae.md`, 부품 사전, 화면, 한국어, 레퍼런스 완성본 `examples/`), `scripts/`(`extract_pptx.py`, `bundle.py`, `states.mjs`), `assets/template.html` |
 | `guide/class-html-guide.md` | 채팅 AI용 합본 지침(빌드 때 자동 생성) |
-| `examples/` | 직접 만든 예시 덱(`m2-parts.html`: 모든 부품), 연수 슬라이드(`training.html`), 실습용 PPT(`practice/`: 과학 '확산', 사회 '수요와 공급', `tools/make_practice_pptx.py`로 만듦) |
+| `examples/` | 직접 만든 예시 덱(`m2-parts.html`: 모든 부품), 연수 슬라이드(`training.html`: 23장, 이야기 테마. 사이트에서는 `/examples/training.html`, 한 파일판은 `bundle.py examples/training.html --offline --engine engine`), 실습용 PPT(`practice/`: 과학 '확산', 사회 '수요와 공급', `tools/make_practice_pptx.py`로 만듦) |
 | `tests/`, `tools/` | 엔진 시험, 빌드, 화면 캡처·점검(`tools/shots.mjs`), 사이트 묶기(`tools/site.mjs` → `_site/`) |
 | `site/`, `live.config.json` | 배포 사이트 첫 화면(실시간 수업 참여·예시 수업), 실시간 설정. `.github/workflows/pages.yml`이 main에 올라오면 Pages로 배포한다 |
 

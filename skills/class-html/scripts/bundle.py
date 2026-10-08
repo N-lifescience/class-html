@@ -2,7 +2,7 @@
 """수업 HTML을 파일 하나로 묶는다. 파이썬 표준 라이브러리만 쓴다.
 
 사용:  python3 bundle.py 수업.html [-o 결과.html] [--max 1600] [--offline [--engine 엔진폴더]]
-  - <img src="media/…">처럼 파일 옆의 그림을 data URI로 넣는다(이미 data:나 http인 것은 그대로).
+  - <img src="media/…">처럼 파일 옆의 그림과 CSS의 글꼴 파일(url('….woff2'))을 data URI로 넣는다(이미 data:나 http인 것은 그대로).
   - 긴 변이 --max(기본 1600px)를 넘으면 줄인다: Pillow가 있으면 Pillow, 맥이면 sips. 둘 다 없으면 원래 크기로 넣고 알린다.
   - --offline: 엔진 CSS·JS도 파일 안에 넣는다(인터넷 없이 열림). --engine을 주면 그 폴더의
     class-html.css·js를, 없으면 HTML에 적힌 주소에서 받는다.
@@ -19,7 +19,8 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
-TYPES = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.jfif': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.bmp': 'image/bmp'}
+TYPES = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.jfif': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.bmp': 'image/bmp',
+         '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.otf': 'font/otf'}
 
 
 def image_size(data):
@@ -111,7 +112,9 @@ def inline_images(html, base, limit, notes):
             data, mime = to_jpeg(path, data, notes)   # 사진·만화 같은 큰 PNG는 JPEG가 훨씬 작다
         return f'{head}{q}data:{mime};base64,{base64.b64encode(data).decode()}{q}'
     # <img>의 src만 바꾼다(엔진 <script src>는 --offline일 때만 따로 넣는다)
-    return re.sub(r'(<img\b[^>]*?\bsrc=)(["\'])([^"\']+)\2', repl, html)
+    html = re.sub(r'(<img\b[^>]*?\bsrc=)(["\'])([^"\']+)\2', repl, html)
+    # 수업 CSS의 글꼴 파일(url('….woff2'))도 넣는다
+    return re.sub(r'(url\()(["\']?)([^"\')]+\.(?:woff2?|ttf|otf))\2(?=\))', repl, html)
 
 
 def read_engine(url, engine_dir, name):

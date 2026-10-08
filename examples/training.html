@@ -1,262 +1,958 @@
 <!doctype html>
-<html lang="ko" data-deck="training-class-html">
+<html lang="ko" data-deck="training-2026-10">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>수업 PPT 말고, 수업 HTML 만들기</title>
+<title>class-html 교직원 연수</title>
 <link rel="stylesheet" href="../engine/class-html.css">
 <script defer src="../engine/class-html.js"></script>
 <style>
-  .slide[data-sec^="1"] { --tab: #0F766E; }
-  .slide[data-sec^="2"] { --tab: #1D4ED8; }
-  .slide[data-sec^="3"] { --tab: #B45309; }
-  .slide[data-sec^="4"] { --tab: #7C3AED; }
-  .slide[data-sec^="5"] { --tab: #BE123C; }
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
-  .box { padding: 20px 24px; border-radius: 18px; background: var(--ch-soft); }
-  .box h3 { margin-top: 0; }
-  .box p:last-child, .box ul:last-child, .box ol:last-child { margin-bottom: 0; }
-  .bad { color: var(--ch-bad); font-weight: 800; }
-  .good { color: var(--ch-ok); font-weight: 800; }
-  .prompt { padding: 16px 20px; border-left: 6px solid var(--accent); border-radius: 0 14px 14px 0; background: var(--ch-card); box-shadow: 0 0 0 2px var(--ch-line) inset; font-size: 24px; line-height: 1.55; }
-  .meter { display: grid; grid-template-columns: 300px 110px 1fr 70px; align-items: center; gap: 12px; margin: 0 0 10px; font-size: 24px; font-weight: 700; }
-  .meter input { width: 100px; min-height: 48px; font: 700 24px var(--ch-font); text-align: center; }
-  .meter output { text-align: right; }
-  .flowchart { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; margin: 10px 0 18px; }
-  .flowchart > div { position: relative; min-height: 150px; padding: 18px; border-radius: 16px; background: var(--ch-soft); text-align: center; font-size: 26px; font-weight: 800; line-height: 1.35; }
-  .flowchart > div small { display: block; margin-top: 8px; font-size: 20px; font-weight: 600; color: var(--ch-mute); }
-  .flowchart > div + div::before { content: "→"; position: absolute; left: -26px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 28px; }
-  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 24px; margin: 0; padding: 0; list-style: none; }
-  .keys li { margin: 0; font-size: 24px; }
-  .keys kbd { display: inline-block; min-width: 36px; margin-right: 10px; padding: 2px 10px; border-radius: 8px; background: var(--ch-ui); color: var(--ch-ui-fg); font: 700 22px var(--ch-mono); text-align: center; }
-  .faq dt { margin-top: 10px; font-size: 26px; font-weight: 800; }
-  .faq dd { margin: 4px 0 0; font-size: 24px; }
-  .foot { display: grid; grid-template-columns: 1fr 400px; gap: 28px; align-items: center; }
-  .spare { margin: 0; font-size: 22px; color: var(--ch-mute); }
+/* 이야기(story) 테마: 따뜻한 종이 바탕 · 필름 그레인 · 기하 산세리프 제목 · 모노 라벨 · 어두운 둥근 패널 · 주황 강조.
+   글꼴 3종은 모두 OFL 1.1(assets/fonts/README.md). */
+@font-face { font-family: 'Chroma Grotesk'; src: url('assets/fonts/SpaceGrotesk-Variable.woff2') format('woff2'); font-weight: 300 700; font-display: swap; }
+@font-face { font-family: 'Chroma Mono'; src: url('assets/fonts/JetBrainsMono-Variable.woff2') format('woff2'); font-weight: 100 800; font-display: swap; }
+@font-face { font-family: 'Wanted Sans'; src: url('assets/fonts/WantedSans-Variable.woff2') format('woff2'); font-weight: 400 1000; font-display: swap; }
+
+body[data-theme="story"] {
+  --st-bg: #f4f1eb; --st-bg-2: #ece7dc; --st-ink: #111111; --st-ink-2: #3b3833; --st-muted: #6f6962;
+  --st-line: rgba(17, 17, 17, .15); --st-orange: #ed5a14; --st-orange-ink: #c2440b; --st-blue: #1e5fce;
+  --st-green: #235c34; --st-gold: #d99d21; --st-gold-ink: #8a6210; --st-pink: #f29fc8; --st-pink-ink: #b8397a;
+  --st-purple: #7a42b8; --st-dark: #111111; --st-on-dark: #f4f1eb; --st-on-dark-2: #b9b2a8;
+  --st-display: 'Chroma Grotesk', 'Wanted Sans', "Malgun Gothic", sans-serif;
+  --st-mono: 'Chroma Mono', 'Wanted Sans', ui-monospace, monospace;
+  --st-grad: linear-gradient(90deg, var(--st-blue), var(--st-purple) 38%, var(--st-pink) 68%, var(--st-orange));
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* 엔진 토큰을 이야기 색으로 */
+  --ch-paper: var(--st-bg); --ch-ink: var(--st-ink); --ch-mute: var(--st-muted); --ch-line: #d9d2c4;
+  --accent: var(--st-orange); --tab: var(--st-orange); --ch-card: #fbf9f5; --ch-soft: var(--st-bg-2);
+  --ch-ok: var(--st-green); --ch-info: var(--st-blue);
+  --ch-font: 'Wanted Sans', "Pretendard Variable", "Malgun Gothic", sans-serif;
+  --ch-mono: var(--st-mono);
+}
+body[data-theme="story"] section.slide {
+  padding: 84px 64px 52px; color: var(--st-ink); font-feature-settings: 'tnum' 1;
+  background-color: var(--st-bg); background-image: var(--grain); background-size: 220px 220px;
+}
+/* 머리줄(점선 아래) · 쪽 번호 */
+body[data-theme="story"] section.slide::before {
+  content: "CLASS-HTML  ·  " attr(data-sec); left: 64px; right: 64px; top: 0; height: 58px;
+  display: flex; align-items: center; border-bottom: 1px dashed var(--st-line);
+  font: 600 15px/1 var(--st-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--st-muted);
+}
+body[data-theme="story"] section.slide:not([data-sec])::before { content: "CLASS-HTML"; }
+body[data-theme="story"] section.slide::after { right: 64px; bottom: 18px; font: 700 14px/1 var(--st-mono); color: var(--st-ink); }
+
+/* 글 */
+body[data-theme="story"] .slide h2 { margin: 0 0 20px; font: 800 44px/1.18 var(--st-display); letter-spacing: -.03em; color: var(--st-ink); }
+body[data-theme="story"] .slide h3 { font-weight: 800; }
+body[data-theme="story"] .slide .kicker { margin: 0 0 12px; gap: 14px; font: 600 20px/1.3 var(--st-mono); letter-spacing: .08em; color: var(--st-orange-ink); }
+body[data-theme="story"] .slide .kicker::before { width: 36px; height: 3px; border-radius: 2px; background: var(--st-orange); }
+body[data-theme="story"] .slide mark { background: none; color: var(--st-orange-ink); font-weight: 800; }
+.lead { margin: 0 0 18px; font-size: 30px; line-height: 1.45; font-weight: 600; color: var(--st-ink); }
+.note { margin: 0; font: italic 400 20px/1.45 var(--st-mono); color: var(--st-muted); }
+.hl { color: var(--st-orange-ink); font-weight: 800; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
+
+/* 어두운 패널(모눈) */
+.panel {
+  border-radius: 24px; padding: 24px 30px; color: var(--st-on-dark);
+  background-color: var(--st-dark);
+  background-image: linear-gradient(rgba(244,241,235,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(244,241,235,.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.panel-head { display: flex; justify-content: space-between; margin: 0 0 6px; font: 600 20px/1.2 var(--st-mono); letter-spacing: .06em; color: var(--st-on-dark-2); }
+.index { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; margin: 0; padding: 0; list-style: none; }
+.index li { display: grid; grid-template-columns: 50px 1fr auto; align-items: baseline; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(244,241,235,.14); }
+.index li:nth-child(-n+2) { border-top: 0; }
+.index b { font: 700 24px/1 var(--st-display); color: var(--st-on-dark-2); }
+.index li:first-child b { color: var(--st-orange); }
+.index span { font-size: 26px; font-weight: 700; }
+.index small { font: 500 20px/1 var(--st-mono); color: var(--st-on-dark-2); }
+
+/* 표지 */
+body[data-theme="story"] section.slide#cover { padding-top: 92px; }
+.cover-title { margin: 0 0 14px; font: 800 58px/1.12 var(--st-display); letter-spacing: -.035em; }
+.byline { margin: 14px 0 0; font: 600 20px/1 var(--st-mono); letter-spacing: .06em; color: var(--st-muted); }
+
+/* 숫자 칸 */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 8px; }
+.stat { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px 20px; background: var(--st-bg-2); border-top: 3px solid var(--st-ink); }
+.stat:first-child { border-top-color: var(--st-orange); }
+.stat > span { font-size: 22px; font-weight: 600; color: var(--st-ink-2); }
+.stat > b { font: 700 72px/1 var(--st-display); letter-spacing: -.04em; }
+.stat > b small { font: 700 28px var(--ch-font); color: var(--st-muted); margin-left: 4px; }
+.stat > p { margin: 0; font-size: 20px; line-height: 1.4; color: var(--st-muted); }
+
+/* 막대(여는 투표) */
+.meter { display: grid; grid-template-columns: 330px 100px 1fr 60px; align-items: center; gap: 16px; margin: 0 0 14px; font-size: 26px; font-weight: 700; }
+.meter input { width: 92px; min-height: 52px; font: 700 26px var(--ch-font); text-align: center; }
+.meter output { text-align: right; font: 700 32px/1 var(--st-display); }
+body[data-theme="story"] .meter .bar { --bar-c: var(--st-ink-2); height: 26px; border-radius: 999px; }
+
+/* 밝은 칸 → 어두운 칸 */
+.versus { display: grid; grid-template-columns: 1fr 52px 1fr; gap: 12px; align-items: stretch; }
+.side { display: flex; flex-direction: column; gap: 10px; padding: 22px 26px; border-radius: 24px; }
+.side.light { border: 2px solid var(--st-ink); background: var(--st-bg); }
+.side.dark { color: var(--st-on-dark); background-color: var(--st-dark); background-image: linear-gradient(rgba(244,241,235,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(244,241,235,.05) 1px, transparent 1px); background-size: 40px 40px; }
+.pill-tag { align-self: flex-start; padding: 4px 16px; border: 2px solid currentColor; border-radius: 999px; font-size: 22px; font-weight: 700; }
+.side.light .pill-tag { color: var(--st-orange-ink); }
+.side.dark .pill-tag { color: var(--st-pink); }
+.side ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.side li { position: relative; padding-left: 26px; font-size: 25px; line-height: 1.4; font-weight: 600; }
+.side li::before { content: ""; position: absolute; left: 4px; top: 13px; width: 10px; height: 10px; border-radius: 50%; background: currentColor; opacity: .55; }
+.arrow { display: grid; place-items: center; color: var(--st-orange); font: 800 40px/1 var(--st-display); }
+
+/* 기둥 */
+.feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.feat { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 4px solid var(--c, var(--st-orange)); }
+.feat b { font-size: 30px; font-weight: 800; color: var(--ci, var(--st-orange-ink)); }
+.feat p { margin: 0; font-size: 23px; line-height: 1.45; color: var(--st-ink-2); }
+.c-blue { --c: var(--st-blue); --ci: var(--st-blue); }
+.c-green { --c: var(--st-green); --ci: var(--st-green); }
+.c-gold { --c: var(--st-gold); --ci: var(--st-gold-ink); }
+.c-pink { --c: var(--st-pink); --ci: var(--st-pink-ink); }
+
+/* 단계 원 + 이어지는 선(마지막 원은 주황) */
+.steps { position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 0 18px; margin: 6px 0 0; padding: 0; list-style: none; }
+.steps::before { content: ""; position: absolute; left: 18px; right: 10px; top: 18px; height: 3px; background: var(--st-grad); }
+.steps li { position: relative; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.steps i { width: 38px; height: 38px; display: grid; place-items: center; border: 3px solid var(--st-ink); border-radius: 50%; background: var(--st-bg); font: 700 20px/1 var(--st-display); font-style: normal; }
+.steps li:last-child i { border-color: var(--st-orange); background: var(--st-orange); color: #fff; box-shadow: 0 0 0 7px rgba(237, 90, 20, .2); }
+.steps small { font: 600 20px/1.2 var(--st-mono); letter-spacing: .03em; color: var(--st-orange-ink); }
+.steps b { font-size: 25px; line-height: 1.3; font-weight: 800; }
+.steps p { margin: 0; font-size: 21px; line-height: 1.42; color: var(--st-ink-2); }
+
+/* 인용(주황 세로선) */
+.quote { display: grid; grid-template-columns: 6px 1fr; gap: 0 22px; padding: 16px 24px 16px 0; border-radius: 0 18px 18px 0; background: var(--st-bg-2); }
+.quote::before { content: ""; grid-row: 1 / span 2; border-radius: 3px; background: var(--st-orange); }
+.quote p { margin: 0; font-size: 26px; line-height: 1.5; font-weight: 600; }
+.quote small { display: block; margin-top: 4px; font: 500 20px/1.3 var(--st-mono); color: var(--st-muted); }
+
+/* 단추형 링크 · 복사 */
+.btn { display: inline-flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 28px; border: 0; border-radius: 999px; background: var(--st-orange); color: #fff; font: 800 24px/1.25 var(--ch-font); text-decoration: none; box-shadow: 0 14px 30px -18px rgba(237, 90, 20, .9); cursor: pointer; }
+.btn.ghost { background: none; color: var(--st-ink); box-shadow: none; border: 2px solid var(--st-ink); }
+.panel .btn.ghost { color: var(--st-on-dark); border-color: var(--st-on-dark-2); }
+.prompt { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 16px; padding: 14px 16px 14px 22px; border-left: 6px solid var(--st-orange); border-radius: 0 16px 16px 0; background: var(--ch-card); box-shadow: 0 0 0 2px var(--ch-line) inset; }
+.prompt code { font: 600 22px/1.5 var(--st-mono); }
+section.slide button.copy { min-height: 52px; padding: 8px 18px; border: 2px solid var(--st-ink); border-radius: 999px; background: var(--st-bg); font: 700 20px var(--ch-font); color: var(--st-ink); cursor: pointer; }
+section.slide button.copy.is-done { border-color: var(--st-green); color: var(--st-green); }
+
+/* 단축키 */
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 28px; margin: 0; padding: 0; list-style: none; }
+.keys li { font-size: 25px; font-weight: 600; }
+.keys kbd { display: inline-block; min-width: 40px; margin-right: 10px; padding: 3px 10px; border-radius: 8px; background: var(--st-dark); color: var(--st-on-dark); font: 700 21px var(--st-mono); text-align: center; }
+
+/* 막혔을 때 */
+.faq { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 36px; margin: 0; }
+.faq div { padding-top: 10px; border-top: 2px solid var(--st-ink); }
+.faq dt { font-size: 24px; font-weight: 800; }
+.faq dd { margin: 4px 0 0; font-size: 22px; line-height: 1.45; color: var(--st-ink-2); }
+
+/* 전후 비교 */
+.ba { position: relative; width: 720px; height: 405px; overflow: hidden; border-radius: 18px; background: var(--st-dark); box-shadow: 0 18px 40px -24px rgba(17,17,17,.55); }
+.ba img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ba .ba-after { clip-path: inset(0 0 0 calc(var(--cut, 50) * 1%)); }
+.ba .ba-line { position: absolute; top: 0; bottom: 0; left: calc(var(--cut, 50) * 1% - var(--cut, 50) * .04px); width: 4px; background: var(--st-orange); }
+.ba .ba-tag { position: absolute; bottom: 12px; padding: 4px 14px; border-radius: 999px; background: rgba(17,17,17,.82); color: #fff; font: 700 20px/1.3 var(--ch-font); }
+.ba .ba-tag.l { left: 12px; } .ba .ba-tag.r { right: 12px; background: var(--st-orange); }
+#before-after .calc { display: grid; grid-template-columns: 720px 1fr; gap: 32px; align-items: start; }
+#before-after input[type=range] { width: 720px; margin-top: 10px; }
+#before-after ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 16px; }
+#before-after li { padding-top: 10px; border-top: 2px solid var(--st-line); font-size: 23px; line-height: 1.45; }
+#before-after li b { display: block; font: 600 20px/1.3 var(--st-mono); letter-spacing: .04em; color: var(--st-orange-ink); }
+
+/* 교과 갤러리 */
+.ideas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.idea { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; border-radius: 20px; background: var(--ch-card); box-shadow: 0 0 0 2px var(--ch-line) inset; }
+.idea code { align-self: flex-start; padding: 2px 10px; border-radius: 8px; background: var(--st-bg-2); font: 600 20px/1.5 var(--st-mono); color: var(--st-orange-ink); }
+.idea b { font-size: 24px; line-height: 1.3; }
+.idea p { margin: 0; font-size: 20px; line-height: 1.45; color: var(--st-ink-2); }
+
+/* 성장 타임라인 */
+#growth .steps b { font-size: 23px; }
+#growth .steps p { font-size: 20px; }
+#growth .steps li.next i { border-style: dashed; }
+.secret { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; padding: 20px 26px; }
+.secret b { font-size: 28px; }
+.secret p { margin: 0; font-size: 22px; line-height: 1.45; color: var(--st-on-dark-2); }
+
+/* 다짐 */
+.pledge textarea { width: 100%; height: 190px; padding: 16px 18px; box-sizing: border-box; border: 2px solid var(--st-ink); border-radius: 18px; background: var(--ch-card); font: 600 26px/1.45 var(--ch-font); color: var(--st-ink); resize: none; }
+.qr { display: flex; gap: 24px; align-items: center; }
+.qr img { width: 210px; height: 210px; padding: 10px; border-radius: 18px; background: #fff; }
+
+/* 마무리 */
+#closing .panel { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 44px; }
+.cta-title { margin: 0; font: 800 54px/1.16 var(--st-display); letter-spacing: -.035em; color: var(--st-on-dark); }
+.cta-title em { font-style: normal; color: var(--st-pink); }
+.cta-links { display: flex; flex-wrap: wrap; gap: 14px; }
+.handle { margin: 0; font: 600 20px/1.3 var(--st-mono); letter-spacing: .04em; color: var(--st-on-dark-2); }
+
+/* 엔진 부품을 이야기 모양으로 */
+body[data-theme="story"] .pill { --pill: var(--st-ink); }
+#caution .side { padding: 14px 22px; gap: 6px; }
+#caution .side li { font-size: 22px; }
+#caution .quiz .opt { min-height: 58px; }
+body[data-theme="story"] .quiz .opt, body[data-theme="story"] .sort span, body[data-theme="story"] .switch button { border-radius: 16px; }
+body[data-theme="story"] .box { padding: 18px 24px; border-radius: 20px; background: var(--st-bg-2); }
+body[data-theme="story"] .box h3 { margin: 0 0 8px; }
+body[data-theme="story"] .box p:last-child, body[data-theme="story"] .box ol:last-child { margin-bottom: 0; }
+
+/* ── 레퍼런스에서 가져온 만지는 도해(원래 색 그대로) ── */
+.ref-link { margin-left: auto; }
+.dohae-head { display: flex; align-items: baseline; gap: 18px; }
+.dohae-head h2 { flex: 1; }
+.dohae-head .pill { flex: none; }
+
+/* A 확산(sci-diffusion 「잉크가 퍼지는 모습을 입자로」) */
+#try-sci { --teal: #0F766E; --yellow: #FBBF24; --gray: #6B7078; --ink: #222222; --ink-dot: #E0464E; --water-dot: #9DC8F5; }
+#try-sci .dx { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+#try-sci .dx-view > svg { display: block; }
+#try-sci .dx-ctrl { display: flex; flex-direction: column; gap: 8px; }
+#try-sci .dx-view { position: relative; }
+#try-sci .dx-lab { margin: 0; font-size: 26px; font-weight: 700; }
+#try-sci .dx-lab b { color: var(--teal); }
+#try-sci .dx-ticks { position: relative; height: 28px; margin-top: -6px; font-size: 20px; color: var(--gray); }
+#try-sci .dx-ticks span { position: absolute; top: 0; left: calc(22px + (100% - 44px) * var(--f)); transform: translateX(-50%); white-space: nowrap; }
+#try-sci .dx-ticks span:first-child { transform: none; left: 0; }
+#try-sci .dx-ticks span:last-child { transform: none; left: auto; right: 0; }
+section.slide#try-sci input.dx-range { -webkit-appearance: none; appearance: none; width: 100%; height: 56px; margin: 0; background: transparent; cursor: pointer; }
+section.slide#try-sci input.dx-range::-webkit-slider-runnable-track { height: 12px; border-radius: 6px; background: #D7DEE6; }
+section.slide#try-sci input.dx-range::-webkit-slider-thumb { -webkit-appearance: none; width: 44px; height: 44px; margin-top: -16px; border-radius: 50%; background: var(--teal); border: 5px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,.45); }
+section.slide#try-sci input.dx-range::-moz-range-track { height: 12px; border-radius: 6px; background: #D7DEE6; }
+section.slide#try-sci input.dx-range::-moz-range-thumb { width: 34px; height: 34px; border-radius: 50%; background: var(--teal); border: 5px solid #fff; }
+#try-sci .dx-veil { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; background: #EEF2F5; border: 3px dashed #B8C4CE; border-radius: 18px; color: #5C6B78; font-size: 28px; font-weight: 600; line-height: 1.5; }
+#try-sci .dx-veil[hidden] { display: none; }
+#try-sci .dx-out { margin: 8px 0 0; min-height: 36px; font-size: 25px; font-weight: 700; line-height: 1.4; }
+#try-sci .dx-box { padding: 12px 16px; border-radius: 14px; background: #F1F5F4; font-size: 22px; line-height: 1.45; color: var(--ink); }
+#try-sci .dx-model { font-size: 20px; color: var(--gray); font-weight: 500; }
+#try-sci .dx-legend { display: flex; flex-direction: column; gap: 4px; font-size: 21px; line-height: 1.35; }
+#try-sci .dot { display: inline-block; width: 20px; height: 20px; border-radius: 50%; vertical-align: -3px; margin-right: 8px; }
+#try-sci .ink-n { font-size: 46px; font-weight: 800; color: var(--ink-dot); line-height: 1.1; }
+#try-sci .ink-n small { font-size: 26px; color: var(--ink); font-weight: 700; }
+#try-sci .ink-bar { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-top: 8px; }
+#try-sci .ink-bar i { height: 22px; border-radius: 4px; background: #E3E8EC; }
+#try-sci .ink-bar i.on { background: var(--ink-dot); }
+
+/* B 시장 가격(soc-supply-demand 「시장 가격의 결정」) */
+#try-soc { --navy: #1D4E89; --ink: #222222; --muted: #6B7078; --dem: #1D4E89; --sup: #E8590C; --soft: #F1F5FA; --line: #C9D4E2; }
+#try-soc .dh { display: grid; grid-template-columns: 430px 1fr; gap: 30px; }
+#try-soc .dh-view { position: relative; }
+#try-soc .dh-veil { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; text-align: center; border: 3px dashed #B8C4CE; border-radius: 18px; background: #EEF2F5; color: #5C6B78; font-size: 28px; font-weight: 600; line-height: 1.5; }
+#try-soc .dh-veil[hidden] { display: none; }
+#try-soc .dh-lab { margin: 0; font-size: 26px; font-weight: 700; color: var(--ink); }
+#try-soc .dh-lab b { color: var(--navy); }
+section.slide#try-soc input.dh-range { width: 100%; height: 52px; margin: 0; accent-color: var(--navy); cursor: pointer; }
+#try-soc .dh-ticks { display: flex; justify-content: space-between; margin-top: -6px; font-size: 20px; color: var(--muted); }
+#try-soc .dh-out { margin: 4px 0 0; font-size: 24px; line-height: 1.45; font-weight: 700; color: var(--ink); white-space: pre-line; min-height: 70px; }
+#try-soc .dh-svg { display: block; }
+#try-soc .dh-svg text { font-family: inherit; }
+section.slide#try-soc button.dh-b { width: auto; margin: 0; font: inherit; font-size: 24px; font-weight: 700; line-height: 1.25; min-height: 56px; padding: 8px 14px; border: 3px solid var(--line); border-radius: 14px; background: #fff; color: var(--ink); cursor: pointer; }
+section.slide#try-soc button.dh-b:disabled { opacity: .45; cursor: default; }
+#try-soc .c-dem { color: var(--dem); } #try-soc .c-sup { color: var(--sup); }
+#try-soc .mk-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+#try-soc .mk-bar p { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
+#try-soc .mk-bar div { position: relative; height: 24px; border-radius: 8px; background: #E6EBF0; overflow: hidden; }
+#try-soc .mk-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; transition: width .2s; }
+#try-soc .mk-calc { margin: 8px 0 10px; padding: 6px 14px; border-radius: 12px; background: var(--soft); font-size: 22px; line-height: 1.4; color: var(--ink); min-height: 66px; white-space: pre-line; }
+
+/* C 이성과 정서의 저울(eth-dohae 「활동 ①」) */
+#try-eth { --accent: #006DBB; --ms-reason: #006DBB; --ms-emo: #C8325F; --ms-ink: #3F3F3F; --ms-muted: #5F6B7A; --ms-line: #D3DCE6; }
+#try-eth .ms-wrap, #try-eth .ms-wrap * { box-sizing: border-box; }
+#try-eth .ms-act { display: grid; grid-template-columns: 420px 1fr; gap: 28px; }
+#try-eth .ms-ctrl { display: flex; flex-direction: column; gap: 4px; }
+#try-eth .ms-view { position: relative; }
+#try-eth .ms-lab { font-size: 24px; font-weight: 600; margin: 4px 0 0; }
+#try-eth .ms-lab b { color: var(--accent); }
+#try-eth .ms-ticks { position: relative; height: 28px; font-size: 20px; color: var(--ms-muted); margin-top: -6px; }
+#try-eth .ms-ticks span { position: absolute; top: 0; white-space: nowrap; }
+#try-eth .ms-ticks span:first-child { left: 0; }
+#try-eth .ms-ticks span:last-child { right: 0; }
+#try-eth .ms-note { font-size: 23px; line-height: 1.45; color: var(--ms-ink); margin: 0; min-height: 100px; }
+#try-eth .ms-seg { display: flex; gap: 10px; }
+#try-eth .ms-seg button { flex: 1; }
+section.slide#try-eth button.ms-b { width: auto; margin: 0; font: inherit; font-size: 24px; font-weight: 700; line-height: 1.25; min-height: 58px; padding: 8px 12px; border: 3px solid var(--ms-line); border-radius: 14px; background: #fff; color: var(--ms-ink); cursor: pointer; }
+section.slide#try-eth button.ms-b[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+section.slide#try-eth input.ms-range { -webkit-appearance: none; appearance: none; width: 100%; height: 52px; background: transparent; margin: 0; cursor: pointer; }
+section.slide#try-eth input.ms-range::-webkit-slider-runnable-track { height: 10px; border-radius: 5px; background: #D7DEE6; }
+section.slide#try-eth input.ms-range::-webkit-slider-thumb { -webkit-appearance: none; width: 38px; height: 38px; margin-top: -14px; border-radius: 50%; background: var(--accent); border: 5px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,.4); }
+section.slide#try-eth input.ms-range::-moz-range-track { height: 10px; border-radius: 5px; background: #D7DEE6; }
+section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); border: 5px solid #fff; }
+#try-eth .ms-veil { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; background: #EEF2F6; border: 3px dashed #B6C3D0; border-radius: 18px; font-size: 28px; font-weight: 600; color: var(--ms-muted); line-height: 1.5; }
+#try-eth .ms-veil[hidden] { display: none; }
+#try-eth .ms-verdict { margin: 6px 0 0; font-size: 25px; font-weight: 700; text-align: center; line-height: 1.4; min-height: 36px; color: var(--ms-ink); }
+#try-eth .c-reason { color: var(--ms-reason); } #try-eth .c-emo { color: var(--ms-emo); }
 </style>
 </head>
-<body data-theme="ppt" style="--accent:#0F766E">
+<body data-theme="story">
 
-<section class="slide cover" id="cover" data-title="표지">
-  <p class="kicker">교직원 연수 · 실습형 90~120분</p>
-  <h1>수업 PPT 말고,<br>수업 HTML 만들기</h1>
-  <p>내 수업 PPT와 내가 쓰는 AI로<br>판서와 활동이 들어간 수업 화면을 만듭니다.</p>
-</section>
-
-<section class="slide" id="poll" data-sec="1. 여는 질문" data-title="여는 투표">
-  <h2>PPT로 판서할 때 가장 불편한 것은?</h2>
-  <p>손을 든 수를 적으면 막대가 바로 바뀝니다.</p>
-  <div class="calc" data-let="total = a + b + c + d">
-    <div class="meter">펜 ↔ 마우스 모드 바꾸기 <input type="number" name="a" min="0" max="60" value="0" aria-label="펜 마우스 전환"><div class="bar" data-value="a" data-max="max(total, 1)"></div><output data-expr="a"></output></div>
-    <div class="meter">넘기면 판서가 사라짐 <input type="number" name="b" min="0" max="60" value="0" aria-label="판서 사라짐"><div class="bar" data-value="b" data-max="max(total, 1)"></div><output data-expr="b"></output></div>
-    <div class="meter">반마다 다시 써야 함 <input type="number" name="c" min="0" max="60" value="0" aria-label="반마다 다시"><div class="bar" data-value="c" data-max="max(total, 1)"></div><output data-expr="c"></output></div>
-    <div class="meter">빈 칠판이 따로 없음 <input type="number" name="d" min="0" max="60" value="0" aria-label="빈 칠판"><div class="bar" data-value="d" data-max="max(total, 1)"></div><output data-expr="d"></output></div>
-    <p data-expr="total == 0 ? '손을 든 수를 적어 보세요.' : '모두 ' + total + '명이 답했습니다.'"></p>
-  </div>
-</section>
-
-<section class="slide" id="compare" data-sec="1. 여는 질문" data-title="PPT와 HTML 비교">
-  <h2>같은 수업, 무엇이 다를까요?</h2>
-  <div class="switch" data-stops="시작|PPT로 수업할 때|수업 HTML로 할 때">
-    <ul data-only="1">
-      <li>펜을 들면 다음 장으로 넘기려고 <span class="bad">마우스 모드로 바꿔야</span> 합니다.</li>
-      <li>그래프·지도는 그림이라 <span class="bad">값을 바꿔 볼 수 없습니다.</span></li>
-      <li>3반에 쓴 판서가 4반 수업 화면에 그대로 남습니다.</li>
-    </ul>
-    <ul data-only="2">
-      <li>펜을 든 채로 ◀ ▶, 단추, 슬라이더가 <span class="good">그대로 작동합니다.</span></li>
-      <li>슬라이더를 움직이면 <span class="good">그래프와 그림이 계산해서 바뀝니다.</span></li>
-      <li>판서가 <span class="good">반마다 따로</span> 저장되고, 창을 닫아도 남습니다.</li>
-    </ul>
-  </div>
-</section>
-
-<section class="slide" id="try-ink" data-sec="2. 판서 체험" data-title="판서 체험">
-  <h2>펜을 든 채로 넘겨 보세요</h2>
-  <div class="cols">
-    <ol>
-      <li>아래 툴바에서 <b>펜</b>을 고릅니다.</li>
-      <li>이 화면에 아무거나 씁니다.</li>
-      <li>펜을 든 채로 <b>▶</b>를 누르고, 다시 <b>◀</b>.</li>
-      <li>판서가 그대로 있나요?</li>
+<!-- 0. 표지 -->
+<section class="slide" id="cover" data-title="표지">
+  <p class="kicker">2026. 10. 13. · 교직원 연수</p>
+  <h1 class="cover-title">class-html은 어떻게 탄생했고,<br>어떻게 성장하고 있을까요?</h1>
+  <p class="lead">수업 PPT를 학생이 직접 만지는 수업 HTML로 바꾸는 이야기와 실습이에요.</p>
+  <div class="panel">
+    <p class="panel-head"><span>오늘 90분</span><span>설명 40 · 실습 45 · 마무리 5</span></p>
+    <ol class="index">
+      <li><b>01</b><span>탄생 이야기</span><small>10분</small></li>
+      <li><b>04</b><span>만드는 흐름</span><small>5분</small></li>
+      <li><b>02</b><span>직접 만져 보기</span><small>15분</small></li>
+      <li><b>05</b><span>내 PPT로 실습</span><small>45분</small></li>
+      <li><b>03</b><span>수업에서 쓰기</span><small>10분</small></li>
+      <li><b>06</b><span>성장 기록 · 마무리</span><small>5분</small></li>
     </ol>
-    <div class="box">
-      <h3>펜을 든 채로 되는 것</h3>
-      <p>넘기기 ◀ ▶, 활동 단추와 보기,<br>슬라이더, 카드 끌기</p>
-      <p>단추 위에서 <b>톡</b> 누르면 단추,<br><b>쭉</b> 끌면 판서가 됩니다.</p>
+  </div>
+  <p class="byline">N-LIFESCIENCE · GITHUB.COM/N-LIFESCIENCE/CLASS-HTML</p>
+</section>
+
+<section class="slide" id="numbers" data-sec="숫자로 보기" data-title="숫자로 보는 class-html">
+  <p class="kicker">지금까지 한눈에</p>
+  <h2>일주일 동안 쌓인 것</h2>
+  <div class="stats" data-stagger>
+    <div class="stat" data-anim="fade-up"><span>첫 커밋부터</span><b><span data-anim="count">7</span><small>일</small></b><p>2026. 10. 2.에 저장소를 열었어요.</p></div>
+    <div class="stat" data-anim="fade-up"><span>공개 버전</span><b><span data-anim="count">2</span><small>번</small></b><p>v1.0.0(10. 5.),<br>v1.1.0(10. 6.)</p></div>
+    <div class="stat" data-anim="fade-up"><span>만든 수업 장</span><b><span data-anim="count">111</span><small>장</small></b><p>생명 5차시 72장,<br>윤리 19장, 세계사 20장</p></div>
+    <div class="stat" data-anim="fade-up"><span>엔진 부품</span><b><span data-anim="count">13</span><small>종</small></b><p>단계 막대부터<br>입자 상자까지</p></div>
+  </div>
+  <div class="quote" style="margin-top:26px"><p>판서가 되고, 학생이 만질 수 있고, 내 AI로 만들 수 있는 수업 화면.<br>오늘은 이 셋을 직접 해 봐요.</p><small>오늘의 목표</small></div>
+</section>
+
+<!-- 1. 탄생 -->
+<section class="slide" id="poll" data-sec="01 · 탄생" data-title="여는 투표">
+  <p class="kicker">여는 질문</p>
+  <h2>PPT로 판서할 때 가장 불편한 것은?</h2>
+  <p class="lead" style="font-size:26px">손을 든 사람 수를 적으면 막대가 바로 바뀌어요.</p>
+  <div class="calc" data-let="total = a + b + c + d; top = max(a, b, c, d)">
+    <div class="meter">펜 ↔ 마우스 모드 바꾸기 <input type="number" name="a" min="0" max="99" value="0" aria-label="펜 마우스 전환"><div class="bar" data-value="a" data-max="max(total, 1)" data-style="--bar-c: a == top && top > 0 ? '#ed5a14' : '#3b3833'"></div><output data-expr="a"></output></div>
+    <div class="meter">넘기면 판서가 사라짐 <input type="number" name="b" min="0" max="99" value="0" aria-label="판서 사라짐"><div class="bar" data-value="b" data-max="max(total, 1)" data-style="--bar-c: b == top && top > 0 ? '#ed5a14' : '#3b3833'"></div><output data-expr="b"></output></div>
+    <div class="meter">반마다 다시 써야 함 <input type="number" name="c" min="0" max="99" value="0" aria-label="반마다 다시"><div class="bar" data-value="c" data-max="max(total, 1)" data-style="--bar-c: c == top && top > 0 ? '#ed5a14' : '#3b3833'"></div><output data-expr="c"></output></div>
+    <div class="meter">빈 칠판이 따로 없음 <input type="number" name="d" min="0" max="99" value="0" aria-label="빈 칠판"><div class="bar" data-value="d" data-max="max(total, 1)" data-style="--bar-c: d == top && top > 0 ? '#ed5a14' : '#3b3833'"></div><output data-expr="d"></output></div>
+    <p class="note" data-expr="total == 0 ? '손을 든 수를 적어 보세요.' : '모두 ' + total + '명이 답했어요. 주황 막대가 가장 많은 답이에요.'"></p>
+  </div>
+</section>
+
+<section class="slide" id="ai-diff" data-sec="01 · 탄생" data-title="AI마다 달랐던 결과">
+  <p class="kicker">처음 해 본 일</p>
+  <h2>같은 PPT, 같은 부탁인데 AI마다 달랐어요</h2>
+  <div class="switch" data-stops="시작|GPT 첫 변환|ChatGPT (지침 1판)|Claude (지침 1판)">
+    <div class="versus" data-only="1">
+      <div class="side light"><span class="pill-tag">잘한 것</span><ul><li>PPT 내용을 빠짐없이 옮겼어요.</li></ul></div><div class="arrow">→</div>
+      <div class="side dark"><span class="pill-tag">아쉬운 것</span><ul><li>옮기기만 해서 활동이 없었어요.</li><li>원본 색이 사라졌어요.</li><li>그림만 20MB였어요.</li></ul></div>
+    </div>
+    <div class="versus" data-only="2">
+      <div class="side light"><span class="pill-tag">잘한 것</span><ul><li>값을 넣으면 계산하는 활동이 많았어요.</li></ul></div><div class="arrow">→</div>
+      <div class="side dark"><span class="pill-tag">아쉬운 것</span><ul><li>설계표와 점검 장이 학생 화면에 들어갔어요.</li><li>원본 색과 표지가 없었어요.</li></ul></div>
+    </div>
+    <div class="versus" data-only="3">
+      <div class="side light"><span class="pill-tag">잘한 것</span><ul><li>원본 색을 살렸어요.</li><li>지도 세 장을 시기별로 열었어요.</li></ul></div><div class="arrow">→</div>
+      <div class="side dark"><span class="pill-tag">아쉬운 것</span><ul><li>계산하는 활동이 적었어요.</li><li>글 넘침을 잡느라 화면을 찍어 보며 다섯 번 고쳤어요.</li></ul></div>
+    </div>
+  </div>
+  <p class="step lead" style="margin-top:14px">펜 동작, 화면 틀, 활동 수준이 AI마다 달랐어요. <mark>그래서 바뀌면 안 되는 것을 엔진에 맡기기로 했어요.</mark></p>
+</section>
+
+<section class="slide" id="harness" data-sec="01 · 탄생" data-title="엔진 · 부품 · 지침">
+  <p class="kicker">그래서 만든 것</p>
+  <h2>엔진은 똑같이, 내용은 AI가</h2>
+  <div class="reveal" data-stops="시작|엔진|부품|지침">
+    <div class="feats">
+      <div class="feat c-blue" data-at="1"><small class="note">모든 수업에서 똑같이</small><b>엔진</b><p>펜을 든 채로 넘기기, 칠판, 반별 판서 저장, 인쇄, 넘친 글자 자동 점검을 맡아요.</p></div>
+      <div class="feat c-green" data-at="2"><small class="note">속성만 쓰면 작동</small><b>부품</b><p>단계 막대, 분류 카드, 보기마다 이유가 나오는 문제, 계산 상자, 그래프, 입자 상자 등 13종이에요.</p></div>
+      <div class="feat" data-at="3"><small class="note">AI가 읽는 파일 하나</small><b>지침</b><p>먼저 묻고, 설계표를 보여 주고, 개념마다 학생이 만지는 도해를 하나씩 넣게 해요.</p></div>
     </div>
   </div>
 </section>
 
-<section class="slide" id="try-board" data-sec="2. 판서 체험" data-title="칠판과 반">
+<!-- 2. 체험 -->
+<section class="slide" id="before-after" data-sec="02 · 직접 만져 보기" data-title="전후 비교">
+  <p class="kicker">같은 장, 두 모습</p>
+  <h2>실습 PPT '확산' 5쪽을 바꾸면</h2>
+  <div class="calc">
+    <div>
+      <div class="ba" data-style="--cut: c">
+        <img src="assets/training/before-ppt.png" alt="실습 PPT 5쪽: 잉크 입자 그림 세 장(처음, 1분 뒤, 5분 뒤)">
+        <img class="ba-after" src="assets/training/after-html.png" alt="바꾼 수업 HTML: 시간 막대를 2분에 둔 잉크 입자 상자">
+        <i class="ba-line"></i><span class="ba-tag l">PPT</span><span class="ba-tag r">수업 HTML</span>
+      </div>
+      <input type="range" name="c" min="0" max="100" value="50" aria-label="PPT와 수업 HTML 경계">
+    </div>
+    <ul>
+      <li><b>그림 3장 → 시간 막대</b>처음·1분·5분 사이도 학생이 직접 돌려 봐요.</li>
+      <li><b>몇 칸에 퍼졌나</b>9칸 중 몇 칸에 잉크가 있는지 세어 줘요.</li>
+      <li><b>입자 하나의 길</b>물 입자도 움직인다는 것을 점선으로 보여 줘요.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide" id="try-sci" data-sec="02 · 직접 만져 보기" data-title="체험 1: 과학 확산">
+  <div class="dohae-head"><h2>과학 · 잉크가 퍼지는 모습을 입자로</h2><a class="pill" href="https://n-lifescience.github.io/class-html/skills/class-html/references/examples/sci-diffusion.html#ink-model" target="_blank" rel="noopener">전체 수업 열기</a></div>
+  <div class="dx">
+    <div class="dx-ctrl">
+      <p class="dx-lab">잉크를 떨어뜨린 뒤 <b id="ik-t-out">시작</b></p>
+      <input class="dx-range" type="range" autocomplete="off" id="ik-t" min="0" max="31" value="0" aria-label="잉크를 떨어뜨린 뒤 지난 시간">
+      <div class="dx-ticks"><span>시작</span><span style="--f:0.2258">1분</span><span style="--f:0.6129">3분</span><span>5분</span></div>
+      <div class="dx-box">
+        잉크 입자가 있는 칸 <span class="dx-model">(모형)</span>
+        <p class="ink-n" style="margin:2px 0 0"><span id="ik-n">?</span><small> / 9칸</small></p>
+        <div class="ink-bar" id="ik-bar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="dx-legend">
+        <span><i class="dot" style="background:var(--ink-dot)"></i>잉크 입자 36개</span>
+        <span><i class="dot" style="background:var(--water-dot)"></i>물 입자 90개</span>
+        <span><i class="dot" style="background:#1E5FA8;box-shadow:0 0 0 4px var(--yellow)"></i>물 입자 하나가 1분 동안 지나온 길</span>
+      </div>
+    </div>
+    <div class="dx-view">
+      <svg id="ik-svg" width="504" height="360" viewBox="0 0 560 400" aria-label="잉크 입자와 물 입자가 움직이는 상자">
+        <rect x="1.5" y="1.5" width="557" height="397" fill="#FFFFFF" stroke="#3B4A5A" stroke-width="3"/>
+        <g id="ik-cells"></g>
+        <g stroke="#C9D3DC" stroke-width="2" stroke-dasharray="8 8">
+          <line x1="186.7" y1="3" x2="186.7" y2="397"/><line x1="373.3" y1="3" x2="373.3" y2="397"/>
+          <line x1="3" y1="133.3" x2="557" y2="133.3"/><line x1="3" y1="266.7" x2="557" y2="266.7"/>
+        </g>
+        <g id="ik-water"></g>
+        <polyline id="ik-trail" fill="none" stroke="#1E5FA8" stroke-width="3" stroke-linejoin="round" stroke-dasharray="2 6" stroke-linecap="round"/>
+        <g id="ik-ink"></g>
+        <circle id="ik-me" cx="-50" cy="-50" r="10" fill="#1E5FA8" stroke="#FBBF24" stroke-width="4"/>
+      </svg>
+      <p class="dx-out" id="ik-out"></p>
+      <div class="dx-veil" id="ik-veil"><span>시간 막대를 밀면<br>잉크 한 방울을 떨어뜨려요</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="try-soc" data-sec="02 · 직접 만져 보기" data-title="체험 2: 사회 시장 가격">
+  <div class="dohae-head"><h2>사회 · 떡볶이 값은 왜 3,000원일까?</h2><a class="pill" href="https://n-lifescience.github.io/class-html/skills/class-html/references/examples/soc-supply-demand.html#market" target="_blank" rel="noopener">전체 수업 열기</a></div>
+  <div class="dh">
+    <div>
+      <p class="dh-lab">가격 <b id="mk-k-out">시작</b></p>
+      <input class="dh-range" type="range" autocomplete="off" id="mk-k" min="0" max="21" value="0" aria-label="떡볶이 가격">
+      <div class="dh-ticks"><span>시작</span><span>2,000원 ~ 4,000원</span></div>
+      <div class="mk-bars">
+        <div class="mk-bar"><p class="c-dem">수요량(사려는 양) <span id="mk-qd-t"></span></p><div><i id="mk-qd" style="background:var(--dem)"></i></div></div>
+        <div class="mk-bar"><p class="c-sup">공급량(팔려는 양) <span id="mk-qs-t"></span></p><div><i id="mk-qs" style="background:var(--sup)"></i></div></div>
+      </div>
+      <p class="mk-calc" id="mk-calc"></p>
+      <button class="dh-b" id="mk-run" type="button" disabled>시장에 맡기기 ▶</button>
+    </div>
+    <div class="dh-view">
+      <svg class="dh-svg" id="mk-svg" width="652" height="360" viewBox="0 0 652 360" aria-label="가격선과 초과 수요·초과 공급을 보여 주는 수요·공급 그래프"></svg>
+      <p class="dh-out" id="mk-out"></p>
+      <div class="dh-veil" id="mk-veil"><span>가격 막대를 밀어<br>떡볶이 값을 정해 보세요</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="try-eth" data-sec="02 · 직접 만져 보기" data-title="체험 3: 윤리 이성과 정서">
+  <div class="dohae-head"><h2>윤리 · 이성과 정서, 무엇이 판단을 움직일까</h2><a class="pill" href="https://n-lifescience.github.io/class-html/skills/class-html/references/examples/eth-dohae.html#scale" target="_blank" rel="noopener">전체 수업 열기</a></div>
+  <div class="ms-wrap">
+    <div class="ms-act">
+      <div class="ms-ctrl">
+        <div class="ms-seg" id="ds-case">
+          <button class="ms-b" data-v="switch" aria-pressed="false">스위치 당기기</button>
+          <button class="ms-b" data-v="push" aria-pressed="false">사람 밀기</button>
+        </div>
+        <p class="ms-note" id="ds-desc">먼저 상황을 골라요.</p>
+        <p class="ms-lab">선로 위 사람 <b id="ds-n-out">5</b>명</p>
+        <input class="ms-range" type="range" autocomplete="off" id="ds-n" min="2" max="10" value="5" aria-label="선로 위 사람 수">
+        <p class="ms-lab">정서 반응 세기 <b id="ds-e-out">보통</b></p>
+        <input class="ms-range" type="range" autocomplete="off" id="ds-e" min="0" max="20" value="10" aria-label="정서 반응 세기">
+        <div class="ms-ticks"><span>약함</span><span>강함</span></div>
+      </div>
+      <div class="ms-view">
+        <svg width="660" height="345" viewBox="0 0 660 345" aria-label="이성과 정서의 무게를 비교하는 저울">
+          <path d="M330 80 L330 320" stroke="#9AA6B2" stroke-width="10" stroke-linecap="round"/>
+          <rect x="260" y="318" width="140" height="16" rx="8" fill="#9AA6B2"/>
+          <line id="ds-beam" x1="100" y1="80" x2="560" y2="80" stroke="#3F3F3F" stroke-width="12" stroke-linecap="round"/>
+          <circle cx="330" cy="80" r="14" fill="#3F3F3F"/>
+          <g id="ds-L" transform="translate(100 80)">
+            <path d="M0 0 L-80 90 M0 0 L80 90" stroke="#3F3F3F" stroke-width="3" fill="none"/>
+            <rect id="ds-Lw" x="-50" y="60" width="100" height="30" rx="6" fill="#006DBB"/>
+            <path d="M-95 90 Q0 140 95 90 Z" fill="#CFE3F3" stroke="#006DBB" stroke-width="4"/>
+            <text id="ds-Lt" x="0" y="160" text-anchor="middle" font-size="28" font-weight="800" fill="#006DBB">이성</text>
+            <text x="0" y="188" text-anchor="middle" font-size="20" fill="#3F3F3F">더 살리는 사람 수</text>
+          </g>
+          <g id="ds-R" transform="translate(560 80)">
+            <path d="M0 0 L-80 90 M0 0 L80 90" stroke="#3F3F3F" stroke-width="3" fill="none"/>
+            <rect id="ds-Rw" x="-50" y="60" width="100" height="30" rx="6" fill="#C8325F"/>
+            <path d="M-95 90 Q0 140 95 90 Z" fill="#F7D5DF" stroke="#C8325F" stroke-width="4"/>
+            <text id="ds-Rt" x="0" y="160" text-anchor="middle" font-size="28" font-weight="800" fill="#C8325F">정서</text>
+            <text x="0" y="188" text-anchor="middle" font-size="20" fill="#3F3F3F">직접 해치는 거부감</text>
+          </g>
+        </svg>
+        <p class="ms-verdict" id="ds-verdict"></p>
+        <div class="ms-veil" id="ds-veil"><span>왼쪽에서 상황을 고르면<br>저울이 움직여요</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="gallery" data-sec="02 · 직접 만져 보기" data-title="교과별 활용 아이디어">
+  <p class="kicker">내 교과라면</p>
+  <h2>교과마다 이렇게 쓸 수 있어요</h2>
+  <div class="switch" data-stops="시작|국어|수학|영어|사회·역사|과학|정보·예체능">
+    <div class="ideas" data-only="1">
+      <div class="idea"><code>ol.order</code><b>사건 순서 맞히기</b><p>소설의 사건을 차례로 쌓으면 자리마다 채점하고 이유가 붙어요.</p></div>
+      <div class="idea"><code>.sort</code><b>인물 성격과 근거</b><p>대사 카드를 '성격'별 칸으로 끌어 나눠요.</p></div>
+      <div class="idea"><code>.reveal</code><b>시 한 행씩</b><p>행을 하나씩 열며 앞 행에 판서해 둔 것을 이어 가요.</p></div>
+    </div>
+    <div class="ideas" data-only="2">
+      <div class="idea"><code>.calc + figure.plot</code><b>계수를 바꾸는 그래프</b><p>a, b를 밀면 함수 그래프와 꼭짓점이 바로 바뀌어요.</p></div>
+      <div class="idea"><code>$ 수식 $</code><b>수식 그대로</b><p>KaTeX로 수식을 그려요. 판서와 함께 써요.</p></div>
+      <div class="idea"><code>.quiz</code><b>보기마다 이유</b><p>틀린 보기를 고르면 어디서 틀렸는지 알려 줘요.</p></div>
+    </div>
+    <div class="ideas" data-only="3">
+      <div class="idea"><code>ol.order</code><b>문장 배열</b><p>단락의 문장을 순서대로 놓으면 연결어가 근거로 나와요.</p></div>
+      <div class="idea"><code>.blank</code><b>빈칸 열기</b><p>본문 빈칸을 하나씩 눌러 열며 함께 읽어요.</p></div>
+      <div class="idea"><code>.switch</code><b>두 표현 비교</b><p>단추로 같은 뜻의 두 문장을 번갈아 보여 줘요.</p></div>
+    </div>
+    <div class="ideas" data-only="4">
+      <div class="idea"><code>figure.map-reveal</code><b>시기별 지도</b><p>영토 변화를 한 시기씩 열고 새 땅에 테두리를 켜요.</p></div>
+      <div class="idea"><code>ol.yearline</code><b>연표 막대</b><p>연도에 비례한 축 위에서 사건을 하나씩 짚어요.</p></div>
+      <div class="idea"><code>.calc</code><b>판정 모형</b><p>나이·성별·연도를 넣으면 선거권이 있었는지 계산해요.</p></div>
+    </div>
+    <div class="ideas" data-only="5">
+      <div class="idea"><code>figure.particles</code><b>입자 상자</b><p>확산과 삼투를 입자 개수로 보여 줘요. 막도 넣을 수 있어요.</p></div>
+      <div class="idea"><code>.calc + figure.plot</code><b>변인 조절</b><p>온도·농도를 바꾸면 결과 수치와 그래프가 함께 바뀌어요.</p></div>
+      <div class="idea"><code>.reveal</code><b>실험 단계</b><p>과정을 한 단계씩 열고 주의할 점을 붙여요.</p></div>
+    </div>
+    <div class="ideas" data-only="6">
+      <div class="idea"><code>.reveal</code><b>알고리즘 한 단계씩</b><p>정렬·탐색의 각 단계를 막대로 돌려 봐요.</p></div>
+      <div class="idea"><code>.timer · .picker</code><b>교실 도구</b><p>모둠 활동 타이머, 겹치지 않는 발표자 뽑기를 써요.</p></div>
+      <div class="idea"><code>.score</code><b>모둠 점수판</b><p>체육·음악 활동에서 모둠별 점수를 바로 올려요.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. 수업에서 쓰기 -->
+<section class="slide" id="try-ink" data-sec="03 · 수업에서 쓰기" data-title="판서 체험">
+  <p class="kicker">지금 해 보세요</p>
+  <h2>펜을 든 채로 넘겨 보세요</h2>
+  <div class="cols" data-activity>
+    <ol class="steps" style="--n:1; grid-template-columns:1fr; gap:16px">
+      <li style="display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:center"><i>1</i><b>아래 툴바에서 펜을 골라요.</b></li>
+      <li style="display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:center"><i>2</i><b>이 화면에 아무거나 써요.</b></li>
+      <li style="display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:center"><i>3</i><b>펜을 든 채로 ▶, 다시 ◀.</b></li>
+      <li style="display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:center"><i>4</i><b>판서가 그대로 있나요?</b></li>
+    </ol>
+    <div class="panel">
+      <p class="panel-head"><span>펜을 든 채로 되는 것</span></p>
+      <p style="margin:6px 0 14px;font-size:26px;font-weight:700;line-height:1.45">넘기기 ◀ ▶, 활동 단추와 보기,<br>슬라이더, 카드 끌기</p>
+      <p style="margin:0;font-size:24px;line-height:1.5;color:var(--st-on-dark-2)">단추 위에서 <b style="color:var(--st-pink)">톡</b> 누르면 단추,<br><b style="color:var(--st-pink)">쭉</b> 끌면 판서가 돼요.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="try-board" data-sec="03 · 수업에서 쓰기" data-title="칠판과 반">
+  <p class="kicker">반마다 따로</p>
   <h2>칠판 모드와 반별 저장</h2>
   <div class="reveal" data-stops="시작|칠판|반 바꾸기|백업">
     <div class="box veil">
-      <p data-only="1">툴바의 <b>칠판</b>(또는 C 키)을 누르면 빈 칠판이 열립니다.<br>흰색·모눈·줄·초록 칠판·좌표평면 바탕, 여러 장을 쓸 수 있습니다.<br>같은 자리 단추가 <b>슬라이드</b>로 바뀌고, 누르면 보던 장으로 돌아옵니다.</p>
-      <p data-only="2"><b>반</b> 메뉴에서 「2반」을 추가하고 골라 보세요. 판서가 비어 있습니다.<br>「기본」으로 돌아가면 아까 쓴 판서가 다시 나옵니다.<br>반 목록은 이 PC의 모든 수업 HTML이 함께 씁니다.</p>
-      <p data-only="3">학교 PC가 재부팅 때 저장소를 지운다면<br>반 메뉴의 「판서 백업 파일로 저장」으로 파일을 받아 두고,<br>다음 시간에 「백업 파일 불러오기」를 누릅니다.</p>
+      <p data-only="1">툴바의 <b>칠판</b>(또는 C 키)을 누르면 빈 칠판이 열려요.<br>흰색·모눈·줄·초록 칠판·좌표평면 바탕에 여러 장을 쓸 수 있어요.<br>같은 자리 단추가 <b>슬라이드</b>로 바뀌고, 누르면 보던 장으로 돌아와요.</p>
+      <p data-only="2"><b>반</b> 메뉴에서 「2반」을 추가하고 골라 보세요. 판서가 비어 있어요.<br>「기본」으로 돌아가면 아까 쓴 판서가 다시 나와요.<br>반 목록은 이 PC의 모든 수업 HTML이 함께 써요.</p>
+      <p data-only="3">학교 PC가 재부팅 때 저장소를 지운다면<br>반 메뉴의 「판서 백업 파일로 저장」으로 파일을 받아 두고,<br>다음 시간에 「백업 파일 불러오기」를 눌러요.</p>
     </div>
   </div>
 </section>
 
-<section class="slide" id="keys" data-sec="2. 판서 체험" data-title="단축키">
+<section class="slide" id="keys" data-sec="03 · 수업에서 쓰기" data-title="단축키">
+  <p class="kicker">외우지 않아도 돼요 · ? 키로 언제든</p>
   <h2>알아 두면 편한 키</h2>
   <ul class="keys">
     <li><kbd>→</kbd>다음(단계를 하나씩)</li><li><kbd>←</kbd>이전</li><li><kbd>12</kbd><kbd>⏎</kbd>12쪽으로</li>
     <li><kbd>P</kbd>펜</li><li><kbd>H</kbd>형광펜</li><li><kbd>E</kbd>지우개</li>
     <li><kbd>L</kbd>레이저</li><li><kbd>Esc</kbd>손(조작)</li><li><kbd>C</kbd>칠판</li>
     <li><kbd>T</kbd>목차</li><li><kbd>F</kbd>전체 화면</li><li><kbd>B</kbd>검정 화면</li>
-    <li><kbd>?</kbd>도움말</li><li><kbd>D</kbd>자동 점검</li><li><kbd>Ctrl</kbd><kbd>P</kbd>인쇄</li>
+    <li><kbd>Ctrl</kbd><kbd>Z</kbd>판서 되돌리기</li><li><kbd>D</kbd>자동 점검</li><li><kbd>?</kbd>도움말</li>
   </ul>
-  <p style="margin-top:22px">프레젠터 리모컨의 넘기기 단추도 그대로 됩니다.</p>
+  <p class="note" style="margin-top:26px">프레젠터 리모컨의 넘기기 단추도 그대로 돼요.</p>
 </section>
 
-<section class="slide" id="gal-calc" data-sec="3. 교과별 부품" data-title="부품: 계산 상자와 그래프">
-  <h2>값을 바꾸면 계산해서 바뀝니다</h2>
-  <div class="calc cols" style="grid-template-columns: 420px 1fr" data-let="y = a * x0 ^ 2">
+<section class="slide" id="edit" data-sec="03 · 수업에서 쓰기" data-title="편집 모드">
+  <p class="kicker">AI에게 다시 부탁하지 않아도</p>
+  <h2>편집 모드로 바로 고쳐요</h2>
+  <ol class="steps" style="--n:4" data-activity>
+    <li><i>1</i><small>툴바</small><b>「편집」을 눌러요</b><p>위에 편집 막대가 나와요.</p></li>
+    <li><i>2</i><small>고르기</small><b>고칠 곳을 눌러요</b><p>글·상자·그림·SVG 도형 무엇이든 골라요.</p></li>
+    <li><i>3</i><small>고치기</small><b>글, 크기, 색, 위치</b><p>두 번 누르면 글을 고치고, 모서리를 끌면 크기가 바뀌어요.</p></li>
+    <li><i>4</i><small>저장</small><b>「HTML 저장」</b><p>고친 파일을 새로 받아요(Ctrl+S).</p></li>
+  </ol>
+  <div class="quote" style="margin-top:28px"><p>해 보기: 지금 이 장의 제목을 "편집 모드, 생각보다 쉬워요"로 바꿔 보세요.</p><small>「편집 끝내기」를 누르면 수업 화면으로 돌아와요</small></div>
+</section>
+
+<!-- 4. 만드는 흐름 -->
+<section class="slide" id="how" data-sec="04 · 만드는 흐름" data-title="만드는 흐름">
+  <p class="kicker">내 AI가 하는 일</p>
+  <h2>PPT 하나가 수업 HTML이 되기까지</h2>
+  <div class="reveal" data-stops="시작|올리기|인터뷰|설계표|HTML|점검">
+    <ol class="steps" style="--n:5">
+      <li data-at="1"><i>1</i><small>올리기</small><b>PPT + 저장소 주소</b><p>내 AI에 PPT를 올리고 한 줄을 붙여요.</p></li>
+      <li data-at="2"><i>2</i><small>인터뷰</small><b>AI가 먼저 물어요</b><p>교과·차시, 수업 장면, 헷갈리는 곳, 넣을 활동, 지킬 것.</p></li>
+      <li data-at="3"><i>3</i><small>설계표</small><b>개념마다 도해 하나</b><p>채팅에서만 확인해요. 학생 화면에는 안 들어가요.</p></li>
+      <li data-at="4"><i>4</i><small>파일</small><b>HTML 한 파일</b><p>판서·저장·점검은 엔진이 맡아요.</p></li>
+      <li data-at="5"><i>5</i><small>점검</small><b>D 키로 확인</b><p>넘친 글자를 찾고, 편집이나 AI 부탁으로 고쳐요.</p></li>
+    </ol>
+  </div>
+  <p class="step lead" style="margin-top:8px">"알아서 해 줘"라고 답하면 AI가 추천대로 만들어요.</p>
+</section>
+
+<section class="slide" id="caution" data-sec="04 · 만드는 흐름" data-title="저작권과 개인정보">
+  <h2>저작권과 개인정보, 이것만은 지켜요</h2>
+  <div class="cols" style="grid-template-columns:500px 1fr;gap:32px">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="side light"><span class="pill-tag">저작권</span><ul><li>교과서·출판사 그림이 든 수업 HTML은 내 수업에서만 써요.</li><li>누리집, 블로그, 공개 저장소에 올리지 않아요.</li></ul></div>
+      <div class="side dark"><span class="pill-tag">개인정보</span><ul><li>학생 이름·사진·성적이 든 장은 지우고 AI에 올려요.</li><li>외부 AI 사용은 학교·교육청 지침을 먼저 확인해요.</li></ul></div>
+    </div>
     <div>
-      <p style="margin-bottom:0">a = <output data-expr="a"></output></p>
-      <input type="range" name="a" min="-2" max="2" step="0.5" value="1" aria-label="a">
-      <p style="margin-bottom:0">x = <output data-expr="x0"></output></p>
-      <input type="range" name="x0" min="-3" max="3" step="0.5" value="1" aria-label="x">
-      <p>y = a × x² = <output data-expr="y"></output></p>
-      <p class="caption">과학 시뮬레이션, 수학 함수, 판정 모형에 씁니다.</p>
-    </div>
-    <figure class="plot" data-x="-3, 3" data-y="-10, 10" data-height="360"><i data-line="a * x ^ 2" data-label="y = a x²"></i><i data-point="x0, y"></i></figure>
-  </div>
-</section>
-
-<section class="slide" id="gal-map" data-sec="3. 교과별 부품" data-title="부품: 지도 단계 공개">
-  <h2>지도를 시기별로 하나씩 엽니다</h2>
-  <div class="cols" style="grid-template-columns: 520px 1fr">
-    <figure class="map-reveal fig" id="island" data-stops="시작|북부|남부|동섬" data-approx="근사 · 가상의 섬나라">
-      <img src="assets/island.svg" alt="가상의 섬나라 지도">
-      <svg viewBox="0 0 800 500">
-        <polygon data-from="1" points="120,90 380,60 600,110 640,220 115,232"/>
-        <polygon data-from="2" points="115,232 640,220 610,360 420,420 180,380 110,250"/>
-        <polygon data-from="3" points="655,315 768,315 768,390 655,390"/>
-      </svg>
-    </figure>
-    <div>
-      <p>교과서 지도 그림 위에 근사 영역을 겹쳐<br>처음에는 모두 가립니다.</p>
-      <p>→를 누를 때마다 한 시기씩 열리고<br>새로 더해진 땅에 테두리가 켜집니다.</p>
-      <p class="caption">역사 영토, 지리 분포, 전선의 변화에 씁니다.</p>
+      <p class="q" data-n="?" style="font-size:26px;margin-bottom:10px">해도 되는 것을 모두 고르세요.</p>
+      <div class="quiz" data-multi data-why="맞아요. 내 수업 안에서 쓰고, 개인정보는 지우고 올려요.">
+        <button class="opt" data-ok data-why="내 수업에서는 괜찮아요.">내 수업 시간에 띄운다</button>
+        <button class="opt" data-why="공개하면 수업 목적을 넘어요.">교과서 그림이 든 HTML을 누리집에 올린다</button>
+        <button class="opt" data-ok data-why="개인정보를 지우고 올려요.">학생 이름이 든 장을 지우고 AI에 올린다</button>
+        <button class="opt" data-why="학생 사진은 넣지 않아요.">학생 사진을 넣어 반 전체에 공유한다</button>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="slide" id="gal-sort" data-sec="3. 교과별 부품" data-title="부품: 분류 카드">
-  <h2>카드를 끌어 나눕니다</h2>
-  <div class="sort">
-    <div class="bin" data-bin="v"><h3>판서 엔진이 하는 일</h3></div>
-    <div class="bin" data-bin="a"><h3>AI가 하는 일</h3></div>
-    <span data-bin="v" data-why="펜을 든 채로 넘기기는 엔진이 합니다." data-hint="모든 수업 HTML에서 똑같이 동작하는 기능입니다.">펜을 든 채로 넘기기</span>
-    <span data-bin="a" data-why="PPT 내용으로 활동을 설계하는 것은 AI가 합니다." data-hint="수업마다 달라지는 일입니다.">활동 설계</span>
-    <span data-bin="v" data-why="반별 저장은 엔진이 합니다." data-hint="모든 수업에서 같은 기능입니다.">반별 판서 저장</span>
-    <span data-bin="a" data-why="문장을 다듬는 것은 AI가 합니다." data-hint="내용에 관한 일입니다.">문장 다듬기</span>
-    <span data-bin="v" data-why="자동 점검은 엔진이 합니다(D 키)." data-hint="넘친 글자를 찾는 도구입니다.">넘친 글자 점검</span>
-  </div>
-</section>
-
-<section class="slide" id="gal-quiz" data-sec="3. 교과별 부품" data-title="부품: 즉시 확인 문제">
-  <p class="q" data-n="?">수업 HTML의 '활동'으로 칠 수 있는 것은?</p>
-  <div class="quiz">
-    <button class="opt" data-why="누르면 글이 나타나기만 하는 것은 PPT 애니메이션으로도 됩니다.">누르면 정답 글이 나타난다</button>
-    <button class="opt" data-ok data-why="맞습니다. 입력에 따라 화면이 계산해서 달라지면 활동입니다.">슬라이더를 움직이면 그래프가 바뀐다</button>
-    <button class="opt" data-why="동영상 재생은 PPT로도 됩니다.">동영상이 자동으로 재생된다</button>
-  </div>
-  <p class="caption">보기마다 왜 맞고 왜 틀린지 이유가 나옵니다.</p>
-</section>
-
-<section class="slide" id="how" data-sec="4. 만들기" data-title="작동 원리">
-  <h2>어떻게 만들어지나요?</h2>
-  <div class="reveal" data-stops="시작|PPT와 주소|인터뷰|설계표|HTML">
-    <div class="flowchart veil">
-      <div data-at="1">PPT + 저장소 주소<small>내 AI에 올리기</small></div>
-      <div data-at="2">AI의 질문 5개<small>교과·장면·헷갈리는 곳·활동·지킬 것</small></div>
-      <div data-at="3">설계표 확인<small>개념마다 활동 하나</small></div>
-      <div data-at="4">HTML 파일 하나<small>엔진이 판서·저장·점검</small></div>
+<!-- 5. 실습 -->
+<section class="slide" id="prep" data-sec="05 · 실습" data-title="실습 준비">
+  <p class="kicker">시작 전 2분</p>
+  <h2>실습 준비</h2>
+  <div class="cols" style="grid-template-columns:480px 1fr;gap:36px">
+    <div><ul class="checklist">
+      <li>내 수업 PPT 하나 (10~20장이면 알맞아요)</li>
+      <li>학생 개인정보가 든 장은 지웠어요</li>
+      <li>AI 하나에 로그인했어요</li>
+      <li>크롬이나 엣지로 열어요</li>
+    </ul></div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <p style="margin:0;font-size:24px;font-weight:700">AI에 PPT와 함께 붙여 넣을 한 줄</p>
+      <div class="prompt"><code>https://github.com/N-lifescience/class-html<br>지침대로 이 PPT를 수업 HTML로 바꿔줘</code><button class="copy" type="button" data-text="https://github.com/N-lifescience/class-html 지침대로 이 PPT를 수업 HTML로 바꿔줘">복사</button></div>
+      <p style="margin:6px 0 0;font-size:22px;font-weight:700">PPT가 없다면 실습 PPT로 해요</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        <a class="btn ghost" href="https://github.com/N-lifescience/class-html/raw/main/examples/practice/%EC%8B%A4%EC%8A%B5_%EA%B3%BC%ED%95%99_%ED%99%95%EC%82%B0.pptx" target="_blank" rel="noopener">과학 '확산' 받기 ↓</a>
+        <a class="btn ghost" href="https://github.com/N-lifescience/class-html/raw/main/examples/practice/%EC%8B%A4%EC%8A%B5_%EC%82%AC%ED%9A%8C_%EC%88%98%EC%9A%94%EC%99%80%EA%B3%B5%EA%B8%89.pptx" target="_blank" rel="noopener">사회 '수요와 공급' 받기 ↓</a>
+      </div>
     </div>
-    <p data-only="1">AI는 저장소의 지침 한 파일을 읽고 따릅니다.</p>
-    <p data-only="2">AI가 먼저 묻습니다. "알아서"라고 답하면 추천대로 갑니다.</p>
-    <p data-only="3">설계표는 채팅으로만 보여 주고, 학생 화면에는 넣지 않습니다.</p>
-    <p data-only="4">받은 파일을 더블클릭하면 바로 수업할 수 있습니다.</p>
   </div>
 </section>
 
-<section class="slide" id="practice1" data-sec="4. 만들기" data-title="실습 1: 변환">
-  <h2>실습 1 · 내 PPT 바꾸기 <span class="timer" data-sec="1500" style="margin-left:16px;vertical-align:middle"></span></h2>
+<section class="slide" id="practice1" data-sec="05 · 실습" data-title="실습 1: 내 PPT 바꾸기">
+  <div class="dohae-head"><h2>실습 1 · 내 PPT 바꾸기</h2><div class="timer" data-sec="1500" data-label="실습 1"></div></div>
   <div class="switch" data-stops="시작|ChatGPT|Gemini|Claude">
-    <ol data-only="1">
-      <li>새 대화에 PPT 파일을 올립니다.</li>
-      <li>아래 문장을 붙여 넣습니다.</li>
-      <li>AI의 질문에 답하고, 설계표를 확인합니다.</li>
-      <li>HTML 파일을 내려받습니다(답이 끊기면 '계속').</li>
+    <ol class="steps" data-only="1" style="--n:4">
+      <li><i>1</i><b>새 대화에 PPT를 올려요</b></li>
+      <li><i>2</i><b>복사한 한 줄을 붙여 넣어요</b></li>
+      <li><i>3</i><b>질문에 답하고 설계표를 확인해요</b></li>
+      <li><i>4</i><b>HTML 파일을 받아요</b><p>답이 끊기면 "계속"이라고 써요.</p></li>
     </ol>
-    <ol data-only="2">
-      <li>새 대화에 PPT 파일을 올립니다(PDF로 바꿔 올려도 됩니다).</li>
-      <li>저장소의 <code>guide/class-html-guide.md</code>를 함께 올립니다.</li>
-      <li>아래 문장을 붙여 넣고, 질문에 답합니다.</li>
-      <li>코드를 파일로 받지 못하면 '전체 HTML 코드 블록으로'라고 부탁합니다.</li>
+    <ol class="steps" data-only="2" style="--n:4">
+      <li><i>1</i><b>새 대화에 PPT를 올려요</b><p>안 되면 PDF로 바꿔 올려요.</p></li>
+      <li><i>2</i><b>지침 파일도 함께 올려요</b><p>아래 「합본 지침 받기」</p></li>
+      <li><i>3</i><b>한 줄을 붙여 넣고 질문에 답해요</b></li>
+      <li><i>4</i><b>파일로 못 받으면</b><p>"전체 HTML을 코드 블록 하나로"라고 부탁해요.</p></li>
     </ol>
-    <ol data-only="3">
-      <li>새 대화에 PPT 파일을 올립니다.</li>
-      <li>아래 문장을 붙여 넣습니다. 스킬을 등록했다면 "수업 HTML로 바꿔줘"만 써도 됩니다.</li>
-      <li>질문 창에서 답을 고르고, 설계표를 확인합니다.</li>
-      <li>만들어진 파일을 내려받습니다.</li>
+    <ol class="steps" data-only="3" style="--n:4">
+      <li><i>1</i><b>새 대화에 PPT를 올려요</b></li>
+      <li><i>2</i><b>한 줄을 붙여 넣어요</b><p>스킬을 등록했다면 "수업 HTML로 바꿔줘"만.</p></li>
+      <li><i>3</i><b>질문 창에서 답을 골라요</b><p>설계표를 확인해요.</p></li>
+      <li><i>4</i><b>만든 파일을 받아요</b></li>
     </ol>
-    <div class="foot">
-      <p class="prompt">https://github.com/N-lifescience/class-html 지침대로<br>이 PPT를 수업 HTML로 바꿔줘</p>
-      <p class="spare">PPT가 없으면 실습 PPT로 해 봅니다.<br>저장소 <code>examples/practice</code><br>과학 '확산' · 사회 '수요와 공급'</p>
-    </div>
+  </div>
+  <div style="display:flex;gap:14px;margin-top:22px">
+    <a class="btn ghost" href="https://raw.githubusercontent.com/N-lifescience/class-html/main/guide/class-html-guide.md" target="_blank" rel="noopener">합본 지침 받기 ↓</a>
+    <p class="note" style="align-self:center">받은 파일은 더블클릭하면 바로 열려요.</p>
   </div>
 </section>
 
-<section class="slide" id="practice2" data-sec="4. 만들기" data-title="실습 2: 수업해 보기">
-  <h2>실습 2 · 열어서 수업해 보기 <span class="timer" data-sec="1200" style="margin-left:16px;vertical-align:middle"></span></h2>
+<section class="slide" id="practice2" data-sec="05 · 실습" data-title="실습 2: 열어서 수업해 보기">
+  <div class="dohae-head"><h2>실습 2 · 열어서 수업하고 고치기</h2><div class="timer" data-sec="1200" data-label="실습 2"></div></div>
   <div class="cols">
     <div class="box">
       <h3>해 볼 것</h3>
-      <ol>
-        <li>파일을 열고 펜으로 판서하며 넘겨 보기</li>
+      <ol style="margin:0;padding-left:30px;font-size:24px;line-height:1.55">
+        <li>펜으로 판서하며 넘겨 보기</li>
         <li>그림이 비어 있으면 원본 PPT를 화면에 끌어다 놓고 ⚙ 「그림 넣어 저장」</li>
         <li>D 키로 자동 점검 열어 보기</li>
+        <li>「편집」으로 글 한 줄 고쳐 저장하기</li>
       </ol>
     </div>
-    <div>
-      <h3>고쳐 달라고 말하기</h3>
-      <p class="prompt">5쪽은 글이 많아. 두 장으로 나눠 줘.</p>
-      <p class="prompt">7쪽 그래프에 단위를 넣고,<br>농도 슬라이더 범위를 0~10으로 해 줘.</p>
-      <p class="prompt">자동 점검에 나온 오류를 모두 고쳐 줘.</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <h3 style="margin:0">AI에게 고쳐 달라고 말하기</h3>
+      <div class="quote"><p>5쪽은 글이 많아. 두 장으로 나눠 줘.</p></div>
+      <div class="quote"><p>7쪽 그래프에 단위를 넣고, 농도 슬라이더 범위를 0~10으로 해 줘.</p></div>
+      <div class="quote"><p>자동 점검에 나온 오류를 모두 고쳐 줘.</p></div>
     </div>
   </div>
 </section>
 
-<section class="slide" id="faq" data-sec="5. 마무리" data-title="막혔을 때">
+<section class="slide" id="faq" data-sec="05 · 실습" data-title="막혔을 때">
+  <p class="kicker">손을 들기 전에</p>
   <h2>막혔을 때</h2>
   <dl class="faq">
-    <dt>AI가 질문 없이 바로 만들어요.</dt><dd>"지침의 인터뷰부터 다시 해 줘"라고 씁니다.</dd>
-    <dt>그림이 회색 상자로 나와요.</dt><dd>원본 PPT를 그 화면에 끌어다 놓고, ⚙ 「그림 넣어 저장」을 누릅니다.</dd>
-    <dt>학교 컴퓨터에서 화면이 깨져요.</dt><dd>인터넷이 막힌 PC라면 ⚙ 「오프라인용 저장」으로 받은 파일을 씁니다.</dd>
-    <dt>판서가 사라졌어요.</dt><dd>반을 확인하고(반 메뉴), 백업 파일이 있으면 불러옵니다.</dd>
+    <div><dt>AI가 질문 없이 바로 만들어요</dt><dd>"지침의 인터뷰부터 다시 해 줘"라고 써요.</dd></div>
+    <div><dt>답이 중간에 끊겨요</dt><dd>"계속"이라고 쓰거나, "전체 HTML을 코드 블록 하나로" 부탁해요.</dd></div>
+    <div><dt>그림이 회색 상자로 나와요</dt><dd>원본 PPT를 그 화면에 끌어다 놓고 ⚙ 「그림 넣어 저장」을 눌러요.</dd></div>
+    <div><dt>학교 PC에서 화면이 깨져요</dt><dd>인터넷이 막힌 PC라면 ⚙ 「오프라인용 저장」으로 받은 파일을 써요.</dd></div>
+    <div><dt>글이 상자 밖으로 넘쳐요</dt><dd>D 키로 점검하고 "점검 오류를 모두 고쳐 줘"라고 하거나 편집으로 줄여요.</dd></div>
+    <div><dt>판서가 사라졌어요</dt><dd>반 메뉴에서 반을 확인하고, 백업 파일이 있으면 불러와요.</dd></div>
   </dl>
 </section>
 
-<section class="slide" id="copyright" data-sec="5. 마무리" data-title="저작권과 개인정보">
-  <p class="q" data-n="!">교과서 그림이 들어간 수업 HTML,<br>어디까지 써도 될까요? 맞는 것을 모두 고르세요.</p>
-  <div class="quiz" data-multi data-cols="2" data-why="맞습니다. 내 수업에서 쓰고, 공개 게시하지 않으며, 학생 개인정보는 넣지 않습니다.">
-    <button class="opt" data-ok>내 수업 시간에 띄운다</button>
-    <button class="opt">학교 누리집에 올린다</button>
-    <button class="opt" data-ok>판서 백업 파일을 내 PC에 보관한다</button>
-    <button class="opt">학생 이름과 사진을 넣어 공유한다</button>
+<!-- 6. 성장 -->
+<section class="slide" id="growth" data-sec="06 · 성장" data-title="성장 기록">
+  <p class="kicker">어떻게 자라고 있을까요</p>
+  <h2>일주일의 성장 기록</h2>
+  <div class="reveal" data-stops="시작|10. 2.|10. 3.|10. 5.|10. 6.|10. 7.|다음">
+    <ol class="steps" style="--n:6">
+      <li data-at="1"><i>1</i><small>10. 2.</small><b>설계와 엔진</b><p>펜을 든 채로 넘기기, 반별 판서 저장.</p></li>
+      <li data-at="2"><i>2</i><small>10. 3.</small><b>부품과 지침</b><p>단계 막대, 분류, 계산 상자. AI가 읽을 지침.</p></li>
+      <li data-at="3"><i>3</i><small>10. 5.</small><b>v1.0.0 공개</b><p>누구나 주소 한 줄로 쓸 수 있게.</p></li>
+      <li data-at="4"><i>4</i><small>10. 6.</small><b>만지는 도해 · 편집</b><p>v1.1.0. 값을 바꾸면 그림이 바뀌는 수업, 바로 고치기.</p></li>
+      <li data-at="5"><i>5</i><small>10. 7.</small><b>전자칠판 판서</b><p>양옆 도구, 손등 지우개. 지금 시험 중이에요.</p></li>
+      <li data-at="6" class="next"><i>?</i><small>다음</small><b>아직은 비밀</b><p>10월 18일 이후에 공개해요.</p></li>
+    </ol>
+  </div>
+  <div class="panel secret" data-only="6"><b>지금 공모전에 낼 기능을 만들고 있어요.</b><p>10월 18일까지는 비밀이에요. 그 뒤에 저장소와 이 자료에서 먼저 알려 드릴게요.</p></div>
+</section>
+
+<section class="slide" id="pledge" data-sec="06 · 성장" data-title="다짐과 설문">
+  <p class="kicker">마무리 3분</p>
+  <h2>다음 수업에 하나만 바꿔 본다면?</h2>
+  <div class="cols" style="grid-template-columns:1fr 440px">
+    <div class="pledge">
+      <textarea id="pledge-text" aria-label="다음 수업에서 바꿔 볼 것" placeholder="예) 다음 주 3단원 첫 시간에 단계 막대 하나 넣기"></textarea>
+      <p class="note" id="pledge-note" style="margin-top:8px">적은 내용은 이 PC 브라우저에만 남아요.</p>
+    </div>
+    <div class="panel" style="display:flex;flex-direction:column;gap:14px">
+      <p class="panel-head"><span>연수 설문 · 3분 · 익명</span></p>
+      <div class="qr"><img src="assets/training/form-qr.svg" alt="연수 설문 QR 코드"><p style="margin:0;font-size:22px;line-height:1.45;color:var(--st-on-dark-2)">휴대폰 카메라로 찍거나 아래 단추를 눌러요.</p></div>
+      <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSe4DfQKW7-8lPddGTpcaFvEHNzqouGJ5jtAxoqpY96aH9vQrg/viewform" target="_blank" rel="noopener">설문 열기 →</a>
+    </div>
   </div>
 </section>
 
-<section class="slide" id="closing" data-sec="5. 마무리" data-title="마무리">
-  <h2>오늘 바꾼 것 하나를 다음 수업에</h2>
-  <p>저장소: <b>github.com/N-lifescience/class-html</b></p>
-  <div class="answer"><p>PPT는 보여 주는 도구,<br>수업 HTML은 <mark>함께 조작하는</mark> 도구입니다.</p></div>
+<section class="slide" id="closing" data-sec="06 · 성장" data-title="마무리">
+  <div class="panel">
+    <p class="kicker" style="color:var(--st-orange)">오늘 바꾼 것 하나를 다음 수업에</p>
+    <p class="cta-title">PPT는 보여 주는 도구,<br>수업 HTML은 <em>함께 만지는</em> 도구예요.</p>
+    <div class="cta-links">
+      <a class="btn" href="https://github.com/N-lifescience/class-html" target="_blank" rel="noopener">저장소 열기 →</a>
+      <a class="btn ghost" href="https://n-lifescience.github.io/class-html/examples/training.html" target="_blank" rel="noopener">이 연수 자료 다시 보기</a>
+      <a class="btn ghost" href="https://docs.google.com/forms/d/e/1FAIpQLSe4DfQKW7-8lPddGTpcaFvEHNzqouGJ5jtAxoqpY96aH9vQrg/viewform" target="_blank" rel="noopener">설문</a>
+    </div>
+    <p class="handle">GITHUB.COM/N-LIFESCIENCE/CLASS-HTML · MIT</p>
+  </div>
 </section>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 슬라이더는 손을 떼면 초점을 풀어 → 키·리모컨이 다시 장을 넘기게 한다
+  document.querySelectorAll('section.slide input[type=range]').forEach((r) => r.addEventListener('change', () => r.blur()));
+  const $ = (s) => document.querySelector(s);
+  const SVG = 'http://www.w3.org/2000/svg';
+
+  /* 복사 단추 */
+  document.querySelectorAll('button.copy').forEach((b) => b.addEventListener('click', async () => {
+    const text = b.dataset.text;
+    try { await navigator.clipboard.writeText(text); }
+    catch { const t = document.createElement('textarea'); t.value = text; document.body.append(t); t.select(); document.execCommand('copy'); t.remove(); }
+    b.textContent = '복사했어요'; b.classList.add('is-done');
+    setTimeout(() => { b.textContent = '복사'; b.classList.remove('is-done'); }, 2000);
+  }));
+
+  /* 다짐: 이 PC 브라우저에만 남긴다 */
+  {
+    const t = $('#pledge-text'), KEY = 'class-html-training-pledge';
+    try { t.value = localStorage.getItem(KEY) || ''; } catch {}
+    t.addEventListener('input', () => {
+      try { localStorage.setItem(KEY, t.value); $('#pledge-note').textContent = '저장했어요. 이 PC 브라우저에만 남아요.'; }
+      catch { $('#pledge-note').textContent = '이 브라우저는 저장을 막아 두었어요. 화면을 찍어 두세요.'; }
+    });
+  }
+
+  /* ── A 확산: sci-diffusion에서 가져옴. 잉크 36개·물 90개가 같은 무작위 걸음(10초마다 4걸음)을 한다 ── */
+  {
+    const mk = (tag, attrs, parent) => { const e = document.createElementNS(SVG, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+    // 씨앗을 고정한 난수: 누가 언제 열어도 같은 그림이 나온다
+    const rng = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const gauss = (r) => () => Math.sqrt(-2 * Math.log(r() + 1e-12)) * Math.cos(2 * Math.PI * r());
+    const refl = (v, lo, hi) => { while (v < lo || v > hi) v = v < lo ? 2 * lo - v : 2 * hi - v; return v; };
+    const W = 560, H = 400, R = 9, NI = 36, NW = 90, F = 31, SUB = 4, SIG = 22;
+    const r = rng(1138), g = gauss(r);
+    const ps = [];
+    for (let i = 0; i < NI; i++) ps.push([refl(80 + g() * 20, R, 180), refl(70 + g() * 18, R, 125)]);
+    for (let i = 0; i < NW; i++) ps.push([R + r() * (W - 2 * R), R + r() * (H - 2 * R)]);
+    let me = NI; ps.forEach((p, i) => { if (i >= NI && Math.hypot(p[0] - 380, p[1] - 260) < Math.hypot(ps[me][0] - 380, ps[me][1] - 260)) me = i; });
+    const frames = [ps.map((p) => p.slice())], path = [ps[me].slice()];
+    for (let f = 1; f < F; f++) {
+      for (let s = 0; s < SUB; s++) { for (const p of ps) { p[0] = refl(p[0] + g() * SIG, R, W - R); p[1] = refl(p[1] + g() * SIG, R, H - R); } path.push(ps[me].slice()); }
+      frames.push(ps.map((p) => p.slice()));
+    }
+    const cellOf = ([x, y]) => Math.min(2, Math.floor(x / (W / 3))) + 3 * Math.min(2, Math.floor(y / (H / 3)));
+    const counts = frames.map((P) => new Set(P.slice(0, NI).map(cellOf)));
+    const fullAt = counts.findIndex((c) => c.size === 9);
+    const cells = [...Array(9)].map((_, c) => mk('rect', { x: (c % 3) * W / 3, y: Math.floor(c / 3) * H / 3, width: W / 3, height: H / 3, fill: '#E0464E', 'fill-opacity': 0 }, $('#ik-cells')));
+    const dots = ps.map((_, i) => i < NI ? mk('circle', { r: R, fill: '#E0464E' }, $('#ik-ink')) : mk('circle', { r: R, fill: '#9DC8F5' }, $('#ik-water')));
+    dots[me].setAttribute('visibility', 'hidden');
+    const bars = [...$('#ik-bar').children];
+    const clock = (t) => t < 60 ? t + '초' : Math.floor(t / 60) + '분' + (t % 60 ? ' ' + (t % 60) + '초' : '');
+    function drawInk() {
+      const k = +$('#ik-t').value;              // 0 = 시작(가림), 1 = 0초 … 31 = 5분
+      $('#ik-veil').hidden = k > 0;
+      if (!k) { $('#ik-t-out').textContent = '시작'; $('#ik-n').textContent = '?'; bars.forEach((b) => b.classList.remove('on')); $('#ik-out').textContent = ''; return; }
+      const f = k - 1, P = frames[f], n = counts[f].size;
+      $('#ik-t-out').textContent = clock(f * 10);
+      P.forEach((p, i) => { dots[i].setAttribute('cx', p[0].toFixed(1)); dots[i].setAttribute('cy', p[1].toFixed(1)); });
+      cells.forEach((c, i) => c.setAttribute('fill-opacity', counts[f].has(i) ? 0.10 : 0));
+      $('#ik-me').setAttribute('cx', P[me][0].toFixed(1)); $('#ik-me').setAttribute('cy', P[me][1].toFixed(1));
+      $('#ik-trail').setAttribute('points', path.slice(Math.max(0, f * SUB - 6 * SUB), f * SUB + 1).map((p) => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '));
+      $('#ik-n').textContent = n;
+      bars.forEach((b, i) => b.classList.toggle('on', i < n));
+      $('#ik-out').textContent = f === 0 ? '잉크 입자가 한 칸에 모여 있다.'
+        : n < 9 ? `잉크 입자가 9칸 중 ${n}칸으로 퍼졌다.`
+        : f === fullAt ? '9칸 모두에 잉크 입자가 있다. 고르게 퍼졌다.'
+        : '고르게 퍼진 뒤에도 입자는 계속 움직인다.';
+    }
+    $('#ik-t').addEventListener('input', drawInk);
+    drawInk();
+  }
+
+  /* ── B 시장 가격: soc-supply-demand에서 가져옴. 수요량 = 900 − 0.2 × 가격, 공급량 = 0.2 × 가격 − 300 ── */
+  {
+    const won = (n) => Math.round(n).toLocaleString('ko-KR');
+    const DEM = '#1D4E89', SUP = '#E8590C', INK = '#222222', MUTED = '#6B7078';
+    const qd = (p) => 900 - 0.2 * p, qs = (p) => 0.2 * p - 300;
+    const PRICES = [2000, 2500, 3000, 3500, 4000];
+    const mk = (parent, tag, attrs, text) => { const e = document.createElementNS(SVG, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; parent.appendChild(e); return e; };
+    const clear = (g) => { while (g.firstChild) g.removeChild(g.firstChild); };
+    const svg = $('#mk-svg'), slider = $('#mk-k'), run = $('#mk-run');
+    // 그래프 틀: 가로 수량 0~600인분, 세로 가격 1,750~4,250원
+    const L = 96, Rr = 600, T = 40, B = 300, Hh = 360;
+    const X = (q) => L + q * (Rr - L) / 600, Y = (p) => B - (p - 1750) * (B - T) / 2500;
+    const defs = mk(svg, 'defs', {});
+    const m = mk(defs, 'marker', { id: 'mk-ah-red', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 3.6, markerHeight: 3.6, orient: 'auto-start-reverse' });
+    mk(m, 'path', { d: 'M0 0 L10 5 L0 10 Z', fill: '#C92A2A' });
+    const ticks = PRICES.map((p) => {
+      mk(svg, 'line', { x1: L, y1: Y(p), x2: Rr, y2: Y(p), stroke: '#E3E8EF', 'stroke-width': 2 });
+      return mk(svg, 'text', { x: L - 10, y: Y(p) + 8, 'text-anchor': 'end', 'font-size': 22, fill: '#444' }, won(p));
+    });
+    for (let q = 100; q <= 600; q += 100) mk(svg, 'text', { x: X(q), y: B + 30, 'text-anchor': 'middle', 'font-size': 22, fill: '#444' }, q);
+    mk(svg, 'line', { x1: L, y1: T - 10, x2: L, y2: B, stroke: INK, 'stroke-width': 3 });
+    mk(svg, 'line', { x1: L, y1: B, x2: Rr + 8, y2: B, stroke: INK, 'stroke-width': 3 });
+    mk(svg, 'text', { x: 6, y: T - 6, 'font-size': 22, 'font-weight': 700, fill: INK }, '가격(원)');
+    mk(svg, 'text', { x: Rr + 26, y: Hh - 4, 'text-anchor': 'end', 'font-size': 22, 'font-weight': 700, fill: INK }, '수량(인분)');
+    mk(svg, 'line', { x1: X(qd(2000)), y1: Y(2000), x2: X(qd(4000)), y2: Y(4000), stroke: DEM, 'stroke-width': 6, 'stroke-linecap': 'round' });
+    mk(svg, 'line', { x1: X(qs(2000)), y1: Y(2000), x2: X(qs(4000)), y2: Y(4000), stroke: SUP, 'stroke-width': 6, 'stroke-linecap': 'round' });
+    mk(svg, 'text', { x: X(500) + 4, y: Y(3750) + 8, 'font-size': 22, 'font-weight': 800, fill: SUP }, '공급 곡선');
+    mk(svg, 'text', { x: X(500) + 4, y: Y(2250) + 8, 'font-size': 22, 'font-weight': 800, fill: DEM }, '수요 곡선');
+    const G = mk(svg, 'g', {});
+    let timer = null;
+    const price = (k) => 2000 + (k - 1) * 100;
+    const stop = () => { if (timer) { clearInterval(timer); timer = null; } run.textContent = '시장에 맡기기 ▶'; };
+    function draw() {
+      const k = +slider.value;
+      $('#mk-veil').hidden = k > 0;
+      clear(G);
+      if (!k) {
+        stop(); run.disabled = true;
+        $('#mk-k-out').textContent = '시작'; $('#mk-qd-t').textContent = ''; $('#mk-qs-t').textContent = '';
+        $('#mk-qd').style.width = '0'; $('#mk-qs').style.width = '0';
+        $('#mk-calc').textContent = '수요량 − 공급량 = ?\n→ ?'; $('#mk-out').textContent = '';
+        return;
+      }
+      const p = price(k), d = Math.round(qd(p)), s = Math.round(qs(p)), gap = d - s;
+      run.disabled = false;
+      $('#mk-k-out').textContent = won(p) + '원';
+      $('#mk-qd-t').textContent = d + '인분'; $('#mk-qs-t').textContent = s + '인분';
+      $('#mk-qd').style.width = (d / 500 * 100) + '%'; $('#mk-qs').style.width = (s / 500 * 100) + '%';
+      const kind = gap > 0 ? '초과 수요' : gap < 0 ? '초과 공급' : '균형';
+      $('#mk-calc').textContent = `수요량 ${d} − 공급량 ${s} = ${gap < 0 ? '−' + -gap : gap}인분\n→ ` + (gap ? `${kind} ${Math.abs(gap)}인분` : '균형');
+      const y = Y(p);
+      ticks.forEach((t, i) => t.setAttribute('opacity', Math.abs(Y(PRICES[i]) - y) < 30 ? 0 : 1));
+      mk(G, 'line', { x1: X(0), y1: y, x2: X(600), y2: y, stroke: MUTED, 'stroke-width': 3, 'stroke-dasharray': '10 7' });
+      mk(G, 'rect', { x: 8, y: y - 17, width: 82, height: 34, rx: 8, fill: INK });
+      mk(G, 'text', { x: 49, y: y + 8, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 800, fill: '#fff' }, won(p));
+      if (gap) {
+        const c = gap > 0 ? DEM : SUP;
+        mk(G, 'line', { x1: X(Math.min(d, s)), y1: y, x2: X(Math.max(d, s)), y2: y, stroke: c, 'stroke-width': 14, opacity: 0.35 });
+        if (Math.abs(gap) >= 200) mk(G, 'text', { x: X(300), y: y + (gap > 0 ? 40 : -18), 'text-anchor': 'middle', 'font-size': 24, 'font-weight': 800, fill: c, stroke: '#fff', 'stroke-width': 6, 'paint-order': 'stroke' }, `${kind} ${Math.abs(gap)}인분`);
+        const ax = X(0) + 22, dy = gap > 0 ? -56 : 56;
+        mk(G, 'line', { x1: ax, y1: y, x2: ax, y2: y + dy, stroke: '#C92A2A', 'stroke-width': 6, 'marker-end': 'url(#mk-ah-red)' });
+        mk(G, 'text', { x: ax - 8, y: gap > 0 ? y + dy - 14 : y + dy + 28, 'font-size': 22, 'font-weight': 800, fill: '#C92A2A', stroke: '#fff', 'stroke-width': 6, 'paint-order': 'stroke' }, gap > 0 ? '가격 상승' : '가격 하락');
+      }
+      mk(G, 'circle', { cx: X(d), cy: y, r: 11, fill: DEM, stroke: '#fff', 'stroke-width': 3 });
+      mk(G, 'circle', { cx: X(s), cy: y, r: 11, fill: SUP, stroke: '#fff', 'stroke-width': 3 });
+      if (!gap) {
+        mk(G, 'circle', { cx: X(300), cy: y, r: 14, fill: INK });
+        mk(G, 'text', { x: X(300) + 20, y: y - 18, 'font-size': 24, 'font-weight': 800, fill: INK, stroke: '#fff', 'stroke-width': 6, 'paint-order': 'stroke' }, '균형점 E');
+      }
+      $('#mk-out').textContent = gap > 0
+        ? `사려는 양이 ${gap}인분 더 많다(초과 수요).\n사려는 사람끼리 경쟁해 가격이 오른다.`
+        : gap < 0
+        ? `팔려는 양이 ${-gap}인분 더 많다(초과 공급).\n팔려는 사람끼리 경쟁해 가격이 내린다.`
+        : `수요량과 공급량이 ${d}인분으로 같다.\n가격이 더 움직이지 않는다. 균형 가격이다.`;
+      if (!gap) stop();
+    }
+    function tick() {
+      const k = +slider.value, gap = qd(price(k)) - qs(price(k));
+      if (!k || Math.abs(gap) < 1e-9) { stop(); return; }
+      slider.value = k + (gap > 0 ? 1 : -1);
+      draw();
+    }
+    run.addEventListener('click', () => {
+      if (timer) { stop(); return; }
+      run.textContent = '멈추기 ■';
+      timer = setInterval(tick, 500);
+      tick();
+    });
+    slider.addEventListener('input', () => { stop(); draw(); });
+    if (window.ClassHTML && ClassHTML.onHide) ClassHTML.onHide((slide) => { if (slide && slide.id === 'try-soc') stop(); });
+    draw();
+  }
+
+  /* ── C 이성과 정서의 저울: eth-dohae에서 가져옴. 이성 = 더 살리는 사람 수, 정서 = 직접 해치는 정도 × 정서 세기 ── */
+  {
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const num = (v) => String(+v.toFixed(3));
+    const ds = { kase: null };
+    const HARM = { switch: 1.5, push: 6 };
+    const DESC = {
+      switch: (n) => `전차가 선로 위 ${n}명에게 달려온다. 스위치를 당기면 옆 선로로 꺾여 그곳의 1명이 죽는다.`,
+      push: (n) => `전차가 선로 위 ${n}명에게 달려온다. 육교 위의 한 사람을 밀어 떨어뜨리면 전차가 멈춘다.`,
+    };
+    const verdict = (parts) => { const v = $('#ds-verdict'); v.replaceChildren(...parts.map((p) => typeof p === 'string' ? p : Object.assign(document.createElement('span'), p))); };
+    function drawScale() {
+      const n = +$('#ds-n').value, e = $('#ds-e').value / 10;
+      $('#ds-n-out').textContent = n;
+      $('#ds-e-out').textContent = (e < 0.5 ? '약함 ' : e > 1.4 ? '강함 ' : '보통 ') + e.toFixed(1) + '배';
+      if (!ds.kase) return;
+      $('#ds-veil').hidden = true;
+      $('#ds-desc').textContent = DESC[ds.kase](n);
+      const R = n - 1, E = HARM[ds.kase] * e, diff = R - E;
+      const deg = -clamp(diff * 4, -16, 16), rad = deg * Math.PI / 180;
+      $('#ds-beam').setAttribute('transform', `rotate(${deg} 330 80)`);
+      const end = (s) => [330 + s * 230 * Math.cos(rad), 80 + s * 230 * Math.sin(rad)];
+      const [lx, ly] = end(-1), [rx, ry] = end(1);
+      $('#ds-L').setAttribute('transform', `translate(${lx} ${ly})`);
+      $('#ds-R').setAttribute('transform', `translate(${rx} ${ry})`);
+      const block = (id, v) => { const h = 8 + v * 6; const r = $(id); r.setAttribute('y', 90 - h); r.setAttribute('height', h); };
+      block('#ds-Lw', R); block('#ds-Rw', E);
+      $('#ds-Lt').textContent = '이성 ' + num(R);
+      $('#ds-Rt').textContent = '정서 ' + num(E);
+      const act = ds.kase === 'switch' ? '스위치를 당긴다' : '사람을 민다';
+      const not = ds.kase === 'switch' ? '당기지 않는다' : '밀지 않는다';
+      if (diff > 0.25) verdict(['판단: ', { className: 'c-reason', textContent: act }, ` — ${R}명을 더 살린다는 계산이 이긴다`]);
+      else if (diff < -0.25) verdict(['판단: ', { className: 'c-emo', textContent: not }, ' — 직접 해치는 거부감이 이긴다']);
+      else verdict(['판단: 망설인다 — 두 힘이 팽팽하다']);
+    }
+    const bs = [...document.querySelectorAll('#ds-case button')];
+    bs.forEach((b) => b.addEventListener('click', () => { bs.forEach((x) => x.setAttribute('aria-pressed', String(x === b))); ds.kase = b.dataset.v; drawScale(); }));
+    ['#ds-n', '#ds-e'].forEach((s) => $(s).addEventListener('input', drawScale));
+    drawScale();
+  }
+});
+</script>
 </body>
 </html>

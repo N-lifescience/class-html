@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko" data-deck="training-v2-2026-10">
+<html lang="ko" data-deck="training-2026-10">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -74,6 +74,21 @@ body[data-theme="story"] section.slide#cover { padding-top: 92px; }
 .cover-title { margin: 0 0 14px; font: 800 58px/1.12 var(--st-display); letter-spacing: -.035em; }
 .byline { margin: 14px 0 0; font: 600 20px/1 var(--st-mono); letter-spacing: .06em; color: var(--st-muted); }
 
+/* 숫자 칸 */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 8px; }
+.stat { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px 20px; background: var(--st-bg-2); border-top: 3px solid var(--st-ink); }
+.stat:first-child { border-top-color: var(--st-orange); }
+.stat > span { font-size: 22px; font-weight: 600; color: var(--st-ink-2); }
+.stat > b { font: 700 72px/1 var(--st-display); letter-spacing: -.04em; }
+.stat > b small { font: 700 28px var(--ch-font); color: var(--st-muted); margin-left: 4px; }
+.stat > p { margin: 0; font-size: 20px; line-height: 1.4; color: var(--st-muted); }
+
+/* 막대(여는 투표) */
+.meter { display: grid; grid-template-columns: 330px 100px 1fr 60px; align-items: center; gap: 16px; margin: 0 0 14px; font-size: 26px; font-weight: 700; }
+.meter input { width: 92px; min-height: 52px; font: 700 26px var(--ch-font); text-align: center; }
+.meter output { text-align: right; font: 700 32px/1 var(--st-display); }
+body[data-theme="story"] .meter .bar { --bar-c: var(--st-ink-2); height: 26px; border-radius: 999px; }
+
 /* 밝은 칸 → 어두운 칸 */
 .versus { display: grid; grid-template-columns: 1fr 52px 1fr; gap: 12px; align-items: stretch; }
 .side { display: flex; flex-direction: column; gap: 10px; padding: 22px 26px; border-radius: 24px; }
@@ -133,12 +148,33 @@ section.slide button.copy.is-done { border-color: var(--st-green); color: var(--
 .faq dt { font-size: 24px; font-weight: 800; }
 .faq dd { margin: 4px 0 0; font-size: 22px; line-height: 1.45; color: var(--st-ink-2); }
 
+/* 전후 비교 */
+.ba { position: relative; width: 720px; height: 405px; overflow: hidden; border-radius: 18px; background: var(--st-dark); box-shadow: 0 18px 40px -24px rgba(17,17,17,.55); }
+.ba img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ba .ba-after { clip-path: inset(0 0 0 calc(var(--cut, 50) * 1%)); }
+.ba .ba-line { position: absolute; top: 0; bottom: 0; left: calc(var(--cut, 50) * 1% - var(--cut, 50) * .04px); width: 4px; background: var(--st-orange); }
+.ba .ba-tag { position: absolute; bottom: 12px; padding: 4px 14px; border-radius: 999px; background: rgba(17,17,17,.82); color: #fff; font: 700 20px/1.3 var(--ch-font); }
+.ba .ba-tag.l { left: 12px; } .ba .ba-tag.r { right: 12px; background: var(--st-orange); }
+#before-after .calc { display: grid; grid-template-columns: 720px 1fr; gap: 32px; align-items: start; }
+#before-after input[type=range] { width: 720px; margin-top: 10px; }
+#before-after ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 16px; }
+#before-after li { padding-top: 10px; border-top: 2px solid var(--st-line); font-size: 23px; line-height: 1.45; }
+#before-after li b { display: block; font: 600 20px/1.3 var(--st-mono); letter-spacing: .04em; color: var(--st-orange-ink); }
+
 /* 교과 갤러리 */
 .ideas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 .idea { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; border-radius: 20px; background: var(--ch-card); box-shadow: 0 0 0 2px var(--ch-line) inset; }
 .idea code { align-self: flex-start; padding: 2px 10px; border-radius: 8px; background: var(--st-bg-2); font: 600 20px/1.5 var(--st-mono); color: var(--st-orange-ink); }
 .idea b { font-size: 24px; line-height: 1.3; }
 .idea p { margin: 0; font-size: 20px; line-height: 1.45; color: var(--st-ink-2); }
+
+/* 성장 타임라인 */
+#growth .steps b { font-size: 23px; }
+#growth .steps p { font-size: 20px; }
+#growth .steps li.next i { border-style: dashed; }
+.secret { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; padding: 20px 26px; }
+.secret b { font-size: 28px; }
+.secret p { margin: 0; font-size: 22px; line-height: 1.45; color: var(--st-on-dark-2); }
 
 /* 다짐 */
 .pledge textarea { width: 100%; height: 190px; padding: 16px 18px; box-sizing: border-box; border: 2px solid var(--st-ink); border-radius: 18px; background: var(--ch-card); font: 600 26px/1.45 var(--ch-font); color: var(--st-ink); resize: none; }
@@ -154,6 +190,9 @@ section.slide button.copy.is-done { border-color: var(--st-green); color: var(--
 
 /* 엔진 부품을 이야기 모양으로 */
 body[data-theme="story"] .pill { --pill: var(--st-ink); }
+#caution .side { padding: 14px 22px; gap: 6px; }
+#caution .side li { font-size: 22px; }
+#caution .quiz .opt { min-height: 58px; }
 body[data-theme="story"] .quiz .opt, body[data-theme="story"] .sort span, body[data-theme="story"] .switch button { border-radius: 16px; }
 body[data-theme="story"] .box { padding: 18px 24px; border-radius: 20px; background: var(--st-bg-2); }
 body[data-theme="story"] .box h3 { margin: 0 0 8px; }
@@ -243,122 +282,109 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
 #try-eth .ms-veil[hidden] { display: none; }
 #try-eth .ms-verdict { margin: 6px 0 0; font-size: 25px; font-weight: 700; text-align: center; line-height: 1.4; min-height: 36px; color: var(--ms-ink); }
 #try-eth .c-reason { color: var(--ms-reason); } #try-eth .c-emo { color: var(--ms-emo); }
-/* 세로 단계 */
-.vsteps { display: flex; flex-direction: column; gap: 18px; margin: 0; padding: 0; list-style: none; }
-.vsteps li { display: grid; grid-template-columns: 40px 1fr; gap: 16px; align-items: start; }
-.vsteps i { width: 40px; height: 40px; display: grid; place-items: center; box-sizing: border-box; border: 3px solid var(--st-ink); border-radius: 50%; background: var(--st-bg); font: 700 20px/1 var(--st-display); font-style: normal; }
-.vsteps li:last-child i { border-color: var(--st-orange); background: var(--st-orange); color: #fff; }
-.vsteps b { display: block; font-size: 27px; font-weight: 800; line-height: 1.3; }
-.vsteps p { margin: 2px 0 0; font-size: 22px; line-height: 1.4; color: var(--st-ink-2); }
-
-/* 기능 지도 */
-.map-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-section.slide button.map-card { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: center; width: 100%; margin: 0; padding: 16px 24px 18px; box-sizing: border-box; border: 0; border-top: 5px solid var(--c, var(--st-orange)); border-radius: 0 0 20px 20px; background: var(--ch-card); box-shadow: 0 0 0 2px var(--ch-line) inset; font: inherit; color: var(--st-ink); text-align: left; cursor: pointer; }
-.map-card b { font-size: 30px; line-height: 1.25; font-weight: 800; color: var(--ci, var(--st-orange-ink)); }
-.map-card span { grid-column: 1; font-size: 22px; line-height: 1.4; color: var(--st-ink-2); }
-.map-card i { grid-column: 2; grid-row: 1 / span 2; font: 800 34px/1 var(--st-display); font-style: normal; color: var(--ci, var(--st-orange-ink)); }
-section.slide button.map-live { margin-top: 18px; background: var(--st-dark); box-shadow: none; border-top-color: var(--st-orange); color: var(--st-on-dark); }
-.map-live b, .map-live i { color: var(--st-orange); }
-.map-live span { color: var(--st-on-dark-2); }
-
-/* 판서 시연 자리 */
-.ink-demo { display: grid; grid-template-columns: 470px 1fr; gap: 36px; }
-.demo-zone { display: grid; place-items: center; height: 420px; border: 3px dashed #c9c1b2; border-radius: 24px; background: var(--ch-card); }
-.demo-zone span { font: 600 24px/1 var(--st-mono); color: var(--st-muted); }
-
-/* 실시간 */
-.site-url { margin: 0; font: 700 26px/1.35 var(--st-mono); color: var(--st-on-dark); }
-
-/* 도해 수요 표 */
-table.wish { width: 100%; font-size: 23px; }
-table.wish th { padding: 10px 14px; background: none; border-bottom: 2px solid var(--st-ink); font: 600 20px/1.3 var(--st-mono); letter-spacing: .04em; color: var(--st-muted); }
-table.wish td { padding: 14px; border-bottom: 1px solid var(--st-line); line-height: 1.4; vertical-align: top; }
-table.wish td:first-child { font-weight: 800; white-space: nowrap; }
-table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color: var(--st-orange-ink); }
-
-/* 셋이면 돼요 */
-#can .side { padding: 14px 22px; gap: 6px; }
-#can .side li { font-size: 23px; }
-
-/* 마무리 */
-#closing .closing { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
-#closing .pledge { display: flex; flex-direction: column; }
-#closing .cta-title { font-size: 40px; }
 </style>
 </head>
 <body data-theme="story">
 
-<!-- 여는 장면 -->
+<!-- 0. 표지 -->
 <section class="slide" id="cover" data-title="표지">
   <p class="kicker">2026. 10. 13. · 교직원 연수</p>
-  <h1 class="cover-title">내 수업 PPT,<br>학생이 만지는 수업으로</h1>
-  <p class="lead">오늘 끝날 때, 선생님 수업 HTML 하나를 갖고 가세요.</p>
+  <h1 class="cover-title">class-html은 어떻게 탄생했고,<br>어떻게 성장하고 있을까요?</h1>
+  <p class="lead">수업 PPT를 학생이 직접 만지는 수업 HTML로 바꾸는 이야기와 실습이에요.</p>
   <div class="panel">
-    <p class="panel-head"><span>오늘 90분</span><span>보기 35 · 실습 40 · 모으기 15</span></p>
+    <p class="panel-head"><span>오늘 90분</span><span>설명 40 · 실습 45 · 마무리 5</span></p>
     <ol class="index">
-      <li><b>00</b><span>여는 장면</span><small>5분</small></li>
-      <li><b>03</b><span>나도 할 수 있어요</span><small>2분</small></li>
-      <li><b>01</b><span>기능 한눈에</span><small>18분</small></li>
-      <li><b>04</b><span>내 PPT로 실습</span><small>40분</small></li>
-      <li><b>02</b><span>실시간 체험</span><small>10분</small></li>
-      <li><b>05</b><span>모으기 · 설문</span><small>15분</small></li>
+      <li><b>01</b><span>탄생 이야기</span><small>10분</small></li>
+      <li><b>04</b><span>만드는 흐름</span><small>5분</small></li>
+      <li><b>02</b><span>직접 만져 보기</span><small>15분</small></li>
+      <li><b>05</b><span>내 PPT로 실습</span><small>45분</small></li>
+      <li><b>03</b><span>수업에서 쓰기</span><small>10분</small></li>
+      <li><b>06</b><span>성장 기록 · 마무리</span><small>5분</small></li>
     </ol>
   </div>
   <p class="byline">N-LIFESCIENCE · GITHUB.COM/N-LIFESCIENCE/CLASS-HTML</p>
 </section>
 
-<section class="slide" id="reveal" data-sec="여는 장면" data-title="방금 본 수업">
-  <p class="kicker">방금 본 수업</p>
-  <h2>이 수업, 원래는 PPT였어요</h2>
-  <div class="versus">
-    <div class="side light"><span class="pill-tag">원래 PPT</span><ul><li>그림을 차례로 넘겨 보여 줬어요.</li><li>판서하려면 펜 모드를 바꿔야 했어요.</li><li>넘기면 판서가 사라졌어요.</li></ul></div>
-    <div class="arrow">→</div>
-    <div class="side dark"><span class="pill-tag">수업 HTML</span><ul><li>학생이 값을 바꾸며 직접 봐요.</li><li>펜을 든 채로 넘기고 단추도 눌러요.</li><li>장마다, 반마다 판서가 남아요.</li></ul></div>
+<section class="slide" id="numbers" data-sec="숫자로 보기" data-title="숫자로 보는 class-html">
+  <p class="kicker">지금까지 한눈에</p>
+  <h2>일주일 동안 쌓인 것</h2>
+  <div class="stats" data-stagger>
+    <div class="stat" data-anim="fade-up"><span>처음 만든 기간</span><b><span data-anim="count">7</span><small>일</small></b><p>10. 2. 저장소를 열고<br>10. 8.까지</p></div>
+    <div class="stat" data-anim="fade-up"><span>공개 버전</span><b><span data-anim="count">2</span><small>번</small></b><p>v1.0.0(10. 5.),<br>v1.1.0(10. 6.)</p></div>
+    <div class="stat" data-anim="fade-up"><span>만든 수업 장</span><b><span data-anim="count">111</span><small>장</small></b><p>생명 5차시 72장,<br>윤리 19장, 세계사 20장</p></div>
+    <div class="stat" data-anim="fade-up"><span>엔진 부품</span><b><span data-anim="count">12</span><small>종</small></b><p>단계 막대부터<br>입자 상자까지</p></div>
   </div>
-  <p class="step lead" style="margin-top:24px">선생님이 하실 일은 <mark>PPT와 한 줄을 AI에게 주고, 질문에 답하는 것</mark>이에요.</p>
+  <div class="quote" style="margin-top:26px"><p>판서가 되고, 학생이 만질 수 있고, 내 AI로 만들 수 있는 수업 화면.<br>오늘은 이 셋을 직접 해 봐요.</p><small>오늘의 목표</small></div>
 </section>
 
-<!-- 01 기능 한눈에 -->
-<section class="slide" id="map" data-sec="01 · 기능 한눈에" data-title="기능 지도">
-  <p class="kicker">방금 쓴 기능, 한눈에</p>
-  <h2>수업 HTML에 들어 있는 것</h2>
-  <div class="map-cards">
-    <button type="button" class="map-card c-blue" data-go="ink"><b>판서 · 칠판</b><span>펜을 든 채로 넘기기 · 손등 지우개 · 빈 칠판 · 반별 판서</span><i>→</i></button>
-    <button type="button" class="map-card c-green" data-go="try-sci"><b>만지는 도해</b><span>값을 바꾸면 그림이 바뀌어요 · 과학 · 사회 · 윤리</span><i>→</i></button>
-    <button type="button" class="map-card c-gold" data-go="run"><b>수업 운영</b><span>단계 공개 · 퀴즈 · 분류 · 타이머 · 목차</span><i>→</i></button>
-    <button type="button" class="map-card c-pink" data-go="fix"><b>고치기</b><span>편집 모드 · 자동 점검 · 그림 넣어 저장</span><i>→</i></button>
-  </div>
-  <button type="button" class="map-card map-live" data-go="live"><b>처음 보여 드리는 것 · 실시간 수업</b><span>선생님 화면과 학생 기기가 함께 움직여요</span><i>→</i></button>
-  <p class="note" style="margin-top:12px">카드를 누르면 그 장으로 가요.</p>
-</section>
-
-<section class="slide" id="ink" data-sec="01 · 기능 한눈에" data-title="판서">
-  <p class="kicker">앞에서 보여 드릴게요</p>
-  <h2>펜을 든 채로 수업해요</h2>
-  <div class="ink-demo" data-activity>
-    <ol class="vsteps">
-      <li><i>1</i><div><b>펜을 든 채로 ◀ ▶</b><p>모드를 바꾸지 않고 넘겨요.</p></div></li>
-      <li><i>2</i><div><b>톡은 누르기, 쭉은 판서</b><p>단추 위에서도 그대로 써져요.</p></div></li>
-      <li><i>3</i><div><b>손등으로 문지르면 지우개</b><p>⚙ 「손으로 맞추기」로 내 손에 맞춰요.</p></div></li>
-      <li><i>4</i><div><b>양옆 ‹ › 탭에 도구</b><p>두 번 누르면 떠 있는 도구가 돼요.</p></div></li>
-    </ol>
-    <div class="demo-zone"><span>여기에 써 볼게요</span></div>
+<!-- 1. 탄생 -->
+<section class="slide" id="poll" data-sec="01 · 탄생" data-title="여는 투표">
+  <p class="kicker">여는 질문</p>
+  <h2>PPT로 판서할 때 가장 불편한 것은?</h2>
+  <p class="lead" style="font-size:26px">손을 든 사람 수를 적으면 막대가 바로 바뀌어요.</p>
+  <div class="calc" data-let="total = a + b + c + d; top = max(a, b, c, d)">
+    <div class="meter">펜 ↔ 마우스 모드 바꾸기 <input type="number" name="a" min="0" max="99" value="0" aria-label="펜 마우스 전환"><div class="bar" data-value="a" data-max="max(total, 1)" data-style="--bar-c: a == top && top > 0 ? '#ed5a14' : '#3b3833'"></div><output data-expr="a"></output></div>
+    <div class="meter">넘기면 판서가 사라짐 <input type="number" name="b" min="0" max="99" value="0" aria-label="판서 사라짐"><div class="bar" data-value="b" data-max="max(total, 1)" data-style="--bar-c: b == top && top > 0 ? '#ed5a14' : '#3b3833'"></div><output data-expr="b"></output></div>
+    <div class="meter">반마다 다시 써야 함 <input type="number" name="c" min="0" max="99" value="0" aria-label="반마다 다시"><div class="bar" data-value="c" data-max="max(total, 1)" data-style="--bar-c: c == top && top > 0 ? '#ed5a14' : '#3b3833'"></div><output data-expr="c"></output></div>
+    <div class="meter">빈 칠판이 따로 없음 <input type="number" name="d" min="0" max="99" value="0" aria-label="빈 칠판"><div class="bar" data-value="d" data-max="max(total, 1)" data-style="--bar-c: d == top && top > 0 ? '#ed5a14' : '#3b3833'"></div><output data-expr="d"></output></div>
+    <p class="note" data-expr="total == 0 ? '손을 든 수를 적어 보세요.' : '모두 ' + total + '명이 답했어요. 주황 막대가 가장 많은 답이에요.'"></p>
   </div>
 </section>
 
-<section class="slide" id="try-board" data-sec="01 · 기능 한눈에" data-title="칠판과 반">
-  <p class="kicker">반마다 따로</p>
-  <h2>칠판 모드와 반별 저장</h2>
-  <div class="reveal" data-stops="시작|칠판|반 바꾸기|백업">
-    <div class="box veil">
-      <p data-only="1">툴바의 <b>칠판</b>(또는 C 키)을 누르면 빈 칠판이 열려요.<br>흰색·모눈·줄·초록 칠판·좌표평면 바탕에 여러 장을 쓸 수 있어요.<br>같은 자리 단추가 <b>슬라이드</b>로 바뀌고, 누르면 보던 장으로 돌아와요.</p>
-      <p data-only="2"><b>반</b> 메뉴에서 「2반」을 추가하고 골라 보세요. 판서가 비어 있어요.<br>「기본」으로 돌아가면 아까 쓴 판서가 다시 나와요.<br>반 목록은 이 PC의 모든 수업 HTML이 함께 써요.</p>
-      <p data-only="3">학교 PC가 재부팅 때 저장소를 지운다면<br>반 메뉴의 「판서 백업 파일로 저장」으로 파일을 받아 두고,<br>다음 시간에 「백업 파일 불러오기」를 눌러요.</p>
+<section class="slide" id="ai-diff" data-sec="01 · 탄생" data-title="AI마다 달랐던 결과">
+  <p class="kicker">처음 해 본 일</p>
+  <h2>AI에게 맡겨 보니 결과가 제각각이었어요</h2>
+  <div class="switch" data-stops="시작|GPT 첫 변환|ChatGPT (프롬프트 1판)|Claude (프롬프트 1판)">
+    <div class="versus" data-only="1">
+      <div class="side light"><span class="pill-tag">잘한 것</span><ul><li>PPT의 글과 그림을 그대로 옮겼어요.</li></ul></div><div class="arrow">→</div>
+      <div class="side dark"><span class="pill-tag">아쉬운 것</span><ul><li>옮기기만 해서 활동이 없었어요.</li><li>원본 색이 사라졌어요.</li><li>그림만 20MB였어요.</li></ul></div>
+    </div>
+    <div class="versus" data-only="2">
+      <div class="side light"><span class="pill-tag">잘한 것</span><ul><li>값을 넣으면 계산하는 활동이 많았어요.</li></ul></div><div class="arrow">→</div>
+      <div class="side dark"><span class="pill-tag">아쉬운 것</span><ul><li>설계표와 점검 장이 학생 화면에 들어갔어요.</li><li>원본 색과 표지가 없었어요.</li></ul></div>
+    </div>
+    <div class="versus" data-only="3">
+      <div class="side light"><span class="pill-tag">잘한 것</span><ul><li>원본 색을 살렸어요.</li><li>지도 세 장을 시기별로 열었어요.</li></ul></div><div class="arrow">→</div>
+      <div class="side dark"><span class="pill-tag">아쉬운 것</span><ul><li>계산하는 활동이 적었어요.</li><li>글 넘침을 잡느라 화면을 찍어 보며 다섯 번 고쳤어요.</li></ul></div>
+    </div>
+  </div>
+  <p class="step lead" style="margin-top:14px">펜 동작, 화면 틀, 활동 수준이 AI마다 달랐어요. <mark>그래서 바뀌면 안 되는 것을 엔진에 맡기기로 했어요.</mark></p>
+</section>
+
+<section class="slide" id="harness" data-sec="01 · 탄생" data-title="엔진 · 부품 · 지침">
+  <p class="kicker">그래서 만든 것</p>
+  <h2>엔진은 똑같이, 내용은 AI가</h2>
+  <div class="reveal" data-stops="시작|엔진|부품|지침">
+    <div class="feats">
+      <div class="feat c-blue" data-at="1"><small class="note">모든 수업에서 똑같이</small><b>엔진</b><p>펜을 든 채로 넘기기, 칠판, 반별 판서 저장, 인쇄, 넘친 글자 자동 점검을 맡아요.</p></div>
+      <div class="feat c-green" data-at="2"><small class="note">속성만 쓰면 작동</small><b>부품</b><p>단계 막대, 분류 카드, 보기마다 이유가 나오는 문제, 계산 상자, 그래프, 입자 상자 등 12종이에요.</p></div>
+      <div class="feat" data-at="3"><small class="note">AI가 읽는 파일 하나</small><b>지침</b><p>먼저 묻고, 설계표를 보여 주고, 개념마다 학생이 만지는 도해를 하나씩 넣게 해요.</p></div>
     </div>
   </div>
 </section>
 
-<section class="slide" id="try-sci" data-sec="01 · 기능 한눈에" data-title="체험 1: 과학 확산">
+<!-- 2. 체험 -->
+<section class="slide" id="before-after" data-sec="02 · 직접 만져 보기" data-title="전후 비교">
+  <p class="kicker">같은 장, 두 모습</p>
+  <h2>실습 PPT '확산' 5쪽을 바꾸면</h2>
+  <div class="calc">
+    <div>
+      <div class="ba" data-style="--cut: c">
+        <img src="assets/training/before-ppt.png" alt="실습 PPT 5쪽: 잉크 입자 그림 세 장(처음, 1분 뒤, 5분 뒤)">
+        <img class="ba-after" src="assets/training/after-html.png" alt="바꾼 수업 HTML: 시간 막대를 2분에 둔 잉크 입자 상자">
+        <i class="ba-line"></i><span class="ba-tag l">PPT</span><span class="ba-tag r">수업 HTML</span>
+      </div>
+      <input type="range" name="c" min="0" max="100" value="50" aria-label="PPT와 수업 HTML 경계">
+    </div>
+    <ul>
+      <li><b>그림 3장 → 시간 막대</b>처음·1분·5분 사이도 학생이 직접 돌려 봐요.</li>
+      <li><b>몇 칸에 퍼졌나</b>9칸 중 몇 칸에 잉크가 있는지 세어 줘요.</li>
+      <li><b>입자 하나의 길</b>물 입자도 움직인다는 것을 점선으로 보여 줘요.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide" id="try-sci" data-sec="02 · 직접 만져 보기" data-title="체험 1: 과학 확산">
   <div class="dohae-head"><h2>과학 · 잉크가 퍼지는 모습을 입자로</h2><a class="pill" href="https://n-lifescience.github.io/class-html/lessons/sci-diffusion.html#ink-model" target="_blank" rel="noopener">전체 수업 열기</a></div>
   <div class="dx">
     <div class="dx-ctrl">
@@ -395,7 +421,7 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
   </div>
 </section>
 
-<section class="slide" id="try-soc" data-sec="01 · 기능 한눈에" data-title="체험 2: 사회 시장 가격">
+<section class="slide" id="try-soc" data-sec="02 · 직접 만져 보기" data-title="체험 2: 사회 시장 가격">
   <div class="dohae-head"><h2>사회 · 떡볶이 값은 왜 3,000원일까?</h2><a class="pill" href="https://n-lifescience.github.io/class-html/lessons/soc-supply-demand.html#market" target="_blank" rel="noopener">전체 수업 열기</a></div>
   <div class="dh">
     <div>
@@ -417,7 +443,7 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
   </div>
 </section>
 
-<section class="slide" id="try-eth" data-sec="01 · 기능 한눈에" data-title="체험 3: 윤리 이성과 정서">
+<section class="slide" id="try-eth" data-sec="02 · 직접 만져 보기" data-title="체험 3: 윤리 이성과 정서">
   <div class="dohae-head"><h2>윤리 · 이성과 정서, 무엇이 판단을 움직일까</h2><a class="pill" href="https://n-lifescience.github.io/class-html/lessons/eth-dohae.html#scale" target="_blank" rel="noopener">전체 수업 열기</a></div>
   <div class="ms-wrap">
     <div class="ms-act">
@@ -461,47 +487,7 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
   </div>
 </section>
 
-<section class="slide" id="run" data-sec="01 · 기능 한눈에" data-title="수업 운영">
-  <p class="kicker">수업 흐름은 그대로</p>
-  <h2>수업을 이끄는 기능</h2>
-  <div class="cols" style="grid-template-columns:1fr 540px;gap:40px">
-    <div>
-      <ul class="keys" style="grid-template-columns:1fr 1fr">
-        <li><kbd>→</kbd>다음(단계를 하나씩)</li><li><kbd>←</kbd>이전</li>
-        <li><kbd>T</kbd>목차</li><li><kbd>C</kbd>칠판</li>
-        <li><kbd>B</kbd>검정 화면</li><li><kbd>F</kbd>전체 화면</li>
-        <li><kbd>D</kbd>자동 점검</li><li><kbd>?</kbd>도움말</li>
-      </ul>
-      <div class="box" style="margin-top:24px"><p style="margin:0;font-size:23px;line-height:1.5">퀴즈 · 분류 카드 · 순서 맞히기 · 타이머 · 발표자 뽑기 · 판서까지 인쇄</p></div>
-      <p class="note" style="margin-top:12px">프레젠터 리모컨의 넘기기 단추도 그대로 돼요.</p>
-    </div>
-    <div>
-      <p class="q" data-n="?" style="font-size:26px;margin-bottom:10px">잉크가 물에 퍼지는 까닭은?</p>
-      <div class="quiz">
-        <button class="opt" data-ok data-why="맞아요. 입자가 스스로 움직이기 때문이에요.">입자가 스스로 끊임없이 움직여서</button>
-        <button class="opt" data-why="끌어당김이 아니라 입자 운동이에요.">물이 잉크를 끌어당겨서</button>
-        <button class="opt" data-why="무게와 상관없이 퍼져요.">잉크가 물보다 무거워서</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="fix" data-sec="01 · 기능 한눈에" data-title="고치기">
-  <p class="kicker">AI에게 다시 부탁하지 않아도</p>
-  <h2>바로 고치고, 스스로 점검해요</h2>
-  <ol class="steps" style="--n:4" data-activity>
-    <li><i>1</i><small>툴바</small><b>「편집」을 눌러요</b><p>위에 편집 막대가 나와요.</p></li>
-    <li><i>2</i><small>고르기</small><b>고칠 곳을 눌러요</b><p>글·상자·그림·SVG 도형 무엇이든 골라요.</p></li>
-    <li><i>3</i><small>고치기</small><b>글, 크기, 색, 위치</b><p>두 번 누르면 글을 고치고, 모서리를 끌면 크기가 바뀌어요.</p></li>
-    <li><i>4</i><small>저장</small><b>「HTML 저장」</b><p>고친 파일을 새로 받아요(Ctrl+S).</p></li>
-  </ol>
-  <div class="cols" style="margin-top:30px;gap:24px">
-    <div class="box"><h3>D 키 · 자동 점검</h3><p style="font-size:23px;line-height:1.45">넘친 글자와 빈 그림을 찾아 표시해요.</p></div>
-    <div class="box"><h3>⚙ 그림 넣어 저장</h3><p style="font-size:23px;line-height:1.45">그림이 회색 상자면 원본 PPT를 화면에 끌어다 놓아요.</p></div>
-  </div>
-</section>
-
-<section class="slide" id="gallery" data-sec="01 · 기능 한눈에" data-title="교과별 활용 아이디어">
+<section class="slide" id="gallery" data-sec="02 · 직접 만져 보기" data-title="교과별 활용 아이디어">
   <p class="kicker">내 교과라면</p>
   <h2>교과마다 이렇게 쓸 수 있어요</h2>
   <div class="switch" data-stops="시작|국어|수학|영어|사회·역사|과학|정보·예체능">
@@ -538,61 +524,99 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
   </div>
 </section>
 
-<!-- 02 실시간 체험 -->
-<section class="slide" id="live" data-sec="02 · 실시간 체험" data-title="실시간 수업">
-  <p class="kicker">휴대폰을 꺼내 주세요</p>
-  <h2>선생님 화면과 내 휴대폰이 함께 움직여요</h2>
-  <div class="cols" style="grid-template-columns:1fr 460px;gap:36px" data-activity>
-    <ol class="vsteps">
-      <li><i>1</i><div><b>QR을 찍거나 코드 6자리</b><p>사이트에 코드를 넣어도 돼요.</p></div></li>
-      <li><i>2</i><div><b>선생님 화면을 따라가요</b><p>선생님이 연 장은 다시 볼 수 있어요.</p></div></li>
-      <li><i>3</i><div><b>시간 막대를 직접 밀어요</b><p>내 휴대폰의 도해가 움직여요.</p></div></li>
-      <li><i>4</i><div><b>모두의 값이 모여요</b><p>막대 하나를 누르면 그 값이 칠판 도해에 떠요.</p></div></li>
+<!-- 3. 수업에서 쓰기 -->
+<section class="slide" id="try-ink" data-sec="03 · 수업에서 쓰기" data-title="판서 체험">
+  <p class="kicker">지금 해 보세요</p>
+  <h2>펜을 든 채로 넘겨 보세요</h2>
+  <div class="cols" data-activity>
+    <ol class="steps" style="--n:1; grid-template-columns:1fr; gap:16px">
+      <li style="display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:center"><i>1</i><b>아래 툴바에서 펜을 골라요.</b></li>
+      <li style="display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:center"><i>2</i><b>이 화면에 아무거나 써요.</b></li>
+      <li style="display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:center"><i>3</i><b>펜을 든 채로 ▶, 다시 ◀.</b></li>
+      <li style="display:grid;grid-template-columns:38px 1fr;gap:14px;align-items:center"><i>4</i><b>판서가 그대로 있나요?</b></li>
     </ol>
-    <div class="panel" style="display:flex;flex-direction:column;gap:18px">
-      <p class="panel-head"><span>참여 주소</span></p>
-      <p class="site-url">n-lifescience.github.io<br>/class-html</p>
-      <a class="btn" href="https://n-lifescience.github.io/class-html/lessons/sci-diffusion.html" target="_blank" rel="noopener">확산 수업 열기 →</a>
-      <p style="margin:0;font-size:22px;line-height:1.45;color:var(--st-on-dark-2)">이름을 받지 않고, 아무것도 저장하지 않아요. 창을 닫으면 사라져요.</p>
+    <div class="panel">
+      <p class="panel-head"><span>펜을 든 채로 되는 것</span></p>
+      <p style="margin:6px 0 14px;font-size:26px;font-weight:700;line-height:1.45">넘기기 ◀ ▶, 활동 단추와 보기,<br>슬라이더, 카드 끌기</p>
+      <p style="margin:0;font-size:24px;line-height:1.5;color:var(--st-on-dark-2)">단추 위에서 <b style="color:var(--st-pink)">톡</b> 누르면 단추,<br><b style="color:var(--st-pink)">쭉</b> 끌면 판서가 돼요.</p>
     </div>
   </div>
 </section>
 
-<!-- 03 나도 할 수 있어요 -->
-<section class="slide" id="can" data-sec="03 · 나도 할 수 있어요" data-title="셋이면 돼요">
-  <p class="kicker">필요한 것은 셋</p>
-  <h2>PPT 하나, 한 줄, AI 하나</h2>
-  <div class="feats">
-    <div class="feat c-blue"><b>PPT 하나</b><p>지금 쓰는 수업 PPT 그대로. 10~20장이면 알맞아요.</p></div>
-    <div class="feat c-green"><b>한 줄</b><p>저장소 주소와 "지침대로 바꿔줘".</p></div>
-    <div class="feat"><b>AI 하나</b><p>ChatGPT · Gemini · Claude 무엇이든.</p></div>
+<section class="slide" id="try-board" data-sec="03 · 수업에서 쓰기" data-title="칠판과 반">
+  <p class="kicker">반마다 따로</p>
+  <h2>칠판 모드와 반별 저장</h2>
+  <div class="reveal" data-stops="시작|칠판|반 바꾸기|백업">
+    <div class="box veil">
+      <p data-only="1">툴바의 <b>칠판</b>(또는 C 키)을 누르면 빈 칠판이 열려요.<br>흰색·모눈·줄·초록 칠판·좌표평면 바탕에 여러 장을 쓸 수 있어요.<br>같은 자리 단추가 <b>슬라이드</b>로 바뀌고, 누르면 보던 장으로 돌아와요.</p>
+      <p data-only="2"><b>반</b> 메뉴에서 「2반」을 추가하고 골라 보세요. 판서가 비어 있어요.<br>「기본」으로 돌아가면 아까 쓴 판서가 다시 나와요.<br>반 목록은 이 PC의 모든 수업 HTML이 함께 써요.</p>
+      <p data-only="3">학교 PC가 재부팅 때 저장소를 지운다면<br>반 메뉴의 「판서 백업 파일로 저장」으로 파일을 받아 두고,<br>다음 시간에 「백업 파일 불러오기」를 눌러요.</p>
+    </div>
   </div>
-  <div class="versus" style="margin-top:26px">
-    <div class="side light"><span class="pill-tag">선생님이 하는 일</span><ul><li>PPT 올리기</li><li>질문에 답하기</li><li>열어서 확인하기</li></ul></div>
-    <div class="arrow">+</div>
-    <div class="side dark"><span class="pill-tag">AI와 엔진이 하는 일</span><ul><li>개념마다 도해 설계</li><li>HTML 한 파일 만들기</li><li>판서 · 저장 · 점검</li></ul></div>
-  </div>
-  <p class="step lead" style="margin-top:20px">코딩은 몰라도 돼요. <mark>수업을 가장 잘 아는 사람은 선생님이에요.</mark></p>
 </section>
 
-<section class="slide" id="how" data-sec="03 · 나도 할 수 있어요" data-title="만드는 흐름">
+<section class="slide" id="keys" data-sec="03 · 수업에서 쓰기" data-title="단축키">
+  <p class="kicker">외우지 않아도 돼요 · ? 키로 언제든</p>
+  <h2>알아 두면 편한 키</h2>
+  <ul class="keys">
+    <li><kbd>→</kbd>다음(단계를 하나씩)</li><li><kbd>←</kbd>이전</li><li><kbd>12</kbd><kbd>⏎</kbd>12쪽으로</li>
+    <li><kbd>P</kbd>펜</li><li><kbd>H</kbd>형광펜</li><li><kbd>E</kbd>지우개</li>
+    <li><kbd>L</kbd>레이저</li><li><kbd>Esc</kbd>손(조작)</li><li><kbd>C</kbd>칠판</li>
+    <li><kbd>T</kbd>목차</li><li><kbd>F</kbd>전체 화면</li><li><kbd>B</kbd>검정 화면</li>
+    <li><kbd>Ctrl</kbd><kbd>Z</kbd>판서 되돌리기</li><li><kbd>D</kbd>자동 점검</li><li><kbd>?</kbd>도움말</li>
+  </ul>
+  <p class="note" style="margin-top:26px">프레젠터 리모컨의 넘기기 단추도 그대로 돼요.</p>
+</section>
+
+<section class="slide" id="edit" data-sec="03 · 수업에서 쓰기" data-title="편집 모드">
+  <p class="kicker">AI에게 다시 부탁하지 않아도</p>
+  <h2>편집 모드로 바로 고쳐요</h2>
+  <ol class="steps" style="--n:4" data-activity>
+    <li><i>1</i><small>툴바</small><b>「편집」을 눌러요</b><p>위에 편집 막대가 나와요.</p></li>
+    <li><i>2</i><small>고르기</small><b>고칠 곳을 눌러요</b><p>글·상자·그림·SVG 도형 무엇이든 골라요.</p></li>
+    <li><i>3</i><small>고치기</small><b>글, 크기, 색, 위치</b><p>두 번 누르면 글을 고치고, 모서리를 끌면 크기가 바뀌어요.</p></li>
+    <li><i>4</i><small>저장</small><b>「HTML 저장」</b><p>고친 파일을 새로 받아요(Ctrl+S).</p></li>
+  </ol>
+  <div class="quote" style="margin-top:28px"><p>해 보기: 지금 이 장의 제목을 "편집 모드, 생각보다 쉬워요"로 바꿔 보세요.</p><small>「편집 끝내기」를 누르면 수업 화면으로 돌아와요</small></div>
+</section>
+
+<!-- 4. 만드는 흐름 -->
+<section class="slide" id="how" data-sec="04 · 만드는 흐름" data-title="만드는 흐름">
   <p class="kicker">내 AI가 하는 일</p>
   <h2>PPT 하나가 수업 HTML이 되기까지</h2>
-  <ol class="steps" style="--n:5">
-      <li><i>1</i><small>올리기</small><b>PPT + 저장소 주소</b><p>내 AI에 PPT를 올리고 한 줄을 붙여요.</p></li>
-      <li><i>2</i><small>인터뷰</small><b>AI가 먼저 물어요</b><p>교과·차시, 수업 장면, 헷갈리는 곳, 넣을 활동, 지킬 것.</p></li>
-      <li><i>3</i><small>설계표</small><b>개념마다 도해 하나</b><p>채팅에서만 확인해요. 학생 화면에는 안 들어가요.</p></li>
-      <li><i>4</i><small>파일</small><b>HTML 한 파일</b><p>판서·저장·점검은 엔진이 맡아요.</p></li>
-      <li><i>5</i><small>점검</small><b>D 키로 확인</b><p>넘친 글자를 찾고, 편집이나 AI 부탁으로 고쳐요.</p></li>
+  <div class="reveal" data-stops="시작|올리기|인터뷰|설계표|HTML|점검">
+    <ol class="steps" style="--n:5">
+      <li data-at="1"><i>1</i><small>올리기</small><b>PPT + 저장소 주소</b><p>내 AI에 PPT를 올리고 한 줄을 붙여요.</p></li>
+      <li data-at="2"><i>2</i><small>인터뷰</small><b>AI가 먼저 물어요</b><p>교과·차시, 수업 장면, 헷갈리는 곳, 넣을 활동, 지킬 것.</p></li>
+      <li data-at="3"><i>3</i><small>설계표</small><b>개념마다 도해 하나</b><p>채팅에서만 확인해요. 학생 화면에는 안 들어가요.</p></li>
+      <li data-at="4"><i>4</i><small>파일</small><b>HTML 한 파일</b><p>판서·저장·점검은 엔진이 맡아요.</p></li>
+      <li data-at="5"><i>5</i><small>점검</small><b>D 키로 확인</b><p>넘친 글자를 찾고, 편집이나 AI 부탁으로 고쳐요.</p></li>
     </ol>
-  <div class="cols" style="margin-top:30px;gap:24px">
-    <div class="side light"><span class="pill-tag">저작권</span><ul><li>교과서 그림이 든 HTML은 내 수업에서만 써요.</li></ul></div>
-    <div class="side dark"><span class="pill-tag">개인정보</span><ul><li>학생 이름·사진·성적은 지우고 올려요.</li></ul></div>
+  </div>
+  <p class="step lead" style="margin-top:8px">"알아서 해 줘"라고 답하면 AI가 추천대로 만들어요.</p>
+</section>
+
+<section class="slide" id="caution" data-sec="04 · 만드는 흐름" data-title="저작권과 개인정보">
+  <h2>저작권과 개인정보, 이것만은 지켜요</h2>
+  <div class="cols" style="grid-template-columns:500px 1fr;gap:32px">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="side light"><span class="pill-tag">저작권</span><ul><li>교과서·출판사 그림이 든 수업 HTML은 내 수업에서만 써요.</li><li>누리집, 블로그, 공개 저장소에 올리지 않아요.</li></ul></div>
+      <div class="side dark"><span class="pill-tag">개인정보</span><ul><li>학생 이름·사진·성적이 든 장은 지우고 AI에 올려요.</li><li>외부 AI 사용은 학교·교육청 지침을 먼저 확인해요.</li></ul></div>
+    </div>
+    <div>
+      <p class="q" data-n="?" style="font-size:26px;margin-bottom:10px">해도 되는 것을 모두 고르세요.</p>
+      <div class="quiz" data-multi data-why="맞아요. 내 수업 안에서 쓰고, 개인정보는 지우고 올려요.">
+        <button class="opt" data-ok data-why="내 수업에서는 괜찮아요.">내 수업 시간에 띄운다</button>
+        <button class="opt" data-why="공개하면 수업 목적을 넘어요.">교과서 그림이 든 HTML을 누리집에 올린다</button>
+        <button class="opt" data-ok data-why="개인정보를 지우고 올려요.">학생 이름이 든 장을 지우고 AI에 올린다</button>
+        <button class="opt" data-why="학생 사진은 넣지 않아요.">학생 사진을 넣어 반 전체에 공유한다</button>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- 04 실습 -->
-<section class="slide" id="prep" data-sec="04 · 실습" data-title="실습 준비">
+<!-- 5. 실습 -->
+<section class="slide" id="prep" data-sec="05 · 실습" data-title="실습 준비">
   <p class="kicker">시작 전 2분</p>
   <h2>실습 준비</h2>
   <div class="cols" style="grid-template-columns:480px 1fr;gap:36px">
@@ -600,7 +624,7 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
       <li>내 수업 PPT 하나 (10~20장이면 알맞아요)</li>
       <li>학생 개인정보가 든 장은 지웠어요</li>
       <li>AI 하나에 로그인했어요</li>
-      <li>크롬으로 열어요</li>
+      <li>크롬이나 엣지로 열어요</li>
     </ul></div>
     <div style="display:flex;flex-direction:column;gap:16px">
       <p style="margin:0;font-size:24px;font-weight:700">AI에 PPT와 함께 붙여 넣을 한 줄</p>
@@ -614,7 +638,7 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
   </div>
 </section>
 
-<section class="slide" id="practice1" data-sec="04 · 실습" data-title="실습 1: 내 PPT 바꾸기">
+<section class="slide" id="practice1" data-sec="05 · 실습" data-title="실습 1: 내 PPT 바꾸기">
   <div class="dohae-head"><h2>실습 1 · 내 PPT 바꾸기</h2><div class="timer" data-sec="1500" data-label="실습 1"></div></div>
   <div class="switch" data-stops="시작|ChatGPT|Gemini|Claude">
     <ol class="steps" data-only="1" style="--n:4">
@@ -642,8 +666,8 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
   </div>
 </section>
 
-<section class="slide" id="practice2" data-sec="04 · 실습" data-title="실습 2: 열어서 수업해 보기">
-  <div class="dohae-head"><h2>실습 2 · 열어서 수업하고 고치기</h2><div class="timer" data-sec="900" data-label="실습 2"></div></div>
+<section class="slide" id="practice2" data-sec="05 · 실습" data-title="실습 2: 열어서 수업해 보기">
+  <div class="dohae-head"><h2>실습 2 · 열어서 수업하고 고치기</h2><div class="timer" data-sec="1200" data-label="실습 2"></div></div>
   <div class="cols">
     <div class="box">
       <h3>해 볼 것</h3>
@@ -663,7 +687,7 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
   </div>
 </section>
 
-<section class="slide" id="faq" data-sec="04 · 실습" data-title="막혔을 때">
+<section class="slide" id="faq" data-sec="05 · 실습" data-title="막혔을 때">
   <p class="kicker">손을 들기 전에</p>
   <h2>막혔을 때</h2>
   <dl class="faq">
@@ -676,54 +700,49 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
   </dl>
 </section>
 
-<!-- 05 모으기 -->
-<section class="slide" id="wish" data-sec="05 · 모으기" data-title="내 수업의 만지는 도해">
-  <p class="kicker">선생님 수업이라면?</p>
-  <h2>PPT로는 안 되던 그 장면</h2>
-  <p class="lead">학생이 <mark>무엇을 바꾸면</mark>, <mark>무엇이 달라지나요?</mark> 이 두 칸이면 도해가 돼요.</p>
-  <table class="wish">
-    <thead><tr><th>교과</th><th>PPT로 어려운 장면</th><th>학생이 바꾸는 것</th><th>달라지는 것</th></tr></thead>
-    <tbody>
-      <tr><td>과학 · 확산</td><td>그림 3장으로는 그 사이가 안 보여요</td><td>시간</td><td>잉크가 퍼진 칸 수</td></tr>
-      <tr><td>수학 · 일차함수</td><td>기울기의 뜻이 와닿지 않아요</td><td>기울기 a</td><td>그래프가 기운 정도</td></tr>
-      <tr><td>국어 · 소설</td><td>시점이 바뀌면 무엇이 달라질까</td><td>서술자</td><td>독자가 아는 정보</td></tr>
-    </tbody>
-  </table>
-  <p class="note" style="margin-top:14px">다음 장 설문에 적어 주시면, 모인 것을 보고 다음 예시를 만들어요.</p>
+<!-- 6. 성장 -->
+<section class="slide" id="growth" data-sec="06 · 성장" data-title="성장 기록">
+  <p class="kicker">어떻게 자라고 있을까요</p>
+  <h2>일주일의 성장 기록</h2>
+  <div class="reveal" data-stops="시작|10. 2.|10. 3.|10. 5.|10. 6.|10. 7.|다음">
+    <ol class="steps" style="--n:6">
+      <li data-at="1"><i>1</i><small>10. 2.</small><b>설계와 엔진</b><p>펜을 든 채로 넘기기, 반별 판서 저장.</p></li>
+      <li data-at="2"><i>2</i><small>10. 3.</small><b>부품과 지침</b><p>단계 막대, 분류, 계산 상자. AI가 읽을 지침.</p></li>
+      <li data-at="3"><i>3</i><small>10. 5.</small><b>v1.0.0 공개</b><p>누구나 주소 한 줄로 쓸 수 있게.</p></li>
+      <li data-at="4"><i>4</i><small>10. 6.</small><b>만지는 도해 · 편집</b><p>v1.1.0. 값을 바꾸면 그림이 바뀌는 수업, 바로 고치기.</p></li>
+      <li data-at="5"><i>5</i><small>10. 7.</small><b>전자칠판 판서</b><p>양옆 도구, 손등 지우개. 지금 시험 중이에요.</p></li>
+      <li data-at="6" class="next"><i>?</i><small>다음</small><b>공모전 준비 중</b><p>10월 18일 이후에 정식으로 소개해요.</p></li>
+    </ol>
+  </div>
+  <div class="panel secret" data-only="6"><b>지금 공모전에 낼 기능을 다듬고 있어요.</b><p>공모전이 마감되는 10월 18일이 지나면 이 자리에서 정식으로 소개할게요.</p></div>
 </section>
 
-<section class="slide" id="survey" data-sec="05 · 모으기" data-title="연수 설문">
-  <div class="dohae-head"><h2>연수 설문 · 익명 · 5분</h2><div class="timer" data-sec="300" data-label="설문"></div></div>
-  <div class="cols" style="grid-template-columns:1fr 470px;gap:36px">
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="box"><h3>1부 · 오늘 연수</h3><p style="font-size:23px;line-height:1.45">만족도, 쓸모 있었던 부분, 실습 결과</p></div>
-      <div class="box"><h3>2부 · 내 수업의 만지는 도해</h3><p style="font-size:23px;line-height:1.45">단원, PPT로 어려운 장면, 학생이 바꾸는 것, 달라지는 것</p></div>
-      <p class="note">이름 없이 통계로만 묶어서 class-html을 고치고 발표 자료를 만드는 데 써요.</p>
+<section class="slide" id="pledge" data-sec="06 · 성장" data-title="다짐과 설문">
+  <p class="kicker">마무리 3분</p>
+  <h2>다음 수업에 하나만 바꿔 본다면?</h2>
+  <div class="cols" style="grid-template-columns:1fr 440px">
+    <div class="pledge">
+      <textarea id="pledge-text" aria-label="다음 수업에서 바꿔 볼 것" placeholder="예) 다음 주 3단원 첫 시간에 단계 막대 하나 넣기"></textarea>
+      <p class="note" id="pledge-note" style="margin-top:8px">적은 내용은 이 PC 브라우저에만 남아요.</p>
     </div>
-    <div class="panel" style="display:flex;flex-direction:column;gap:16px">
+    <div class="panel" style="display:flex;flex-direction:column;gap:14px">
+      <p class="panel-head"><span>연수 설문 · 3분 · 익명</span></p>
       <div class="qr"><img src="assets/training/form-qr.svg" alt="연수 설문 QR 코드"><p style="margin:0;font-size:22px;line-height:1.45;color:var(--st-on-dark-2)">휴대폰 카메라로 찍거나 아래 단추를 눌러요.</p></div>
       <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSe4DfQKW7-8lPddGTpcaFvEHNzqouGJ5jtAxoqpY96aH9vQrg/viewform" target="_blank" rel="noopener">설문 열기 →</a>
     </div>
   </div>
 </section>
 
-<section class="slide" id="closing" data-sec="05 · 모으기" data-title="마무리">
-  <div class="closing">
-    <div class="pledge">
-      <p class="kicker">마무리</p>
-      <h2>다음 수업에 하나만 바꿔 본다면?</h2>
-      <textarea id="pledge-text" aria-label="다음 수업에서 바꿔 볼 것" placeholder="예) 다음 주 3단원 첫 시간에 단계 막대 하나 넣기"></textarea>
-      <p class="note" id="pledge-note" style="margin-top:8px">적은 내용은 이 PC 브라우저에만 남아요.</p>
+<section class="slide" id="closing" data-sec="06 · 성장" data-title="마무리">
+  <div class="panel">
+    <p class="kicker" style="color:var(--st-orange)">오늘 바꾼 것 하나를 다음 수업에</p>
+    <p class="cta-title">PPT는 보여 주는 도구,<br>수업 HTML은 <em>함께 만지는</em> 도구예요.</p>
+    <div class="cta-links">
+      <a class="btn" href="https://github.com/N-lifescience/class-html" target="_blank" rel="noopener">저장소 열기 →</a>
+      <a class="btn ghost" href="https://n-lifescience.github.io/class-html/examples/training.html" target="_blank" rel="noopener">이 연수 자료 다시 보기</a>
+      <a class="btn ghost" href="https://docs.google.com/forms/d/e/1FAIpQLSe4DfQKW7-8lPddGTpcaFvEHNzqouGJ5jtAxoqpY96aH9vQrg/viewform" target="_blank" rel="noopener">설문</a>
     </div>
-    <div class="panel">
-      <p class="cta-title">PPT는 보여 주는 도구,<br>수업 HTML은 <em>함께 만지는</em> 도구예요.</p>
-      <div class="cta-links">
-        <a class="btn" href="https://github.com/N-lifescience/class-html" target="_blank" rel="noopener">저장소 열기 →</a>
-        <a class="btn ghost" href="https://n-lifescience.github.io/class-html/examples/training.html" target="_blank" rel="noopener">이 연수 자료 다시 보기</a>
-        <a class="btn ghost" href="https://docs.google.com/forms/d/e/1FAIpQLSe4DfQKW7-8lPddGTpcaFvEHNzqouGJ5jtAxoqpY96aH9vQrg/viewform" target="_blank" rel="noopener">설문</a>
-      </div>
-      <p class="handle">GITHUB.COM/N-LIFESCIENCE/CLASS-HTML</p>
-    </div>
+    <p class="handle">GITHUB.COM/N-LIFESCIENCE/CLASS-HTML · MIT</p>
   </div>
 </section>
 
@@ -753,15 +772,6 @@ document.addEventListener('DOMContentLoaded', () => {
       try { localStorage.setItem(KEY, t.value); $('#pledge-note').textContent = '저장했어요. 이 PC 브라우저에만 남아요.'; }
       catch { $('#pledge-note').textContent = '이 브라우저는 저장을 막아 두었어요. 화면을 찍어 두세요.'; }
     });
-  }
-
-  /* 기능 지도: 카드를 누르면 그 장으로 */
-  {
-    const slides = [...document.querySelectorAll('section.slide')];
-    document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
-      const i = slides.findIndex((s) => s.id === b.dataset.go);
-      if (i >= 0 && window.ClassHTML) ClassHTML.go(i);
-    }));
   }
 
   /* ── A 확산: sci-diffusion에서 가져옴. 잉크 36개·물 90개가 같은 무작위 걸음(10초마다 4걸음)을 한다 ── */

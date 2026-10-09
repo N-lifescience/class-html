@@ -2,6 +2,7 @@
 # class-html 합본 지침
 
 > **AI에게**: 이 파일 하나가 「수업 HTML」 지침 전체다. 선생님이 수업 PPT를 주면 이 지침대로 수업용 HTML을 만든다.
+> **반드시**: `<head>`에 아래 엔진 css·js 두 줄을 넣는다(지금 환경에서 안 열려도 그대로 둔다). 넘기기·툴바를 직접 짜지 않고, PPT 장을 통째로 그림으로 넣지 않는다(1절 기준 8·9).
 > 본문의 `references/…`는 이 파일의 해당 절을, `scripts/…`는 저장소 https://github.com/N-lifescience/class-html 의 `skills/class-html/scripts/`를 가리킨다.
 > 엔진: `https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css`·`.js` (v1.2.0)
 > 레퍼런스 완성본(`references/examples/`): https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/skills/class-html/references/examples/eth-dohae.html · https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/skills/class-html/references/examples/sci-diffusion.html · https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/skills/class-html/references/examples/soc-supply-demand.html
@@ -79,6 +80,8 @@ PPT를 HTML로 옮기는 일이 아니다. PPT로는 못 하는 수업을 만든
    - 표시는 겹쳐도 된다. 도해 전체에 '무엇', 그 안의 수치에 '모형 수치'를 붙인다.
 6. **교실 뒤에서 읽힌다.** 본문은 30px 안팎이고, 어떤 글자도 20px보다 작으면 안 된다(SVG 안 글자 포함, 엔진 툴바·쪽 번호는 예외). 넘치면 글자를 줄이지 말고 장을 나눈다. 누르는 것은 56px 이상으로 만들고(단추 높이, 슬라이더 입력 높이), 마우스를 올려야만 되는 기능은 만들지 않는다. 한 장에 한 생각만 담는다.
 7. **안전.** 외부 그림 주소는 쓰지 않는다. 만드는 동안은 `media/` 상대 경로, 전달할 때는 `bundle.py`로 넣은 `data:` URI, 코드를 실행할 수 없으면 `img[data-ppt]`를 쓴다. 학생 실명과 사진은 넣지 않는다. 장마다 고정 `id`를 붙인다.
+8. **엔진을 꼭 쓴다.** `<head>`의 엔진 css·js 두 줄을 지우거나 바꾸지 않는다. 만드는 환경에서 엔진 주소가 열리지 않아도 그대로 둔다(교실 브라우저가 연다). 넘기기·툴바·판서·무대 크기 맞추기를 직접 짜지 않는다. 인터넷이 없는 교실이면 전달 때 `bundle.py --offline`으로 엔진을 파일 안에 넣는다.
+9. **PPT 장을 통째로 그림으로 넣지 않는다.** 장 전체를 찍은 그림을 붙이면 글을 고칠 수 없고 도해도 못 붙인다. 문제·식·표는 HTML 글로 다시 치고(수식은 `references/components.md`의 수식), 원본 그림은 그림 부분만 쓴다. 장 안을 `position: absolute` 틀로 통째로 덮지 않는다. 여백은 엔진이 잡는다.
 
 ### 길이
 

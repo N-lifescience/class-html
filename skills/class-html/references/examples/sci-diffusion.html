@@ -82,7 +82,7 @@ body[data-theme="ppt"] section.slide#cover::before { display: none; }
 .res .concl { margin: 34px 0 6px; font-size: 34px; font-weight: 800; line-height: 1.4; }
 
 /* ── 도해 공통 ── */
-.dx { display: grid; grid-template-columns: 1fr 350px; gap: 30px; margin-top: 0; }
+.dx { display: grid; grid-template-columns: auto 350px; justify-content: center; gap: 30px 56px; margin-top: 0; }
 .dx > .dx-ctrl { grid-column: 2; grid-row: 1; }   /* 손잡이는 오른쪽 */
 .dx-view > svg { display: block; }
 .dx-ctrl { display: flex; flex-direction: column; gap: 8px; }

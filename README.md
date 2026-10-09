@@ -43,7 +43,7 @@
 | `guide/class-html-guide.md` | 채팅 AI용 합본 지침(빌드 때 자동 생성) |
 | `examples/` | 직접 만든 예시 덱(`m2-parts.html`: 모든 부품), 연수 슬라이드(`training.html`: 21장, 실제 수업 시연·기능 지도·실시간 체험·실습·도해 수요 설문. 사이트에서는 `/examples/training.html`, 한 파일판은 `bundle.py examples/training.html --offline --engine engine`), 소개 덱(`intro-story.html`: 23장, class-html이 만들어진 이야기), 실습용 PPT(`practice/`: 과학 '확산', 사회 '수요와 공급', `tools/make_practice_pptx.py`로 만듦) |
 | `tests/`, `tools/` | 엔진 시험, 빌드, 화면 캡처·점검(`tools/shots.mjs`), 사이트 묶기(`tools/site.mjs` → `_site/`) |
-| `site/`, `live.config.json` | 배포 사이트 첫 화면(실시간 수업 참여·예시 수업), 실시간 설정. `.github/workflows/pages.yml`이 main에 올라오면 Pages로 배포한다 |
+| `site/`, `live.config.json` | 배포 사이트 첫 화면(실시간 수업 참여·PPT 전후 비교·예시 수업·만드는 법), 실시간 설정. `.github/workflows/pages.yml`이 main에 올라오면 Pages로 배포한다 |
 
 ## 개발
 

@@ -42,6 +42,22 @@
   .note { margin: 10px 0 0; color: var(--mute); font-size: 15px; }
   footer { padding: 20px 0 40px; border-top: 1px solid var(--line); color: var(--mute); font-size: 14px; }
   footer a { color: inherit; }
+  .ba { display: grid; gap: 14px; }
+  .ba figure { margin: 0; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); }
+  .ba .pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; }
+  .ba img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .ba .to { font-size: 22px; color: var(--accent); font-weight: 800; }
+  .ba small { display: block; margin: 0 0 6px; color: var(--mute); font-size: 13px; font-weight: 700; }
+  .ba figcaption { margin: 10px 0 0; color: var(--mute); font-size: 15px; }
+  .ba figcaption b { color: var(--ink); }
+  .how { margin: 0; padding: 0; list-style: none; counter-reset: how; display: grid; gap: 10px; }
+  .how li { counter-increment: how; position: relative; padding: 16px 16px 16px 58px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  .how li::before { content: counter(how); position: absolute; left: 16px; top: 15px; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; font-weight: 800; font-size: 15px; display: grid; place-items: center; }
+  .how b { display: block; margin-bottom: 2px; }
+  .how p { margin: 0; color: var(--mute); font-size: 15px; }
+  .how code { display: block; margin: 8px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--paper); font: 14px/1.5 var(--mono); color: var(--ink); word-break: break-all; }
+  .copy { min-height: 44px; margin-top: 8px; padding: 0 16px; font-size: 15px; }
+  @media (max-width: 640px) { .ba .pair { grid-template-columns: 1fr; } .ba .to { transform: rotate(90deg); justify-self: center; } }
   @media (max-width: 480px) { .field { flex-direction: column; } button { width: 100%; } }
 </style>
 </head>
@@ -63,6 +79,29 @@
     <p id="msg" role="status" aria-live="polite"></p>
   </section>
 
+  <section aria-labelledby="ba-h">
+    <h2 id="ba-h">PPT 한 장이 이렇게 바뀝니다</h2>
+    <div class="ba">
+      <figure>
+        <div class="pair">
+          <div><small>원래 PPT</small><img src="img/sci-before.png" width="1280" height="720" loading="lazy" alt="실습 PPT: 잉크 입자 그림 세 장(처음, 1분 뒤, 5분 뒤)"></div>
+          <span class="to" aria-hidden="true">→</span>
+          <div><small>수업 HTML</small><img src="img/sci-after.png" width="1280" height="720" loading="lazy" alt="수업 HTML: 시간 막대를 2분에 두자 잉크 입자가 9칸 중 6칸으로 퍼진 입자 상자"></div>
+        </div>
+        <figcaption><b>과학 · 확산</b> — 정지 그림 세 장이 시간 막대가 됩니다. 막대를 밀면 입자가 움직이고, 잉크가 있는 칸 수가 함께 바뀝니다.</figcaption>
+      </figure>
+      <figure>
+        <div class="pair">
+          <div><small>원래 PPT</small><img src="img/soc-before.png" width="1280" height="720" loading="lazy" alt="실습 PPT: 수요 곡선과 공급 곡선, 균형점 E"></div>
+          <span class="to" aria-hidden="true">→</span>
+          <div><small>수업 HTML</small><img src="img/soc-after.png" width="1280" height="720" loading="lazy" alt="수업 HTML: 가격을 3,500원에 두자 초과 공급 200인분과 가격 하락 화살표가 나타난 그래프"></div>
+        </div>
+        <figcaption><b>사회 · 수요와 공급</b> — 가격 막대를 3,500원에 두면 초과 공급이 보이고, 「시장에 맡기기」를 누르면 가격이 균형으로 내려갑니다.</figcaption>
+      </figure>
+    </div>
+    <p class="note">원래 PPT는 연수용으로 직접 만든 실습 PPT입니다. 두 수업은 아래 예시 수업에서 직접 만져 볼 수 있습니다.</p>
+  </section>
+
   <section aria-labelledby="lessons-h">
     <h2 id="lessons-h">예시 수업 (선생님 화면)</h2>
     <ul class="lessons">
@@ -71,6 +110,21 @@
       <li><a href="lessons/eth-dohae.html"><small>윤리</small><b>윤리 만지는 도해</b><span>이성과 정서의 저울, 조상 마을 시뮬레이터 등 활동 다섯</span></a></li>
     </ul>
     <p class="note">수업을 연 뒤 도구 막대의 「실시간」을 누르면 코드와 QR이 나옵니다.</p>
+  </section>
+
+  <section aria-labelledby="how-h">
+    <h2 id="how-h">선생님: 내 PPT로 만들기</h2>
+    <ol class="how">
+      <li><b>AI에게 PPT와 한 줄을 줍니다</b><p>ChatGPT·Gemini·Claude 어느 것이든 됩니다. 수업 PPT를 올리고 아래 글을 붙여 넣으세요.</p>
+        <code id="prompt">https://github.com/N-lifescience/class-html 지침대로 이 PPT를 수업 HTML로 바꿔줘</code>
+        <button type="button" class="copy" data-copy="prompt">글 복사</button>
+        <p style="margin-top:8px">주소를 못 읽는 AI라면 <a href="https://raw.githubusercontent.com/N-lifescience/class-html/main/guide/class-html-guide.md">합본 지침 파일</a>을 받아 PPT와 함께 올립니다.</p></li>
+      <li><b>AI의 질문에 답합니다</b><p>교과·차시, 학생이 헷갈리는 지점, 꼭 만지게 하고 싶은 장면을 묻습니다. 설계표를 보여 주면 확인합니다.</p></li>
+      <li><b>받은 파일을 열어 수업합니다</b><p>더블클릭해 크롬에서 엽니다. 툴바에서 펜을 고른 채로 ◀ ▶로 넘기고, 단추와 슬라이더도 그대로 누릅니다. 판서는 장마다, 반마다 남습니다.</p></li>
+      <li><b>고칠 곳은 바로 고칩니다</b><p>툴바 「편집」에서 글·상자·그림을 골라 고치고 「HTML 저장」으로 받습니다. AI에게 다시 부탁하지 않아도 됩니다.</p></li>
+      <li><b>학생과 함께 만지려면 「실시간」</b><p>툴바 「실시간」을 누르면 코드와 QR이 나옵니다. 학생은 이 사이트에 코드를 넣고, 선생님은 「학생 보기」로 학생 값이 모이는 막대를 봅니다.</p></li>
+    </ol>
+    <p class="note">교과서·출판사 그림이 들어간 수업 파일은 수업용으로만 쓰고 인터넷에 올리지 마세요.</p>
   </section>
 </main>
 
@@ -159,6 +213,14 @@
   const pre = (q.get('join') || '').replace(/\D/g, '');
   if (/^\d{6}$/.test(pre)) { input.value = pre; join(pre); }
 }());
+</script>
+<script>
+document.querySelectorAll('.copy').forEach((b) => b.addEventListener('click', async () => {
+  const text = document.getElementById(b.dataset.copy).textContent;
+  try { await navigator.clipboard.writeText(text); b.textContent = '복사했어요'; }
+  catch { b.textContent = '길게 눌러 복사해 주세요'; }
+  setTimeout(() => { b.textContent = '글 복사'; }, 2000);
+}));
 </script>
 </body>
 </html>

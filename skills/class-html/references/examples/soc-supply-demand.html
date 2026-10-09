@@ -62,6 +62,7 @@ section.slide.cover h1 { color: #fff; margin: 0; font-size: 76px; line-height: 1
 /* 도해 공통 */
 .dh { display: grid; gap: 30px; margin-top: 4px; }
 .dh-view { position: relative; }
+#td .dh > :first-child, #market .dh > :first-child { grid-column: 2; grid-row: 1; }   /* 손잡이는 오른쪽 */
 .dh-veil { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; text-align: center; border: 3px dashed #B8C4CE; border-radius: 18px; background: #EEF2F5; color: #5C6B78; font-size: 28px; font-weight: 600; line-height: 1.5; }
 .dh-veil[hidden] { display: none; }
 .dh-lab { margin: 0; font-size: 26px; font-weight: 700; color: var(--ink); }
@@ -82,7 +83,7 @@ section.slide button.dh-b:disabled { opacity: .45; cursor: default; }
 .c-dem { color: var(--dem); } .c-sup { color: var(--sup); }
 
 /* 도해 ① 표 → 그래프 */
-#td .dh { grid-template-columns: 430px 1fr; }
+#td .dh { grid-template-columns: 1fr 430px; }
 .tg { border-collapse: collapse; width: 100%; margin: 8px 0 8px; font-size: 24px; text-align: center; }
 .tg th, .tg td { text-align: center; height: 41px; padding: 0 6px; border-bottom: 2px solid #fff; }
 .tg thead th { background: var(--pale); font-weight: 800; color: var(--ink); line-height: 1.2; }
@@ -91,7 +92,7 @@ section.slide button.dh-b:disabled { opacity: .45; cursor: default; }
 .tg tr.now th, .tg tr.now td { background: #FFE8A8; font-weight: 800; }
 
 /* 도해 ② 시장 가격 */
-#market .dh { grid-template-columns: 430px 1fr; }
+#market .dh { grid-template-columns: 1fr 430px; }
 .mk-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .mk-bar p { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
 .mk-bar div { position: relative; height: 26px; border-radius: 8px; background: #E6EBF0; overflow: hidden; }

@@ -80,7 +80,7 @@ body[data-theme="ppt"] section.slide.cover::after { color: var(--tab-ink); }
 - 엔진이 쓰는 이름은 수업 CSS에서 쓰지 않는다. 엔진은 어절마다 `<ch-w class="w">`로 감싸므로 `.w` 규칙은 모든 낱말에 걸린다. `.band`는 표지 띠, `ch-`로 시작하는 이름은 엔진 부품이다. `data-eid`는 편집 모드가 요소마다 붙이는 번호다.
 - 동그라미 숫자(①②)는 Windows에서 22px 안팎일 때 ⊙처럼 깨질 수 있다. 직접 만든 단추와 눈금 이름에는 '1.'을 쓴다. 엔진 부품(퀴즈 보기 번호, `ol.circled`)의 번호는 엔진이 맡는다.
 
-- 두 칸 배치는 `display: grid; grid-template-columns: 420px 1fr; gap: 28px;`처럼 이 수업 CSS에 쓴다. 도해는 대개 왼쪽에 손잡이, 오른쪽에 그림·그래프를 둔다.
+- 두 칸 배치는 `display: grid; grid-template-columns: 420px 1fr; gap: 28px;`처럼 이 수업 CSS에 쓴다. 도해는 왼쪽에 그림·그래프, 오른쪽에 손잡이를 둔다(`1fr 420px`). 오른손잡이 교사가 판 앞에서 조작해도 몸이 그림을 가리지 않는다.
 - 그림 폭을 정하면 높이가 따라 커진다. 그림과 막대(약 110px)가 제목 아래 약 470px 안에 들어가게 폭을 고른다.
 
 ## 인쇄

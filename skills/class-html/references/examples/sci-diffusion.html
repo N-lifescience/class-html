@@ -82,7 +82,8 @@ body[data-theme="ppt"] section.slide#cover::before { display: none; }
 .res .concl { margin: 34px 0 6px; font-size: 34px; font-weight: 800; line-height: 1.4; }
 
 /* ── 도해 공통 ── */
-.dx { display: grid; grid-template-columns: 350px 1fr; gap: 30px; margin-top: 0; }
+.dx { display: grid; grid-template-columns: 1fr 350px; gap: 30px; margin-top: 0; }
+.dx > .dx-ctrl { grid-column: 2; grid-row: 1; }   /* 손잡이는 오른쪽 */
 .dx-view > svg { display: block; }
 .dx-ctrl { display: flex; flex-direction: column; gap: 8px; }
 .dx-view { position: relative; }
@@ -317,7 +318,7 @@ section.slide button.md-b[aria-pressed="true"] { background: var(--teal); border
       <svg id="md-svg" width="700" height="348" viewBox="0 0 700 348" aria-label="냄새 입자 하나가 다른 입자와 부딪히며 지나간 길"></svg>
       <p class="dx-box" id="md-calc" style="margin:2px 0 0;padding:6px 16px">부딪힌 횟수 <b>?</b> · 처음 자리에서 멀어진 거리 <b>?</b> <span class="dx-model">(모형)</span></p>
       <p class="dx-out" id="md-out"></p>
-      <div class="dx-veil" id="md-veil"><span>왼쪽에서 진공 · 기체 · 액체 가운데<br>하나를 고르면 냄새 입자가 출발한다</span></div>
+      <div class="dx-veil" id="md-veil"><span>오른쪽에서 진공 · 기체 · 액체 가운데<br>하나를 고르면 냄새 입자가 출발한다</span></div>
     </div>
   </div>
   <div class="dx-take step" style="margin-top:4px">확산은 액체보다 기체에서 더 빠르게 일어난다.<br>진공에서는 방해하는 다른 입자가 없어 가장 빠르다.</div>

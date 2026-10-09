@@ -22,7 +22,8 @@ body[data-theme="ppt"] {
 .ms-coverbox .ms-sub { font-size: 40px; font-weight: 600; margin: 18px 0 0; }
 
 /* 활동 공통 */
-.ms-act { display: grid; grid-template-columns: 420px 1fr; gap: 28px; margin-top: 18px; }
+.ms-act { display: grid; grid-template-columns: 1fr 420px; gap: 28px; margin-top: 18px; }
+.ms-act > .ms-ctrl { grid-column: 2; grid-row: 1; }   /* 손잡이는 오른쪽: 오른손잡이 교사가 조작해도 그림을 가리지 않는다 */
 .ms-ctrl { display: flex; flex-direction: column; gap: 10px; }
 .ms-view { position: relative; }
 .ms-lab { font-size: 24px; font-weight: 600; margin: 4px 0 0; }
@@ -126,7 +127,7 @@ section.slide input.ms-range::-moz-range-thumb { width: 28px; height: 28px; bord
           </g>
         </svg>
         <p class="ms-verdict" id="ds-verdict"></p>
-        <div class="ms-veil" id="ds-veil"><span>왼쪽에서 상황을 고르면<br>저울이 움직인다</span></div>
+        <div class="ms-veil" id="ds-veil"><span>오른쪽에서 상황을 고르면<br>저울이 움직인다</span></div>
       </div>
     </div>
   </div>
@@ -183,7 +184,7 @@ section.slide input.ms-range::-moz-range-thumb { width: 28px; height: 28px; bord
         </div>
         <div class="ms-gauge"><i id="dr-bar" style="width:0"></i><em>공감 반응선 50</em></div>
         <p class="ms-verdict" id="dr-out"></p>
-        <div class="ms-veil" id="dr-veil"><span>왼쪽에서 뇌를 고르면<br>공감 영역이 켜진다</span></div>
+        <div class="ms-veil" id="dr-veil"><span>오른쪽에서 뇌를 고르면<br>공감 영역이 켜진다</span></div>
       </div>
     </div>
   </div>
@@ -193,7 +194,7 @@ section.slide input.ms-range::-moz-range-thumb { width: 28px; height: 28px; bord
 <section class="slide" id="village" data-title="활동 ④ 조상 마을 시뮬레이터">
   <h2>조상 마을: 어떤 성향이 살아남을까</h2>
   <div class="ms-wrap" data-ai="양보·나섬 성향의 세대별 비율을 계산하는 진화 모형">
-    <div class="ms-act" style="grid-template-columns:400px 1fr">
+    <div class="ms-act" style="grid-template-columns:1fr 400px">
       <div class="ms-ctrl">
         <p class="ms-note" style="font-size:22px"><span class="ms-dot" style="background:var(--ms-yield)"></span>양보하는 성향 <b>10명</b><br><span class="ms-dot" style="background:var(--ms-bold)"></span>나서는 성향 <b>90명</b>으로 시작</p>
         <p class="ms-lab">나섰다가 해코지당할 확률 <b id="vg-p-out">0%</b></p>

@@ -39,6 +39,8 @@
 
 ## 엔진에 붙이는 뼈대
 
+그림·그래프는 왼쪽, 손잡이(슬라이더·단추)와 수치는 오른쪽 칸에 둔다. 교사 대부분이 오른손잡이라 판 앞에서 오른쪽 손잡이를 밀어도 몸이 그림을 가리지 않고, 학생은 왼쪽에서 오른쪽으로 읽으며 그림을 먼저 본다.
+
 아래 뼈대는 상대 부피 0.85~1.30을 다루는 모형이다. 슬라이더는 '시작'(가림)에서 시작하고, 첫 조작에서 도해가 열린다. 코드는 세 곳으로 나눠 넣는다. CSS는 `<head>`의 `<style>`에, 장은 본문에, 스크립트는 `</body>` 바로 앞에 둔다. 도해가 쓸 수 있는 높이는 제목 아래 약 470px(ppt 테마, `data-sec`이 있는 장)이다.
 
 ```html
@@ -46,11 +48,6 @@
 <section class="slide" id="absorb" data-sec="2. 삼투" data-title="흡수력 도해">
   <h2>세포가 부풀면 물을 더 빨아들일까?</h2>
   <div class="dh" data-ai="흡수력 도해" data-activity>
-    <div>
-      <p class="dh-lab">세포 부피 <b id="ab-v-out">시작</b></p>
-      <input type="range" id="ab-v" min="0" max="10" value="0" autocomplete="off" aria-label="세포 부피">
-      <p class="dh-calc" id="ab-eq" data-ai="모형 수치">흡수력 = 삼투압 − 팽압 (모형)</p>
-    </div>
     <div class="dh-view">
       <svg viewBox="0 0 600 320" aria-label="세포 그림과 흡수력 막대">
         <ellipse id="ab-cell" cx="200" cy="160" rx="120" ry="90" fill="#DFF0ED" stroke="#0F766E" stroke-width="6"/>
@@ -60,12 +57,17 @@
       <div class="dh-veil" id="ab-veil"><span>막대를 밀어 보자</span></div>
       <p class="dh-out" id="ab-out"></p>
     </div>
+    <div>
+      <p class="dh-lab">세포 부피 <b id="ab-v-out">시작</b></p>
+      <input type="range" id="ab-v" min="0" max="10" value="0" autocomplete="off" aria-label="세포 부피">
+      <p class="dh-calc" id="ab-eq" data-ai="모형 수치">흡수력 = 삼투압 − 팽압 (모형)</p>
+    </div>
   </div>
 </section>
 ```
 
 ```css
-.dh { display: grid; grid-template-columns: 400px 1fr; gap: 28px; margin-top: 16px; }
+.dh { display: grid; grid-template-columns: 1fr 400px; gap: 28px; margin-top: 16px; }
 .dh-view { position: relative; }
 .dh-view svg { display: block; width: 100%; max-height: 340px; }
 .dh-veil { position: absolute; inset: 0; display: grid; place-items: center; border: 3px dashed #B8C4CE; border-radius: 18px; background: #EEF2F5; color: #5C6B78; font-size: 28px; }
@@ -123,16 +125,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ```html
 <div class="calc" data-ai="모형 수치" data-let="v = 0.80 + k * 0.05; t = v <= 1 ? 0 : 6.4 * ((v - 1) / 0.35) ^ 1.6; s = 8.7 / v - t">
-  <div class="reveal" data-name="k" data-stops="시작|0.85|0.90|0.95|1.00|1.05|1.10|1.15|1.20|1.25|1.30" style="display: grid; grid-template-columns: 400px 1fr; gap: 28px">
+  <div class="reveal" data-name="k" data-stops="시작|0.85|0.90|0.95|1.00|1.05|1.10|1.15|1.20|1.25|1.30" style="display: grid; grid-template-columns: 1fr 400px; gap: 28px">
+    <div class="veil">
+      <svg viewBox="0 0 400 300" width="400"><ellipse class="cell" cx="200" cy="150" rx="120" ry="90" data-style="--s: v"/></svg>
+    </div>
     <div data-at="1">
       <p>세포 부피 <output data-expr="v" data-digits="2"></output>배</p>
       <p>흡수력 <output data-expr="s" data-digits="1"></output> (모형)</p>
       <div class="bar" data-value="s" data-max="10.5"></div>
       <p data-show="t == 0">팽압이 0이다. 흡수력이 가장 크다.</p>
       <p data-show="t > 0">부풀수록 팽압이 커져 흡수력이 준다.</p>
-    </div>
-    <div class="veil">
-      <svg viewBox="0 0 400 300" width="400"><ellipse class="cell" cx="200" cy="150" rx="120" ry="90" data-style="--s: v"/></svg>
     </div>
   </div>
 </div>

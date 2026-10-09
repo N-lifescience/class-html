@@ -73,15 +73,19 @@
   addEventListener('resize', fit);
   fit();
 
+  let run = 0;   // 다시 시작하면 앞의 기다림은 그만둔다
   function start(local) {
+    const id = ++run;
     status.textContent = '선생님 화면에서 실시간을 켜는 중…';
     phone.hidden = true;
     student.removeAttribute('src');
     teacher.src = `${LESSON}${local ? '?live=local' : ''}`;
     teacher.onload = () => {
+      teacher.onload = null;   // 선생님 칸 안에서 다른 쪽으로 옮겨도 실시간을 다시 켜지 않는다
       const doc = teacher.contentDocument;
       const t0 = Date.now();
       const tick = () => {
+        if (id !== run) return;
         const btn = doc.querySelector('button[data-name="live"]');
         const codeEl = doc.querySelector('.ch-live-code');
         const code = codeEl ? codeEl.textContent.replace(/\D/g, '') : '';

@@ -164,7 +164,7 @@
   ];
 
   // ---------- 화면 상태 ----------
-  const S = { i: 0, v: 0.15, mode: 'still', gsap: null, tl: null, idle: 0, raf: 0, visible: true, user: false, intro: false };
+  const S = { i: 0, v: 0.15, mode: 'still', gsap: null, tl: null, amb: [], idle: 0, raf: 0, visible: true, user: false, intro: false, switching: false };
   let cur = SUBJECTS[0];
   let layer = null;
 
@@ -200,6 +200,7 @@
   function takeOver() {
     S.user = true;
     out.setAttribute('aria-live', 'polite');
+    if (S.intro && S.tl) S.tl.progress(1);   // 글자·단추·그림이 반쯤 숨은 채로 남지 않게 끝 장면으로 넘긴다
     if (S.tl) { S.tl.kill(); S.tl = null; }
     hand.style.opacity = '0';
     clearTimeout(S.idle);
@@ -212,7 +213,7 @@
   // ---------- 보통(GSAP) ----------
   function demo() {
     const g = S.gsap;
-    if (!g || S.user || !S.visible) return;
+    if (!g || S.user || !S.visible || S.tl || S.switching) return;
     const p = { v: S.v };
     const tl = g.timeline({ onComplete: () => { S.tl = null; next(); } });
     S.tl = tl;
@@ -230,12 +231,14 @@
   function next() {
     const g = S.gsap;
     if (S.user) return;
+    S.switching = true;
     g.to(svg, {
       opacity: 0, scale: 0.94, duration: 0.35, ease: 'power2.in', transformOrigin: '50% 50%',
       onComplete: () => {
+        if (S.user) { S.switching = false; g.set(svg, { opacity: 1, scale: 1 }); return; }
         S.v = 0.12;
         mount((S.i + 1) % SUBJECTS.length);
-        g.fromTo(svg, { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out', onComplete: demo });
+        g.fromTo(svg, { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out', onComplete: () => { S.switching = false; demo(); } });
       },
     });
   }
@@ -250,7 +253,7 @@
     S.intro = true;
     const letters = $$('.hero h1 .ch');
     const frames = $$('.xg-frame', ppt);
-    const tl = g.timeline({ onComplete: () => { S.intro = false; ppt.hidden = true; demo(); } });
+    const tl = g.timeline({ onComplete: () => { S.tl = null; S.intro = false; ppt.hidden = true; demo(); } });
     S.tl = tl;
     tl.from(letters, { yPercent: 110, rotate: 8, opacity: 0, duration: 0.8, ease: 'power4.out', stagger: 0.045 })
       .from('.hero .def, .hero .origin, .hero .cta > *', { y: 16, opacity: 0, duration: 0.6, ease: 'power3.out', stagger: 0.07 }, '-=0.4')
@@ -275,7 +278,7 @@
   function ambient() {
     const g = S.gsap;
     $$('.hero .amb > *').forEach((n, k) => {
-      g.to(n, { x: `random(-40, 40)`, y: `random(-30, 30)`, rotate: `random(-90, 90)`, duration: `random(6, 11)`, ease: 'sine.inOut', repeat: -1, yoyo: true, delay: k * 0.2 });
+      S.amb.push(g.to(n, { x: `random(-40, 40)`, y: `random(-30, 30)`, rotate: `random(-90, 90)`, duration: `random(6, 11)`, ease: 'sine.inOut', repeat: -1, yoyo: true, delay: k * 0.2 }));
     });
   }
 
@@ -291,13 +294,16 @@
   // 처음 2초의 평균 프레임을 재서 느리면 가볍게로 바꾼다(사용자가 고른 적이 없을 때만)
   function watchFps() {
     if (store.get() != null || document.hidden) return;
-    let n = 0;
+    let n = 0, hid = false;
     const t0 = performance.now();
+    const onHide = () => { hid = true; };
+    document.addEventListener('visibilitychange', onHide, { once: true });
     const count = () => {
       n++;
       const dt = performance.now() - t0;
       if (dt < 2000) { requestAnimationFrame(count); return; }
-      if (S.mode === 'full' && S.visible && !document.hidden && (n * 1000) / dt < FPS_MIN) setMode('lite', '화면이 느려 가볍게 보여 줘요');
+      document.removeEventListener('visibilitychange', onHide);
+      if (!hid && store.get() == null && S.mode === 'full' && S.visible && (n * 1000) / dt < FPS_MIN) setMode('lite', '화면이 느려 가볍게 보여 줘요');
     };
     requestAnimationFrame(count);
   }
@@ -308,6 +314,7 @@
     const step = (now) => {
       if (S.mode !== 'lite') return;
       S.raf = requestAnimationFrame(step);
+      if (S.user) since = now;   // 손을 뗀 뒤 다시 시작할 때 고른 과목을 바로 넘기지 않는다
       if (!S.visible || S.user || now - last < 66) return;   // 초당 15번이면 충분하다
       last = now;
       const t = (now - since) / 1000;
@@ -323,6 +330,8 @@
     cancelAnimationFrame(S.raf);
     if (S.gsap) {
       S.gsap.killTweensOf([svg, hand, handIn, ppt, '.xg-frame', '.xg-ctrl', '.hero .amb > *']);
+      S.amb = [];
+      S.switching = false;
       S.gsap.set([svg, ppt, '.xg-frame', '.xg-ctrl'], { clearProps: 'opacity,transform' });
       S.gsap.ticker.remove(jitter);
       // 소개 연출이 중간에 끊겨도 글자와 단추가 숨은 채로 남지 않게 한다
@@ -368,6 +377,7 @@
       setMode('lite', 'GSAP를 받지 못해 가볍게 보여 줘요');
       return false;
     }
+    if (S.mode !== 'loading') return false;   // 받는 사이에 가볍게로 바꿨다
     S.mode = 'full';
     hero.dataset.mode = 'full';
     liteBtn.setAttribute('aria-pressed', 'false');
@@ -383,16 +393,17 @@
   }
 
   liteBtn.addEventListener('click', () => {
-    if (S.mode === 'full') { store.set('1'); setMode('lite'); }
-    else if (!reduce) { store.set('0'); stopAll(); full(false); }
+    if (S.mode === 'full' || S.mode === 'loading') { store.set('1'); setMode('lite'); }
+    else if (!reduce) { store.set('0'); stopAll(); S.mode = 'loading'; full(false); }
   });
 
   // 화면 밖이면 멈춘다
   new IntersectionObserver(([e]) => {
     S.visible = e.isIntersecting;
     if (!S.gsap) return;
-    if (S.visible) { S.gsap.globalTimeline.resume(); if (S.mode === 'full' && !S.tl && !S.user && !S.intro) demo(); }
-    else S.gsap.globalTimeline.pause();
+    const own = S.amb.concat(S.tl ? [S.tl] : []);
+    if (S.visible) { own.forEach((t) => t.resume()); if (S.mode === 'full' && !S.user && !S.intro) demo(); }
+    else own.forEach((t) => t.pause());
   }).observe(hero);
 
   // 보드를 누르면(막대 말고) 그 수업을 연다
@@ -409,5 +420,5 @@
   const pref = store.get();
   if (reduce) setMode('still');
   else if (pref === '1') setMode('lite');
-  else full(true);
+  else { S.mode = 'loading'; hero.dataset.mode = 'loading'; full(true); }
 }());

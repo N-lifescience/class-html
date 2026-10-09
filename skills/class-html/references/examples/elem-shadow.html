@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ko" data-deck="elem-sci-light-shadow">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>그림자는 어떻게 생길까? 빛과 그림자</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<style>
+body[data-theme="ppt"] { --accent: #2F6DB5; --tab: #2F6DB5; --tab-ink: #FFFFFF; --flag: #D9480F; }
+body[data-theme="ppt"] {
+  --blue: #2F6DB5; --blue-soft: #DCE8F6; --sun: #F5B83D; --sun-soft: #FFF3D6; --orange: #D9480F; --gray: #66707A; --ink: #23272B;
+  --shadow: #39404A;
+}
+
+/* ── 원본 얼굴: 위쪽 파란 띠 + 둥근 노란 배지 ── */
+body[data-theme="ppt"] section.slide {
+  background: linear-gradient(var(--blue), var(--blue)) 0 0 / 100% 96px no-repeat, linear-gradient(var(--sun), var(--sun)) 0 96px / 100% 8px no-repeat, #FFFFFF;
+  color: var(--ink);
+}
+body[data-theme="ppt"] section.slide[data-sec]::before {
+  left: auto; right: 40px; top: 22px; height: 52px; line-height: 52px; min-width: 170px; padding: 0 26px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; border-radius: 26px; background: var(--sun); color: var(--ink); font-size: 26px;
+}
+body[data-theme="ppt"] section.slide > h2:first-child {
+  position: absolute; top: 0; left: 60px; right: 250px; height: 96px; margin: 0; padding: 0;
+  display: flex; align-items: center; color: #FFFFFF; font-size: 42px; border: 0; background: none; width: auto;
+}
+.key { color: var(--blue); font-weight: 800; }
+
+/* 표지 */
+body[data-theme="ppt"] section.slide#cover { background: var(--blue); }
+body[data-theme="ppt"] section.slide#cover::before { display: none; }
+.cv { display: grid; grid-template-columns: 1fr 420px; gap: 30px; align-items: center; height: 100%; color: #fff; }
+.cv p, .cv h1 { color: #fff; margin: 0; }
+.cv .cv-k { font-size: 30px; }
+.cv h1 { margin: 22px 0 24px; font-size: 70px; line-height: 1.2; }
+.cv .cv-s { display: inline-block; padding: 6px 22px; border-radius: 30px; background: var(--sun); color: var(--ink); font-size: 34px; font-weight: 700; }
+
+/* 학습 목표 */
+.goals { margin: 40px 0 0; padding: 0; list-style: none; counter-reset: g; }
+.goals li { counter-increment: g; position: relative; padding: 0 0 0 62px; margin: 0 0 30px; font-size: 34px; line-height: 1.45; }
+.goals li::before { content: counter(g); position: absolute; left: 0; top: 2px; width: 46px; height: 46px; border-radius: 50%; background: var(--sun); color: var(--ink); font-weight: 800; font-size: 28px; text-align: center; line-height: 46px; }
+
+/* 생각 열기 */
+.two { display: grid; grid-template-columns: 1fr 520px; gap: 40px; align-items: center; margin-top: 10px; }
+.two p { font-size: 32px; line-height: 1.5; margin: 0 0 22px; }
+.two .ask { color: var(--blue); font-weight: 800; }
+
+/* 세 가지 조건 */
+.need { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 18px; }
+.need div { border: 4px solid var(--blue-soft); border-radius: 22px; padding: 14px 18px 18px; text-align: center; }
+.need svg { display: block; margin: 0 auto 6px; }
+.need b { display: block; font-size: 32px; color: var(--blue); }
+.need span { font-size: 26px; line-height: 1.4; }
+.straight { margin-top: 26px; padding: 16px 26px; border-radius: 16px; background: var(--sun-soft); font-size: 30px; line-height: 1.45; font-weight: 700; }
+
+/* ── 도해 공통: 그림은 왼쪽, 손잡이는 오른쪽 ── */
+.dx { display: grid; grid-template-columns: auto 340px; justify-content: center; gap: 24px 44px; }
+.dx > .dx-ctrl { grid-column: 2; grid-row: 1; }
+.dx-view { position: relative; }
+.dx-view > svg { display: block; }
+.dx-ctrl { display: flex; flex-direction: column; gap: 8px; }
+.dx-lab { margin: 0; font-size: 26px; font-weight: 700; }
+.dx-lab b { color: var(--blue); }
+section.slide input.dx-range { -webkit-appearance: none; appearance: none; width: 100%; height: 56px; margin: 0; background: transparent; cursor: pointer; }
+section.slide input.dx-range::-webkit-slider-runnable-track { height: 12px; border-radius: 6px; background: #D7DEE6; }
+section.slide input.dx-range::-webkit-slider-thumb { -webkit-appearance: none; width: 44px; height: 44px; margin-top: -16px; border-radius: 50%; background: var(--blue); border: 5px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,.45); }
+section.slide input.dx-range::-moz-range-track { height: 12px; border-radius: 6px; background: #D7DEE6; }
+section.slide input.dx-range::-moz-range-thumb { width: 34px; height: 34px; border-radius: 50%; background: var(--blue); border: 5px solid #fff; }
+.dx-ticks { position: relative; height: 28px; margin-top: -6px; font-size: 20px; color: var(--gray); }
+.dx-ticks span { position: absolute; top: 0; left: calc(22px + (100% - 44px) * var(--f)); transform: translateX(-50%); white-space: nowrap; }
+.dx-ticks span:first-child { transform: none; left: 0; }
+.dx-ticks span:last-child { transform: none; left: auto; right: 0; }
+.dx-veil { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px;
+  background: #EEF2F6; border: 3px dashed #B6C3D0; border-radius: 18px; color: #56606B; font-size: 28px; font-weight: 600; line-height: 1.5; }
+.dx-veil[hidden] { display: none; }
+.dx-box { padding: 12px 16px; border-radius: 14px; background: #F1F5FA; font-size: 23px; line-height: 1.5; }
+.dx-box b { font-size: 27px; color: var(--ink); }
+.dx-model { font-size: 20px; color: var(--gray); font-weight: 500; }
+.dx-out { margin: 8px 0 0; min-height: 40px; font-size: 27px; font-weight: 700; line-height: 1.4; }
+.sz-bar { position: relative; height: 26px; border-radius: 8px; background: #E5EAF0; overflow: hidden; margin-top: 6px; }
+.sz-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--shadow); transition: width .2s; }
+section.slide button.mt-b { width: 100%; margin: 0; min-height: 60px; padding: 6px 16px; font: inherit; font-size: 26px; font-weight: 700; text-align: left;
+  border: 3px solid #D3DCE6; border-radius: 16px; background: #fff; color: var(--ink); cursor: pointer; }
+section.slide button.mt-b small { font-size: 21px; font-weight: 500; color: var(--gray); }
+section.slide button.mt-b[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+section.slide button.mt-b[aria-pressed="true"] small { color: #fff; }
+
+/* 정리 */
+.sum { margin: 30px 0 0; padding: 0; list-style: none; }
+.sum li { position: relative; padding-left: 40px; margin: 0 0 28px; font-size: 33px; line-height: 1.45; }
+.sum li::before { content: ""; position: absolute; left: 6px; top: 16px; width: 16px; height: 16px; border-radius: 50%; background: var(--sun); }
+.sort .bin { min-height: 110px; }
+</style>
+</head>
+<body data-theme="ppt">
+
+<!-- 1 표지 -->
+<section class="slide" id="cover" data-title="표지">
+  <div class="cv">
+    <div>
+      <p class="cv-k">초등학교 과학 · 빛과 그림자</p>
+      <h1>그림자는<br>어떻게 생길까?</h1>
+      <p class="cv-s">빛과 그림자</p>
+    </div>
+    <svg width="420" height="360" viewBox="0 0 420 360" aria-label="손전등 빛이 인형을 비추어 벽에 그림자가 생긴 그림">
+      <rect x="340" y="20" width="60" height="320" rx="8" fill="#FFFFFF" opacity=".95"/>
+      <polygon points="70,190 340,40 340,330" fill="#FFF3D6" opacity=".9"/>
+      <rect x="18" y="168" width="60" height="44" rx="10" fill="#F5B83D"/>
+      <rect x="70" y="174" width="18" height="32" rx="4" fill="#FFE29A"/>
+      <g fill="#F5B83D"><circle cx="190" cy="160" r="15"/><path d="M174 178 h32 l10 60 h-52 z"/></g>
+      <g fill="#39404A"><circle cx="370" cy="118" r="30"/><path d="M342 152 h56 v116 h-56 z"/></g>
+    </svg>
+  </div>
+</section>
+
+<!-- 2 학습 목표 -->
+<section class="slide" id="goal" data-sec="학습 목표" data-title="학습 목표">
+  <h2>학습 목표</h2>
+  <ol class="goals">
+    <li>그림자가 생기려면 무엇이 있어야 하는지 말할 수 있다.</li>
+    <li>손전등과 물체 사이의 거리에 따라<br>그림자 크기가 어떻게 달라지는지 설명할 수 있다.</li>
+    <li>물체에 따라 그림자의 진하기가 다른 까닭을 말할 수 있다.</li>
+  </ol>
+</section>
+
+<!-- 3 생각 열기 -->
+<section class="slide" id="think" data-sec="생각 열기" data-title="손 그림자 놀이">
+  <h2>손 그림자를 크게 만들려면?</h2>
+  <div class="two">
+    <div>
+      <p>캄캄한 교실 벽에 손전등을 비추고<br>손으로 강아지 그림자를 만들었다.</p>
+      <p class="ask">강아지 그림자를 더 크게 만들려면<br>손을 어디로 옮겨야 할까?</p>
+    </div>
+    <svg width="520" height="380" viewBox="0 0 520 380" aria-label="손전등 빛 앞에 손을 대어 벽에 강아지 모양 그림자를 만드는 모습">
+      <rect x="440" y="20" width="60" height="340" rx="8" fill="#F1F5FA" stroke="#B6C3D0" stroke-width="3"/>
+      <polygon points="80,200 440,40 440,350" fill="#FFF3D6"/>
+      <rect x="20" y="178" width="66" height="44" rx="10" fill="#F5B83D"/>
+      <rect x="80" y="184" width="16" height="32" rx="4" fill="#FFE29A"/>
+      <path d="M230 190 q10 -40 40 -36 q16 2 20 18 l20 -6 q8 22 -14 30 l-4 26 h-50 z" fill="#E8B996" stroke="#B07A55" stroke-width="3"/>
+      <path d="M452 140 q20 -70 30 -60 q8 8 0 40 l10 -6 q8 40 -20 50 l-2 60 h-30 z" fill="#39404A"/>
+      <text x="470" y="372" font-size="20" text-anchor="middle" fill="#66707A">벽</text>
+    </svg>
+  </div>
+</section>
+
+<!-- 4 그림자가 생기는 조건 -->
+<section class="slide" id="need" data-sec="개념" data-title="그림자가 생기려면">
+  <h2>그림자가 생기려면 무엇이 필요할까?</h2>
+  <div class="need">
+    <div>
+      <svg width="120" height="100" viewBox="0 0 120 100" aria-hidden="true"><rect x="10" y="30" width="62" height="40" rx="10" fill="#F5B83D"/><rect x="66" y="36" width="16" height="28" rx="4" fill="#FFE29A"/><path d="M90 30 l22 -14 M92 50 h24 M90 70 l22 14" stroke="#F5B83D" stroke-width="6" stroke-linecap="round"/></svg>
+      <b>빛</b><span>손전등, 햇빛처럼<br>빛을 내는 것</span>
+    </div>
+    <div>
+      <svg width="120" height="100" viewBox="0 0 120 100" aria-hidden="true"><circle cx="60" cy="26" r="16" fill="#2F6DB5"/><path d="M40 46 h40 l10 50 h-60 z" fill="#2F6DB5"/></svg>
+      <b>물체</b><span>빛이 나아가는 길을<br>막는 것</span>
+    </div>
+    <div>
+      <svg width="120" height="100" viewBox="0 0 120 100" aria-hidden="true"><rect x="30" y="6" width="60" height="88" rx="6" fill="#F1F5FA" stroke="#B6C3D0" stroke-width="4"/><path d="M50 30 q10 -12 20 0 v44 h-20 z" fill="#39404A"/></svg>
+      <b>스크린</b><span>그림자가 비치는<br>벽이나 종이</span>
+    </div>
+  </div>
+  <p class="straight">빛은 곧게 나아간다.<br>물체가 빛을 막으면 그 뒤로 빛이 닿지 않아 그림자가 생긴다.</p>
+</section>
+
+<!-- 5 도해 A: 거리와 그림자 크기 -->
+<section class="slide" id="size" data-sec="개념" data-title="도해: 거리와 그림자 크기">
+  <h2>인형을 손전등에 가까이 하면?</h2>
+  <div class="dx" data-ai="손전등·인형·벽 거리와 그림자 크기 모형(빛이 곧게 나아가는 닮은 삼각형)">
+    <div class="dx-ctrl">
+      <p class="dx-lab">손전등과 인형 사이 <b id="sz-d-out">시작</b></p>
+      <input class="dx-range" type="range" autocomplete="off" id="sz-d" min="0" max="7" value="0" aria-label="손전등과 인형 사이 거리">
+      <div class="dx-ticks"><span>시작</span><span style="--f:0.5714">40 cm</span><span>70 cm</span></div>
+      <div class="dx-box">
+        손전등과 벽 사이는 늘 <b>80 cm</b><br>
+        인형 키 <b>6 cm</b><br>
+        그림자 키 <b id="sz-h">?</b><br>
+        그림자는 인형의 <b id="sz-r">?</b> <span class="dx-model">(모형)</span>
+        <div class="sz-bar"><i id="sz-bar"></i></div>
+      </div>
+    </div>
+    <div class="dx-view">
+      <svg id="sz-svg" width="740" height="340" viewBox="0 0 740 340" aria-label="옆에서 본 손전등, 인형, 벽과 벽에 비친 그림자">
+        <text x="230" y="24" font-size="22" font-weight="700" text-anchor="middle" fill="#66707A">옆에서 본 모습</text>
+        <text x="610" y="24" font-size="22" font-weight="700" text-anchor="middle" fill="#66707A">벽에 비친 그림자</text>
+        <polygon id="sz-cone" points="50,180 440,40 440,320" fill="#FFF3D6"/>
+        <polygon id="sz-dark" points="0,0" fill="#39404A" opacity=".18"/>
+        <line id="sz-ray1" stroke="#D9480F" stroke-width="3" stroke-dasharray="8 6"/>
+        <line id="sz-ray2" stroke="#D9480F" stroke-width="3" stroke-dasharray="8 6"/>
+        <line x1="440" y1="36" x2="440" y2="324" stroke="#8A96A3" stroke-width="8"/>
+        <line id="sz-on-wall" x1="440" x2="440" stroke="#39404A" stroke-width="12"/>
+        <rect x="6" y="160" width="44" height="40" rx="9" fill="#F5B83D"/>
+        <rect x="44" y="166" width="12" height="28" rx="3" fill="#FFE29A"/>
+        <g id="sz-doll" fill="#2F6DB5"><circle cx="0" cy="-10" r="5"/><path d="M-5 -5 h10 l3 20 h-16 z"/></g>
+        <rect x="490" y="36" width="240" height="288" rx="10" fill="#F1F5FA" stroke="#B6C3D0" stroke-width="3"/>
+        <g id="sz-shadow" fill="#39404A"><circle cx="0" cy="-10" r="5"/><path d="M-5 -5 h10 l3 20 h-16 z"/></g>
+      </svg>
+      <p class="dx-out" id="sz-out"></p>
+      <div class="dx-veil" id="sz-veil"><span>오른쪽 막대를 밀어<br>인형을 옮겨 보자</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 도해 B: 물체에 따라 달라지는 그림자 -->
+<section class="slide" id="dark" data-sec="개념" data-title="도해: 물체와 그림자 진하기">
+  <h2>어떤 물체의 그림자가 가장 진할까?</h2>
+  <div class="dx" data-ai="물체에 따라 빛이 지나가는 정도와 그림자 진하기 모형" data-activity>
+    <div class="dx-ctrl">
+      <p class="dx-lab">손전등 앞에 놓을 물체</p>
+      <button class="mt-b" type="button" data-v="glass" aria-pressed="false">유리판 <small>· 맑고 투명하다</small></button>
+      <button class="mt-b" type="button" data-v="paper" aria-pressed="false">기름종이 <small>· 뿌옇다</small></button>
+      <button class="mt-b" type="button" data-v="wood" aria-pressed="false">나무판 <small>· 속이 안 보인다</small></button>
+      <div class="dx-box">빛이 지나가는 정도 <b id="mt-p">?</b> <span class="dx-model">(모형)</span>
+        <div class="sz-bar"><i id="mt-bar" style="background:#F5B83D"></i></div>
+      </div>
+    </div>
+    <div class="dx-view">
+      <svg width="740" height="320" viewBox="0 0 740 320" aria-label="손전등 앞에 놓은 물체와 벽에 생긴 그림자의 진하기">
+        <polygon points="60,160 560,20 560,300" fill="#FFF3D6"/>
+        <polygon id="mt-behind" points="300,95 560,40 560,280 300,225" fill="#39404A" opacity="0"/>
+        <rect x="16" y="140" width="44" height="40" rx="9" fill="#F5B83D"/>
+        <rect x="54" y="146" width="12" height="28" rx="3" fill="#FFE29A"/>
+        <rect id="mt-plate" x="290" y="95" width="20" height="130" rx="4" fill="#CFE6F7" stroke="#7FA9CF" stroke-width="3"/>
+        <line x1="560" y1="16" x2="560" y2="304" stroke="#8A96A3" stroke-width="8"/>
+        <rect x="590" y="40" width="140" height="240" rx="10" fill="#FFF3D6" stroke="#B6C3D0" stroke-width="3"/>
+        <rect id="mt-shadow" x="620" y="100" width="80" height="120" rx="6" fill="#39404A" opacity="0"/>
+        <text x="660" y="306" font-size="20" text-anchor="middle" fill="#66707A">벽</text>
+      </svg>
+      <p class="dx-out" id="mt-out"></p>
+      <div class="dx-veil" id="mt-veil"><span>오른쪽에서 물체를 하나 골라<br>손전등 앞에 놓아 보자</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 확인 문제 -->
+<section class="slide" id="check-1" data-sec="확인 문제" data-title="확인 문제 1">
+  <h2>확인 문제 1</h2>
+  <p class="q" data-n="1">벽에 비친 인형 그림자를 더 크게 만드는 방법은?</p>
+  <div class="quiz">
+    <button class="opt" data-ok data-why="맞다. 인형이 손전등에 가까울수록 빛을 더 넓게 가려 그림자가 커진다.">인형을 손전등 쪽으로 옮긴다.</button>
+    <button class="opt" data-ai="풀이" data-why="인형을 벽 쪽으로 옮기면 그림자는 작아진다.">인형을 벽 쪽으로 옮긴다.</button>
+    <button class="opt" data-ai="풀이" data-why="빛의 색이 바뀌어도 그림자 크기는 그대로다.">손전등에 빨간 셀로판지를 씌운다.</button>
+    <button class="opt" data-ai="풀이" data-why="인형이 유리처럼 투명하면 빛이 지나가 그림자가 연해진다. 크기와는 상관없다.">인형을 투명한 것으로 바꾼다.</button>
+  </div>
+</section>
+
+<!-- 8 분류 카드 -->
+<section class="slide" id="check-2" data-sec="확인 문제" data-title="확인 문제 2">
+  <h2>확인 문제 2</h2>
+  <p class="q" data-n="2">손전등 앞에 놓았을 때 그림자가 어떻게 생길지 나누어 보자.</p>
+  <div class="sort">
+    <div class="bin" data-bin="d"><h3>진한 그림자</h3></div>
+    <div class="bin" data-bin="l"><h3>연한 그림자</h3></div>
+    <span data-bin="d" data-ai="풀이와 실마리" data-why="나무 블록은 빛이 지나가지 못한다." data-hint="나무 블록 뒤가 비쳐 보이는가?">나무 블록</span>
+    <span data-bin="l" data-ai="풀이와 실마리" data-why="유리컵은 빛이 대부분 지나간다." data-hint="유리컵 너머가 보이는가?">유리컵</span>
+    <span data-bin="d" data-ai="풀이와 실마리" data-why="책은 빛이 지나가지 못한다." data-hint="책을 눈에 대면 앞이 보이는가?">책</span>
+    <span data-bin="l" data-ai="풀이와 실마리" data-why="투명 비닐은 빛이 대부분 지나간다." data-hint="비닐 너머가 보이는가?">투명 비닐</span>
+    <span data-bin="d" data-ai="풀이와 실마리" data-why="도자기 컵은 빛이 지나가지 못한다." data-hint="도자기 컵 속이 밖에서 보이는가?">도자기 컵</span>
+    <span data-bin="l" data-ai="풀이와 실마리" data-why="기름종이는 빛이 조금 지나가 연한 그림자가 생긴다." data-hint="기름종이 너머가 흐릿하게라도 보이는가?">기름종이</span>
+  </div>
+  <p class="step" style="font-size:26px;margin-top:8px">빛이 잘 지나가는 물체일수록 그림자가 연하다.</p>
+</section>
+
+<!-- 9 정리 -->
+<section class="slide" id="summary" data-sec="정리" data-title="정리">
+  <h2>정리</h2>
+  <ul class="sum">
+    <li>그림자가 생기려면 <span class="blank">빛</span>, <span class="blank">물체</span>, <span class="blank">스크린</span>이 있어야 한다.</li>
+    <li>빛은 <span class="blank">곧게</span> 나아가므로, 빛을 막은 물체 뒤에 그림자가 생긴다.</li>
+    <li>물체가 손전등에 <span class="blank">가까울수록</span> 그림자가 커진다.</li>
+    <li>빛이 잘 지나가는 물체일수록 그림자가 <span class="blank">연하다</span>.</li>
+  </ul>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 슬라이더는 손을 떼면 초점을 풀어 → 키·리모컨이 다시 장을 넘기게 한다
+  document.querySelectorAll('section.slide input[type=range]').forEach((r) => r.addEventListener('change', () => r.blur()));
+  const $ = (s) => document.querySelector(s);
+  const fmt = (v) => (Math.round(v * 10) / 10).toString();
+
+  // ── 도해 A: 손전등(50,180)에서 벽(x=440)까지 80 cm = 390 px. 인형 키 6 cm ──
+  const LX = 50, LY = 180, WX = 440, PX = 390 / 80, DOLL = 6;
+  function drawSize() {
+    const k = +$('#sz-d').value;                      // 0 = 시작(가림)
+    $('#sz-veil').hidden = k > 0;
+    if (!k) { $('#sz-d-out').textContent = '시작'; $('#sz-h').textContent = '?'; $('#sz-r').textContent = '?'; $('#sz-bar').style.width = '0'; $('#sz-out').textContent = ''; return; }
+    const d = k * 10;                                 // 10~70 cm
+    const r = 80 / d;                                 // 닮음비: 벽까지 거리 ÷ 인형까지 거리
+    const h = DOLL * r;
+    const x = LX + d * PX, half = DOLL * PX / 2;      // 인형 위치와 반높이(px)
+    const top = LY - half * r, bot = LY + half * r;   // 벽 위 그림자 끝(px)
+    $('#sz-d-out').textContent = d + ' cm';
+    $('#sz-doll').setAttribute('transform', `translate(${x} ${LY}) scale(${(DOLL * PX) / 30})`);
+    for (const [id, y] of [['#sz-ray1', top], ['#sz-ray2', bot]]) { const l = $(id); l.setAttribute('x1', LX); l.setAttribute('y1', LY); l.setAttribute('x2', WX); l.setAttribute('y2', y); }
+    $('#sz-dark').setAttribute('points', `${x},${LY - half} ${WX},${top} ${WX},${bot} ${x},${LY + half}`);
+    $('#sz-on-wall').setAttribute('y1', top); $('#sz-on-wall').setAttribute('y2', bot);
+    $('#sz-shadow').setAttribute('transform', `translate(610 180) scale(${(DOLL * PX * r) / 30})`);
+    $('#sz-h').textContent = fmt(h) + ' cm';
+    $('#sz-r').textContent = fmt(r) + '배';
+    $('#sz-bar').style.width = Math.min(100, r / 8 * 100) + '%';
+    $('#sz-out').textContent = d <= 20 ? '손전등에 가까워 빛을 넓게 가린다. 그림자가 크다.'
+      : d >= 60 ? '벽에 가까워 그림자가 인형 크기에 가까워진다.' : '손전등에서 멀어질수록 그림자가 작아진다.';
+  }
+  $('#sz-d').addEventListener('input', drawSize);
+  drawSize();
+
+  // ── 도해 B: 물체마다 빛이 지나가는 정도(모형) ──
+  const MAT = {
+    glass: { p: 90, fill: '#CFE6F7', stroke: '#7FA9CF', say: '빛이 거의 다 지나간다. 그림자가 아주 연하다.' },
+    paper: { p: 45, fill: '#EDE6D2', stroke: '#B8A985', say: '빛이 조금 지나간다. 연한 그림자가 생긴다.' },
+    wood:  { p: 0,  fill: '#B07A55', stroke: '#7D5236', say: '빛이 지나가지 못한다. 진한 그림자가 생긴다.' },
+  };
+  const btns = document.querySelectorAll('#dark .mt-b');
+  function pick(v) {
+    btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+    $('#mt-veil').hidden = !!v;
+    if (!v) return;
+    const m = MAT[v], dark = (100 - m.p) / 100;
+    $('#mt-plate').setAttribute('fill', m.fill); $('#mt-plate').setAttribute('stroke', m.stroke);
+    $('#mt-shadow').setAttribute('opacity', 0.08 + dark * 0.86);
+    $('#mt-behind').setAttribute('opacity', dark * 0.16);
+    $('#mt-p').textContent = m.p + '%';
+    $('#mt-bar').style.width = m.p + '%';
+    $('#mt-out').textContent = m.say;
+  }
+  btns.forEach((b) => b.addEventListener('click', () => pick(b.dataset.v)));
+  pick(null);
+});
+</script>
+</body>
+</html>

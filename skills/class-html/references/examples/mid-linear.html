@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ko" data-deck="mid-math-linear-function">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>일차함수의 그래프 · 기울기와 y절편</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<style>
+body[data-theme="ppt"] { --accent: #4C3BA8; --tab: #4C3BA8; --tab-ink: #FFFFFF; --flag: #D9480F; }
+body[data-theme="ppt"] { --violet: #4C3BA8; --violet-soft: #E6E2F7; --mint: #2BB39A; --mint-soft: #DDF4EF; --gray: #646A75; --ink: #22252B; }
+
+/* ── 원본 얼굴: 왼쪽 보라 세로 띠 + 아래 민트 선이 있는 제목 ── */
+body[data-theme="ppt"] section.slide {
+  background: linear-gradient(var(--violet), var(--violet)) 0 0 / 18px 100% no-repeat, #FFFFFF;
+  color: var(--ink);
+}
+body[data-theme="ppt"] section.slide[data-sec]::before {
+  left: auto; right: 40px; top: 30px; height: 44px; line-height: 44px; min-width: 150px; padding: 0 20px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--violet-soft); color: var(--violet); font-size: 24px;
+}
+body[data-theme="ppt"] section.slide > h2:first-child {
+  position: absolute; top: 24px; left: 70px; right: 240px; margin: 0; padding: 0 0 10px; border: 0; border-bottom: 5px solid var(--mint);
+  background: none; width: auto; color: var(--ink); font-size: 40px;
+}
+.key { color: var(--violet); font-weight: 800; }
+.m { font-family: "Times New Roman", serif; font-style: italic; font-size: 1.08em; }
+
+/* 표지 */
+body[data-theme="ppt"] section.slide#cover { background: linear-gradient(var(--violet), var(--violet)) 0 0 / 100% 100% no-repeat; }
+body[data-theme="ppt"] section.slide#cover::before { display: none; }
+.cv { display: grid; grid-template-columns: 1fr 420px; gap: 30px; align-items: center; height: 100%; }
+.cv p, .cv h1 { margin: 0; color: #fff; }
+.cv .cv-k { font-size: 30px; }
+.cv h1 { margin: 22px 0 26px; font-size: 68px; line-height: 1.2; }
+.cv .cv-s { display: inline-block; padding: 6px 20px; border-radius: 8px; background: var(--mint); font-size: 32px; font-weight: 700; }
+
+/* 학습 목표 */
+.goals { margin: 30px 0 0; padding: 0; list-style: none; counter-reset: g; }
+.goals li { counter-increment: g; position: relative; padding: 0 0 0 60px; margin: 0 0 28px; font-size: 33px; line-height: 1.45; }
+.goals li::before { content: counter(g); position: absolute; left: 0; top: 2px; width: 44px; height: 44px; border-radius: 8px; background: var(--mint); color: #fff; font-weight: 800; font-size: 26px; text-align: center; line-height: 44px; }
+
+/* 생각 열기 */
+.lead { margin: 6px 0 18px; font-size: 31px; line-height: 1.5; }
+.ask { margin: 22px 0 0; font-size: 31px; font-weight: 800; color: var(--violet); }
+table.compare.bt { font-size: 30px; --table-head: #E6E2F7; --table-side: #E6E2F7; }
+table.compare.bt td { text-align: center; }
+
+/* 개념 */
+.def { margin-top: 6px; padding: 18px 26px; border-left: 10px solid var(--violet); background: #F4F2FC; border-radius: 0 14px 14px 0; font-size: 32px; line-height: 1.5; font-weight: 700; }
+.parts { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 24px; }
+.parts div { border: 3px solid var(--mint-soft); border-radius: 16px; padding: 14px 20px; font-size: 27px; line-height: 1.45; }
+.parts b { display: block; font-size: 30px; color: var(--violet); }
+
+/* ── 도해: 계산 상자. 그래프는 왼쪽, 손잡이는 오른쪽 ── */
+.dh { display: grid; grid-template-columns: 1fr 360px; gap: 22px 40px; align-items: start; }
+.dh .plot { margin: 0; }
+.dh-ctrl { display: flex; flex-direction: column; gap: 6px; }
+.dh-ctrl > p { margin: 0; font-size: 26px; font-weight: 700; }
+.dh-ctrl output { color: var(--violet); }
+.dh input[type=range] { width: 100%; height: 56px; margin: 0; accent-color: var(--violet); }
+.eq { margin: 6px 0 4px; padding: 10px 16px; border-radius: 12px; background: var(--violet-soft); font-size: 34px; font-weight: 800; text-align: center; color: var(--violet); }
+.say { margin: 4px 0 0; font-size: 24px; line-height: 1.45; font-weight: 700; }
+.note { margin: 0; font-size: 21px; line-height: 1.4; color: var(--gray); font-weight: 500; }
+.box { padding: 10px 14px; border-radius: 12px; background: #F2F4F7; font-size: 23px; line-height: 1.55; }
+.box b { font-size: 26px; }
+.seg { display: flex; gap: 8px; }
+section.slide .seg button { flex: 1; min-height: 58px; margin: 0; padding: 0 8px; font: inherit; font-size: 25px; font-weight: 700; border: 3px solid #D3D8E2; border-radius: 12px; background: #fff; color: var(--ink); cursor: pointer; }
+section.slide .seg button[aria-pressed="true"] { background: var(--violet); border-color: var(--violet); color: #fff; }
+.batt { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 800; }
+.batt .bar { flex: 1; --bar-c: #2BB39A; }
+
+/* 정리 */
+.sum { margin: 20px 0 0; padding: 0; list-style: none; }
+.sum li { position: relative; padding-left: 36px; margin: 0 0 24px; font-size: 31px; line-height: 1.45; }
+.sum li::before { content: ""; position: absolute; left: 4px; top: 15px; width: 14px; height: 14px; border-radius: 3px; background: var(--mint); }
+.sort .bin { min-height: 100px; }
+</style>
+</head>
+<body data-theme="ppt">
+
+<!-- 1 표지 -->
+<section class="slide" id="cover" data-title="표지">
+  <div class="cv">
+    <div>
+      <p class="cv-k">중학교 2학년 수학 · 일차함수</p>
+      <h1>일차함수의 그래프</h1>
+      <p class="cv-s">기울기와 y절편</p>
+    </div>
+    <svg width="420" height="380" viewBox="0 0 420 380" aria-label="좌표평면 위의 오른쪽 위로 향하는 직선">
+      <rect x="10" y="10" width="400" height="360" rx="16" fill="#FFFFFF" opacity=".12"/>
+      <path d="M40 300 H390 M110 340 V40" stroke="#FFFFFF" stroke-width="4" opacity=".8"/>
+      <path d="M60 330 L360 70" stroke="#2BB39A" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="110" cy="287" r="11" fill="#FFFFFF"/>
+      <path d="M200 252 H270 V191" stroke="#FFD166" stroke-width="5" fill="none" stroke-dasharray="10 7"/>
+    </svg>
+  </div>
+</section>
+
+<!-- 2 학습 목표 -->
+<section class="slide" id="goal" data-sec="학습 목표" data-title="학습 목표">
+  <h2>학습 목표</h2>
+  <ol class="goals">
+    <li>일차함수 <span class="m">y</span> = <span class="m">ax</span> + <span class="m">b</span>의 그래프를 그릴 수 있다.</li>
+    <li>기울기 <span class="m">a</span>와 <span class="m">y</span>절편 <span class="m">b</span>가 그래프에서<br>무엇을 뜻하는지 설명할 수 있다.</li>
+  </ol>
+</section>
+
+<!-- 3 생각 열기 -->
+<section class="slide" id="think" data-sec="생각 열기" data-title="휴대폰 충전">
+  <h2>충전기를 꽂으면 배터리는 어떻게 찰까?</h2>
+  <div>
+    <p class="lead">배터리가 20%일 때 충전기를 꽂았다.<br>1분마다 2%씩 일정하게 찬다고 하자.</p>
+    <table class="compare bt" data-ai="생각 열기 예시 자료(가상)">
+      <thead><tr><th>충전한 시간(분)</th><th>0</th><th>5</th><th>10</th><th>15</th><th>20</th></tr></thead>
+      <tbody><tr><th>배터리(%)</th><td>20</td><td>30</td><td>40</td><td>50</td><td>60</td></tr></tbody>
+    </table>
+    <p class="ask">시간을 <span class="m">x</span>분, 배터리를 <span class="m">y</span>%라 하면 <span class="m">y</span>를 <span class="m">x</span>의 식으로 쓸 수 있을까?</p>
+    <p class="step" style="font-size:30px;margin-top:14px"><span class="m">y</span> = 2<span class="m">x</span> + 20. 처음 값 20에, 1분마다 2씩 더한다.</p>
+  </div>
+</section>
+
+<!-- 4 개념 -->
+<section class="slide" id="define" data-sec="개념" data-title="일차함수">
+  <h2>일차함수란?</h2>
+  <div>
+    <p class="def"><span class="m">y</span>가 <span class="m">x</span>에 대한 일차식 <span class="m">y</span> = <span class="m">ax</span> + <span class="m">b</span> (<span class="m">a</span> ≠ 0)로<br>나타날 때, <span class="m">y</span>를 <span class="m">x</span>의 <b>일차함수</b>라고 한다.</p>
+    <div class="parts">
+      <div><b>기울기 <span class="m">a</span></b><span class="m">x</span>가 1 늘 때 <span class="m">y</span>가 늘어나는 양.<br>그래프가 얼마나, 어느 쪽으로 기울었는지 정한다.</div>
+      <div><b><span class="m">y</span>절편 <span class="m">b</span></b>그래프가 <span class="m">y</span>축과 만나는 점의 <span class="m">y</span>좌표.<br><span class="m">x</span> = 0일 때의 <span class="m">y</span> 값이다.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 도해 A: a와 b를 바꾸면 -->
+<section class="slide" id="ab" data-sec="개념" data-title="도해: 기울기와 y절편 바꾸기">
+  <h2><span class="m">a</span>와 <span class="m">b</span>를 바꾸면 직선은 어떻게 움직일까?</h2>
+  <div class="calc dh" data-ai="기울기·y절편 슬라이더와 그래프">
+    <figure class="plot" data-x="-5, 5" data-y="-6, 6" data-xstep="1" data-ystep="2" data-height="440" data-xlabel="x" data-ylabel="y">
+      <i data-line="a * x + b" data-color="#4C3BA8"></i>
+      <i data-point="0, b" data-label="y절편" data-color="#2BB39A"></i>
+    </figure>
+    <div class="dh-ctrl">
+      <p>기울기 <span class="m">a</span> = <output data-expr="a"></output></p>
+      <input type="range" name="a" min="-3" max="3" step="0.5" value="1" aria-label="기울기 a">
+      <p><span class="m">y</span>절편 <span class="m">b</span> = <output data-expr="b"></output></p>
+      <input type="range" name="b" min="-4" max="4" step="1" value="2" aria-label="y절편 b">
+      <p class="eq" data-expr="'y = ' + (a == 0 ? '' : (a == 1 ? '' : a == -1 ? '−' : a < 0 ? '−' + abs(a) : a) + 'x') + (a == 0 ? b : b > 0 ? ' + ' + b : b < 0 ? ' − ' + abs(b) : '')"></p>
+      <p class="say" data-show="a > 0">오른쪽 위로 향한다.<br><span class="m">x</span>가 커지면 <span class="m">y</span>도 커진다.</p>
+      <p class="say" data-show="a < 0">오른쪽 아래로 향한다.<br><span class="m">x</span>가 커지면 <span class="m">y</span>는 작아진다.</p>
+      <p class="say" data-show="a == 0" style="color:#D9480F"><span class="m">a</span> = 0이면 <span class="m">x</span>축에 나란한 직선이다.<br>일차함수가 아니다.</p>
+      <p class="note" data-show="a != 0"><span class="m">a</span>의 절댓값이 클수록 가파르다.<br><span class="m">b</span>를 바꾸면 기울기는 그대로, 위아래로 옮겨진다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 도해 B: 기울기는 증가량의 비 -->
+<section class="slide" id="slope" data-sec="개념" data-title="도해: 기울기는 증가량의 비">
+  <h2>어디서 재도 기울기는 같을까?</h2>
+  <div class="calc dh" data-ai="x의 증가량에 따른 y의 증가량과 기울기(증가량의 비)" data-let="dy = a * dx">
+    <figure class="plot" data-x="-1, 5" data-y="-6, 10" data-xstep="1" data-ystep="2" data-height="440" data-xlabel="x" data-ylabel="y">
+      <i data-line="a * x + 1" data-color="#4C3BA8"></i>
+      <i data-line="1" data-x="0, dx" data-color="#2BB39A"></i>
+      <i data-line="1 + (x - dx) * 100000" data-x="min(dx, dx + dy / 100000), max(dx, dx + dy / 100000)" data-color="#D9480F"></i>
+      <i data-point="0, 1" data-label="P" data-color="#4C3BA8"></i>
+      <i data-point="dx, 1 + dy" data-label="Q" data-color="#4C3BA8"></i>
+    </figure>
+    <div class="dh-ctrl">
+      <p>직선 <span class="m">y</span> = <span class="m">ax</span> + 1의 <span class="m">a</span></p>
+      <div class="seg"><button data-set="a" data-value="2" aria-pressed="true">2</button><button data-set="a" data-value="0.5">0.5</button><button data-set="a" data-value="-1">−1</button></div>
+      <p style="margin-top:8px"><span class="m">x</span>의 증가량 <output data-expr="dx"></output></p>
+      <input type="range" name="dx" min="1" max="4" step="1" value="1" aria-label="x의 증가량">
+      <div class="box">
+        <span style="color:#2BB39A;font-weight:700">x의 증가량</span> <b data-expr="dx"></b><br>
+        <span style="color:#D9480F;font-weight:700">y의 증가량</span> <b data-expr="dy"></b><br>
+        (y의 증가량) ÷ (x의 증가량) = <b data-expr="dy / dx"></b>
+      </div>
+      <p class="say"><span class="m">x</span>가 얼마나 늘든 이 비는 <span class="m">a</span>로 같다.<br>이 비가 <span class="key">기울기</span>다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7 도해 C: 배터리 -->
+<section class="slide" id="battery" data-sec="활용" data-title="도해: 배터리가 다 차는 시간">
+  <h2>배터리는 언제 100%가 될까?</h2>
+  <div class="calc" data-ai="배터리 충전 일차함수(가상 자료)" data-let="x = (k - 1) * 10; y = 2 * x + 20">
+    <div class="reveal" data-name="k" data-stops="시작|0분|10분|20분|30분|40분">
+      <div class="dh">
+        <div class="veil">
+          <figure class="plot" data-x="0, 45" data-y="0, 110" data-xstep="10" data-ystep="20" data-height="370" data-xlabel="충전한 시간(분)" data-ylabel="배터리(%)">
+            <i data-line="2 * x + 20" data-x="0, 40" data-color="#4C3BA8"></i>
+            <i data-point="x, y" data-label="지금" data-color="#2BB39A"></i>
+          </figure>
+        </div>
+        <div class="dh-ctrl" data-at="1">
+          <p class="eq"><span class="m">y</span> = 2<span class="m">x</span> + 20</p>
+          <p><output data-expr="x" data-unit="분"></output> 충전하면</p>
+          <div class="batt"><div class="bar" data-value="y" data-max="100"></div><output data-expr="y" data-unit="%"></output></div>
+          <p class="say" data-show="y < 100">아직 <output data-expr="100 - y"></output>%가 남았다.<br>1분에 2%씩 차므로<br><output data-expr="(100 - y) / 2"></output>분 더 걸린다.</p>
+          <p class="say" data-show="y >= 100" style="color:#2BB39A">40분이면 100%가 된다.<br>2<span class="m">x</span> + 20 = 100에서 <span class="m">x</span> = 40이다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 확인 문제 -->
+<section class="slide" id="check-1" data-sec="확인 문제" data-title="확인 문제 1">
+  <h2>확인 문제 1</h2>
+  <div>
+    <p class="q" data-n="1">일차함수 y = −2x + 3의 그래프에 대한 설명으로 옳은 것은?</p>
+    <div class="quiz">
+      <button class="opt" data-ai="풀이" data-why="기울기는 x 앞의 수 −2다. 3은 y절편이다.">기울기는 3이다.</button>
+      <button class="opt" data-ai="풀이" data-why="y절편은 x = 0일 때의 y 값 3이다.">y절편은 −2이다.</button>
+      <button class="opt" data-ok data-ai="풀이" data-why="맞다. 기울기가 음수이므로 오른쪽 아래로 향한다.">오른쪽 아래로 향하는 직선이다.</button>
+      <button class="opt" data-ai="풀이" data-why="x = 1이면 y = −2 + 3 = 1이다. 점 (1, 5)를 지나지 않는다.">점 (1, 5)를 지난다.</button>
+      <button class="opt" data-ai="풀이" data-why="기울기가 −2이므로 x가 1 늘면 y는 2 줄어든다.">x가 1 늘면 y도 2 늘어난다.</button>
+    </div>
+  </div>
+</section>
+
+<!-- 9 분류 카드 -->
+<section class="slide" id="check-2" data-sec="확인 문제" data-title="확인 문제 2">
+  <h2>확인 문제 2</h2>
+  <div>
+    <p class="q" data-n="2">그래프가 어느 쪽으로 향하는지 나누어 보자.</p>
+    <div class="sort">
+      <div class="bin" data-bin="u"><h3>오른쪽 위로</h3></div>
+      <div class="bin" data-bin="d"><h3>오른쪽 아래로</h3></div>
+      <span data-bin="u" data-ai="풀이와 실마리" data-why="기울기 3이 양수다." data-hint="x 앞의 수는 양수인가, 음수인가?">y = 3x − 1</span>
+      <span data-bin="d" data-ai="풀이와 실마리" data-why="기울기 −1이 음수다." data-hint="−x는 x 앞에 어떤 수가 있는 것인가?">y = −x + 4</span>
+      <span data-bin="u" data-ai="풀이와 실마리" data-why="기울기 0.5가 양수다. y절편이 0이어도 기울기로 정해진다." data-hint="y절편이 아니라 기울기를 보자.">y = 0.5x</span>
+      <span data-bin="d" data-ai="풀이와 실마리" data-why="기울기 −2가 음수다. y절편 −3과는 상관없다." data-hint="두 음수 가운데 어느 것이 기울기인가?">y = −2x − 3</span>
+      <span data-bin="d" data-ai="풀이와 실마리" data-why="y = 5 − x는 y = −x + 5와 같다. 기울기가 −1이다." data-hint="식을 y = ax + b 꼴로 바꾸어 보자.">y = 5 − x</span>
+      <span data-bin="u" data-ai="풀이와 실마리" data-why="y = −4 + 2x는 y = 2x − 4와 같다. 기울기가 2다." data-hint="맨 앞의 −4는 기울기일까?">y = −4 + 2x</span>
+    </div>
+    <p class="step" style="font-size:26px;margin-top:6px">방향은 <span class="key">기울기의 부호</span>로 정해진다. <span class="m">y</span>절편과는 상관없다.</p>
+  </div>
+</section>
+
+<!-- 10 정리 -->
+<section class="slide" id="summary" data-sec="정리" data-title="정리">
+  <h2>정리</h2>
+  <ul class="sum">
+    <li>일차함수 <span class="m">y</span> = <span class="m">ax</span> + <span class="m">b</span>의 그래프는 <span class="blank">직선</span>이다.</li>
+    <li>기울기 <span class="m">a</span> = (<span class="m">y</span>의 증가량) ÷ (<span class="m">x</span>의 증가량). 어디서 재도 <span class="blank">같다</span>.</li>
+    <li><span class="m">a</span> &gt; 0이면 오른쪽 <span class="blank">위로</span>, <span class="m">a</span> &lt; 0이면 오른쪽 <span class="blank">아래로</span> 향한다.</li>
+    <li><span class="m">y</span>절편 <span class="m">b</span>는 그래프가 <span class="blank"><span class="m">y</span>축</span>과 만나는 점의 <span class="m">y</span>좌표다.</li>
+  </ul>
+</section>
+
+</body>
+</html>

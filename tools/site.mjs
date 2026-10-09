@@ -19,9 +19,9 @@ cpSync(join(examples, 'media'), join(out, 'lessons/media'), { recursive: true })
 for (const f of readdirSync(examples).filter((n) => n.endsWith('.html'))) {
   writeFileSync(join(out, 'lessons', f), readFileSync(join(examples, f), 'utf8').replace(CDN_ENGINE, '../engine/'));
 }
-// 연수 슬라이드: /examples/training.html (엔진은 ../engine/ 그대로 맞는다)
+// 연수 슬라이드와 소개 덱: /examples/training.html, /examples/intro-story.html (엔진은 ../engine/ 그대로 맞는다)
 cpSync(join(root, 'examples/assets'), join(out, 'examples/assets'), { recursive: true });
-cpSync(join(root, 'examples/training.html'), join(out, 'examples/training.html'));
+for (const f of ['training.html', 'intro-story.html']) cpSync(join(root, 'examples', f), join(out, 'examples', f));
 const live = JSON.parse(readFileSync(join(root, 'live.config.json'), 'utf8'));
 writeFileSync(join(out, 'live-config.js'), `window.CLASS_HTML_LIVE = ${JSON.stringify(live)};\n`);
 writeFileSync(join(out, '.nojekyll'), '');

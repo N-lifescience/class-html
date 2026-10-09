@@ -1,0 +1,21 @@
+# Supabase 무료 프로젝트는 일주일 동안 쓰임이 없으면 멈춘다. 실시간 수업은 DB를 쓰지 않으므로(broadcast만),
+# 사흘마다 공개 키로 작은 표(keepalive)를 한 번 읽어 프로젝트를 깨워 둔다. 표 만드는 SQL은 docs/keepalive.sql.
+name: keepalive
+
+on:
+  schedule:
+    - cron: '17 3 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          url=$(jq -r .url live.config.json)
+          key=$(jq -r .key live.config.json)
+          curl -fsS -H "apikey: $key" "$url/rest/v1/keepalive?select=id&limit=1"

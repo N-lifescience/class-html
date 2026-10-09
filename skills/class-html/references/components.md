@@ -1,6 +1,6 @@
 # 부품 사전
 
-엔진이 동작을 붙인다. 수업 HTML에는 구조와 `data-*` 속성만 쓴다. 퀴즈·분류 같은 확인 활동과 단계 공개는 부품으로 쓴다. 만지는 도해는 개념에 맞춰 직접 짜도 된다(`dohae.md`, 이 문서 12절).
+엔진이 동작을 붙인다. 수업 HTML에는 구조와 `data-*` 속성만 쓴다. 퀴즈·분류 같은 확인 활동과 단계 공개는 부품으로 쓴다. 익스플로라그램(Exploragram)은 개념에 맞춰 직접 짜도 된다(`exploragram.md`, 이 문서 12절).
 
 `data-why`·`data-hint`·`data-stops` 같은 속성 값은 글자만 된다(태그 없음). 위첨자·아래첨자는 유니코드로 쓴다(Na⁺, H₂O, x²).
 
@@ -12,8 +12,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>자유주의와 민족주의</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
-<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/class-html.js"></script>
 <style>/* 이 수업만의 모양 */</style>
 </head>
 <body data-theme="ppt" style="--accent:#C04F15">
@@ -256,7 +256,7 @@ PPT로 할 수 없는 '하나씩 열기'. 0단계(전부 가림)에서 시작한
 </figure>
 ```
 
-## 12. 맞춤 스크립트(만지는 도해)
+## 12. 맞춤 스크립트(익스플로라그램)
 
 ```html
 <script>
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
 ```
 
 - `</body>` 바로 앞에 둔다. `ClassHTML.onShow/onHide/go/next/prev/audit`를 쓴다. `ClassHTML.go(i)`의 `i`는 0부터 센다(1쪽 = 0). `innerHTML`로 학생 입력을 넣지 않는다.
-- 설계 방법과 뼈대 코드는 `dohae.md`. 조작한 상태를 찍어 확인할 때는 `scripts/states.mjs`.
+- 설계 방법과 뼈대 코드는 `exploragram.md`. 조작한 상태를 찍어 확인할 때는 `scripts/states.mjs`.
 - 펜을 든 채로 쓰는 규칙: 누르는 요소는 `button`·`a`·`label` 또는 `data-tap`, 끄는 요소(슬라이더가 아닌 것)는 `data-no-ink`.
 
 ## 13. 입자 상자 `figure.particles`
@@ -302,5 +302,5 @@ document.addEventListener('DOMContentLoaded', () => {
 | `tiny-text` | 20px 미만 글자(SVG 안 글자는 실제 크기) | 글자 키우기, 그림 폭 키우기 |
 | `part` | 부품 작성 실수(칸 없는 카드, 정답 없는 문제, 식 오류, 어느 막대인지 모르는 data-at …) | 메시지대로 |
 | `not-veiled` | 부품 밖 슬라이더가 중간에서 시작 | 단계·시간 막대면 첫 칸을 '시작'으로. 조건 비교 슬라이더이고 결과가 가림막으로 가려져 있으면 경고를 남겨도 된다 |
-| `few-activities` | 활동 장이 3분의 1 미만 | 엔진 부품, 슬라이더, `[data-activity]`가 있는 장을 센다. 단추만 있는 도해는 감싼 요소에 `data-activity`를 붙인다 |
+| `few-activities` | 활동 장이 3분의 1 미만 | 엔진 부품, 슬라이더, `[data-activity]`가 있는 장을 센다. 단추만 있는 익스플로라그램은 감싼 요소에 `data-activity`를 붙인다 |
 | `empty-image`, `no-alt`, `dup-id` | 빈 그림 자리, 그림 설명 없음, 중복 id | |

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>일차함수의 그래프 · 기울기와 y절편</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
-<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/class-html.js"></script>
 <style>
 body[data-theme="ppt"] { --accent: #4C3BA8; --tab: #4C3BA8; --tab-ink: #FFFFFF; --flag: #D9480F; }
 body[data-theme="ppt"] { --violet: #4C3BA8; --violet-soft: #E6E2F7; --mint: #2BB39A; --mint-soft: #DDF4EF; --gray: #646A75; --ink: #22252B; }
@@ -52,7 +52,7 @@ table.compare.bt td { text-align: center; }
 .parts div { border: 3px solid var(--mint-soft); border-radius: 16px; padding: 14px 20px; font-size: 27px; line-height: 1.45; }
 .parts b { display: block; font-size: 30px; color: var(--violet); }
 
-/* ── 도해: 계산 상자. 그래프는 왼쪽, 손잡이는 오른쪽 ── */
+/* ── 익스플로라그램: 계산 상자. 그래프는 왼쪽, 손잡이는 오른쪽 ── */
 .dh { display: grid; grid-template-columns: 1fr 360px; gap: 22px 40px; align-items: start; }
 .dh .plot { margin: 0; }
 .dh-ctrl { display: flex; flex-direction: column; gap: 6px; }
@@ -132,8 +132,8 @@ section.slide .seg button[aria-pressed="true"] { background: var(--violet); bord
   </div>
 </section>
 
-<!-- 5 도해 A: a와 b를 바꾸면 -->
-<section class="slide" id="ab" data-sec="개념" data-title="도해: 기울기와 y절편 바꾸기">
+<!-- 5 익스플로라그램 A: a와 b를 바꾸면 -->
+<section class="slide" id="ab" data-sec="개념" data-title="익스플로라그램: 기울기와 y절편 바꾸기">
   <h2><span class="m">a</span>와 <span class="m">b</span>를 바꾸면 직선은 어떻게 움직일까?</h2>
   <div class="calc dh" data-ai="기울기·y절편 슬라이더와 그래프">
     <figure class="plot" data-x="-5, 5" data-y="-6, 6" data-xstep="1" data-ystep="2" data-height="440" data-xlabel="x" data-ylabel="y">
@@ -154,8 +154,8 @@ section.slide .seg button[aria-pressed="true"] { background: var(--violet); bord
   </div>
 </section>
 
-<!-- 6 도해 B: 기울기는 증가량의 비 -->
-<section class="slide" id="slope" data-sec="개념" data-title="도해: 기울기는 증가량의 비">
+<!-- 6 익스플로라그램 B: 기울기는 증가량의 비 -->
+<section class="slide" id="slope" data-sec="개념" data-title="익스플로라그램: 기울기는 증가량의 비">
   <h2>어디서 재도 기울기는 같을까?</h2>
   <div class="calc dh" data-ai="x의 증가량에 따른 y의 증가량과 기울기(증가량의 비)" data-let="dy = a * dx">
     <figure class="plot" data-x="-1, 5" data-y="-6, 10" data-xstep="1" data-ystep="2" data-height="440" data-xlabel="x" data-ylabel="y">
@@ -180,8 +180,8 @@ section.slide .seg button[aria-pressed="true"] { background: var(--violet); bord
   </div>
 </section>
 
-<!-- 7 도해 C: 배터리 -->
-<section class="slide" id="battery" data-sec="활용" data-title="도해: 배터리가 다 차는 시간">
+<!-- 7 익스플로라그램 C: 배터리 -->
+<section class="slide" id="battery" data-sec="활용" data-title="익스플로라그램: 배터리가 다 차는 시간">
   <h2>배터리는 언제 100%가 될까?</h2>
   <div class="calc" data-ai="배터리 충전 일차함수(가상 자료)" data-let="x = (k - 1) * 10; y = 2 * x + 20">
     <div class="reveal" data-name="k" data-stops="시작|0분|10분|20분|30분|40분">

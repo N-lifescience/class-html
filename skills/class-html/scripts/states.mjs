@@ -1,4 +1,4 @@
-// 수업 HTML을 엔진 자동 점검으로 재고, 직접 짠 도해는 상태마다 조작해 찍으며 다시 잰다(헤드리스 크롬, npm 패키지 없음, Node 22 이상).
+// 수업 HTML을 엔진 자동 점검으로 재고, 직접 짠 익스플로라그램은 상태마다 조작해 찍으며 다시 잰다(헤드리스 크롬, npm 패키지 없음, Node 22 이상).
 // 사용: node scripts/states.mjs 수업.html 출력폴더 [states.json]
 //   states.json을 빼면 처음 점검만 한다(ClassHTML.audit(): 모든 장, 단계를 모두 연 상태와 부품 상태들).
 //   states.json: [{ "slide": 7, "name": "가격-2500", "js": "const r = document.querySelector('#mk-p'); r.value = 5; r.dispatchEvent(new Event('input', { bubbles: true }))" }, …]

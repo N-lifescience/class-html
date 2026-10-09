@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>실시간 수업 체험 — Exploragram</title>
+<meta name="description" content="선생님 화면과 학생 화면을 한 화면에 나란히 띄워, Exploragram 실시간 수업이 어떻게 맞춰지는지 혼자서 체험합니다.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root { --night: #121418; --night-2: #1C1F25; --on: #F4F1EA; --on-2: #A9ADB5; --accent: #E8541A; --hl: #FF8A4C;
+    --font: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--night); color: var(--on); font: 16px/1.55 var(--font); word-break: keep-all; }
+  a { color: inherit; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; padding: 18px 16px 6px; max-width: 1400px; margin: 0 auto; }
+  header a.home { color: var(--hl); font-weight: 800; text-decoration: none; }
+  h1 { margin: 0; font-size: 22px; }
+  .steps { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0 16px; max-width: 1400px; margin: 0 auto; list-style: none; color: var(--on-2); font-size: 15px; }
+  .steps b { color: var(--on); }
+  #status { max-width: 1400px; margin: 8px auto 0; padding: 0 16px; min-height: 1.6em; color: var(--hl); font-weight: 700; }
+  .duo { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 18px; align-items: start; max-width: 1400px; margin: 10px auto 32px; padding: 0 16px; }
+  .pane small { display: block; margin: 0 0 6px; color: var(--on-2); font-weight: 800; letter-spacing: .02em; }
+  .frame { position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: #000; }
+  .frame iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: #fff; }
+  .t .frame { aspect-ratio: 16 / 9; }
+  .s .frame { aspect-ratio: 390 / 760; border-radius: 28px; border-width: 6px; border-color: #2A2E35; }
+  .phone { margin: 10px 0 0; color: var(--on-2); font-size: 14px; }
+  @media (max-width: 820px) { .duo { grid-template-columns: 1fr; } .s { max-width: 340px; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="./">← Exploragram</a>
+  <h1>실시간 수업 체험</h1>
+</header>
+<ol class="steps">
+  <li><b>1</b> 왼쪽 선생님 화면에서 ◀ ▶로 장을 넘겨 보세요. 오른쪽 학생 화면이 따라옵니다.</li>
+  <li><b>2</b> 학생 화면에서 막대를 움직이면, 선생님 「학생 보기」에 값이 막대로 모입니다.</li>
+</ol>
+<p id="status" role="status" aria-live="polite">선생님 화면에서 실시간을 켜는 중…</p>
+<div class="duo">
+  <section class="pane t" aria-label="선생님 화면">
+    <small>선생님 · 전자칠판</small>
+    <div class="frame"><iframe id="teacher" title="선생님 화면" data-w="1280" data-h="720"></iframe></div>
+  </section>
+  <section class="pane s" aria-label="학생 화면">
+    <small>학생 · 디벗</small>
+    <div class="frame"><iframe id="student" title="학생 화면" data-w="390" data-h="760"></iframe></div>
+    <p class="phone" id="phone" hidden>휴대폰으로도 들어와 보세요. 왼쪽 선생님 화면의 QR을 찍으면 됩니다.</p>
+  </section>
+</div>
+<script src="live-config.js"></script>
+<script>
+// 같은 사이트의 수업을 두 칸에 띄운다. 선생님 칸의 「실시간」을 대신 눌러 코드를 받고, 학생 칸을 그 코드로 들여보낸다.
+// 서버(Supabase)에 닿지 않으면 같은 PC 탭끼리 주고받는 방식(live=local)으로 다시 한다.
+(function () {
+  const LESSON = 'lessons/sci-diffusion.html';
+  const WAIT_MS = 15000;
+  const cfg = window.CLASS_HTML_LIVE || {};
+  const teacher = document.getElementById('teacher');
+  const student = document.getElementById('student');
+  const status = document.getElementById('status');
+  const phone = document.getElementById('phone');
+
+  function fit() {
+    for (const f of [teacher, student]) {
+      const w = Number(f.dataset.w), hgt = Number(f.dataset.h), box = f.parentElement.clientWidth;
+      f.style.width = `${w}px`;
+      f.style.height = `${hgt}px`;
+      f.style.transform = `scale(${box / w})`;
+    }
+  }
+  addEventListener('resize', fit);
+  fit();
+
+  function start(local) {
+    status.textContent = '선생님 화면에서 실시간을 켜는 중…';
+    phone.hidden = true;
+    student.removeAttribute('src');
+    teacher.src = `${LESSON}${local ? '?live=local' : ''}`;
+    teacher.onload = () => {
+      const doc = teacher.contentDocument;
+      const t0 = Date.now();
+      const tick = () => {
+        const btn = doc.querySelector('button[data-name="live"]');
+        const codeEl = doc.querySelector('.ch-live-code');
+        const code = codeEl ? codeEl.textContent.replace(/\D/g, '') : '';
+        if (/^\d{6}$/.test(code)) {
+          status.textContent = `코드 ${code.slice(0, 3)} ${code.slice(3)} · 학생 화면이 들어갑니다`;
+          student.src = `${LESSON}?join=${code}${local ? '&live=local' : ''}`;
+          phone.hidden = local;
+          return;
+        }
+        if (btn && !btn.dataset.pressed) { btn.dataset.pressed = '1'; btn.click(); }
+        const failed = /연결 안 됨/.test(doc.body.textContent);
+        if (failed || Date.now() - t0 > WAIT_MS) {
+          if (!local) { start(true); return; }
+          status.textContent = '실시간을 켜지 못했어요. 새로고침해 주세요.';
+          return;
+        }
+        setTimeout(tick, 300);
+      };
+      tick();
+    };
+  }
+
+  start(!(cfg.url && cfg.key));
+}());
+</script>
+</body>
+</html>

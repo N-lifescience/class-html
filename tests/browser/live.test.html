@@ -143,7 +143,7 @@ test('학생 값이 교사에게 모이고 참여 인원이 보인다', async ()
   assert(doc('t').querySelector('.ch-live-count').textContent.includes('2명'), doc('t').querySelector('.ch-live-count').textContent);
 });
 
-test('「학생 보기」 분포, 막대를 누르면 칠판 도해에 띄우고 「내 값으로」 되돌린다', async () => {
+test('「학생 보기」 분포, 막대를 누르면 칠판 익스플로라그램에 띄우고 「내 값으로」 되돌린다', async () => {
   doc('t').querySelector('.ch-live-dist-btn').click();
   await until(() => doc('t').querySelectorAll('.ch-live-dist .ch-live-row').length === 1);
   const bins = doc('t').querySelectorAll('.ch-live-dist .ch-live-bin');
@@ -151,7 +151,7 @@ test('「학생 보기」 분포, 막대를 누르면 칠판 도해에 띄우고
   assert(!bins[3].disabled && !bins[7].disabled && bins[5].disabled, '학생 값이 있는 칸만 누를 수 있다');
   bins[3].click();
   eq(doc('t').getElementById('t').value, '3');
-  eq(doc('t').getElementById('t-out').textContent, '3', '도해가 다시 그린다');
+  eq(doc('t').getElementById('t-out').textContent, '3', '익스플로라그램이 다시 그린다');
   await until(() => doc('t').querySelector('.ch-live-back'));
   doc('t').querySelector('.ch-live-back').click();
   eq(doc('t').getElementById('t').value, '5', '내 값으로');
@@ -170,7 +170,7 @@ test('학생용 파일에는 학생 표시만 붙고 엔진 흔적은 없다', (
   const html = T.Live.studentHtml();
   assert(html.includes('data-live="student"'), '학생 표시');
   assert(!html.includes('ch-toolbar') && !html.includes('ch-live-ui'), '툴바·실시간 창은 들어가지 않는다');
-  assert(html.includes('https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js'), '상대 주소 엔진은 CDN으로');
+  assert(html.includes('https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/class-html.js'), '상대 주소 엔진은 CDN으로');
   assert(!html.includes('../../engine/'), '상대 주소가 남지 않는다');
 });
 

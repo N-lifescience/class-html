@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>그림자는 어떻게 생길까? 빛과 그림자</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
-<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/class-html.js"></script>
 <style>
 body[data-theme="ppt"] { --accent: #2F6DB5; --tab: #2F6DB5; --tab-ink: #FFFFFF; --flag: #D9480F; }
 body[data-theme="ppt"] {
@@ -55,7 +55,7 @@ body[data-theme="ppt"] section.slide#cover::before { display: none; }
 .need span { font-size: 26px; line-height: 1.4; }
 .straight { margin-top: 26px; padding: 16px 26px; border-radius: 16px; background: var(--sun-soft); font-size: 30px; line-height: 1.45; font-weight: 700; }
 
-/* ── 도해 공통: 그림은 왼쪽, 손잡이는 오른쪽 ── */
+/* ── 익스플로라그램 공통: 그림은 왼쪽, 손잡이는 오른쪽 ── */
 .dx { display: grid; grid-template-columns: auto 340px; justify-content: center; gap: 24px 44px; }
 .dx > .dx-ctrl { grid-column: 2; grid-row: 1; }
 .dx-view { position: relative; }
@@ -165,8 +165,8 @@ section.slide button.mt-b[aria-pressed="true"] small { color: #fff; }
   <p class="straight">빛은 곧게 나아간다.<br>물체가 빛을 막으면 그 뒤로 빛이 닿지 않아 그림자가 생긴다.</p>
 </section>
 
-<!-- 5 도해 A: 거리와 그림자 크기 -->
-<section class="slide" id="size" data-sec="개념" data-title="도해: 거리와 그림자 크기">
+<!-- 5 익스플로라그램 A: 거리와 그림자 크기 -->
+<section class="slide" id="size" data-sec="개념" data-title="익스플로라그램: 거리와 그림자 크기">
   <h2>인형을 손전등에 가까이 하면?</h2>
   <div class="dx" data-ai="손전등·인형·벽 거리와 그림자 크기 모형(빛이 곧게 나아가는 닮은 삼각형)">
     <div class="dx-ctrl">
@@ -203,8 +203,8 @@ section.slide button.mt-b[aria-pressed="true"] small { color: #fff; }
   </div>
 </section>
 
-<!-- 6 도해 B: 물체에 따라 달라지는 그림자 -->
-<section class="slide" id="dark" data-sec="개념" data-title="도해: 물체와 그림자 진하기">
+<!-- 6 익스플로라그램 B: 물체에 따라 달라지는 그림자 -->
+<section class="slide" id="dark" data-sec="개념" data-title="익스플로라그램: 물체와 그림자 진하기">
   <h2>어떤 물체의 그림자가 가장 진할까?</h2>
   <div class="dx" data-ai="물체에 따라 빛이 지나가는 정도와 그림자 진하기 모형" data-activity>
     <div class="dx-ctrl">
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const $ = (s) => document.querySelector(s);
   const fmt = (v) => (Math.round(v * 10) / 10).toString();
 
-  // ── 도해 A: 손전등(50,180)에서 벽(x=440)까지 80 cm = 390 px. 인형 키 6 cm ──
+  // ── 익스플로라그램 A: 손전등(50,180)에서 벽(x=440)까지 80 cm = 390 px. 인형 키 6 cm ──
   const LX = 50, LY = 180, WX = 440, PX = 390 / 80, DOLL = 6;
   function drawSize() {
     const k = +$('#sz-d').value;                      // 0 = 시작(가림)
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#sz-d').addEventListener('input', drawSize);
   drawSize();
 
-  // ── 도해 B: 물체마다 빛이 지나가는 정도(모형) ──
+  // ── 익스플로라그램 B: 물체마다 빛이 지나가는 정도(모형) ──
   const MAT = {
     glass: { p: 90, fill: '#CFE6F7', stroke: '#7FA9CF', say: '빛이 거의 다 지나간다. 그림자가 아주 연하다.' },
     paper: { p: 45, fill: '#EDE6D2', stroke: '#B8A985', say: '빛이 조금 지나간다. 연한 그림자가 생긴다.' },

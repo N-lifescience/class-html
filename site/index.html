@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>수업 HTML</title>
-<meta name="description" content="수업 PPT를 만지는 도해가 있는 수업 HTML로. 전자칠판에서 펜을 든 채로 수업하고, 학생은 자기 기기에서 함께 만진다.">
+<title>Exploragram — 학생이 직접 움직이는 수업 그림</title>
+<meta name="description" content="Exploragram(익스플로라그램): 학생이 직접 움직이며 원리를 찾아내는 수업 그림. 수업 PPT를 전자칠판에서 펜을 든 채로 넘기고, 학생은 자기 기기에서 함께 만지는 수업으로 바꿉니다.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
   :root {
@@ -21,7 +21,7 @@
   .mark { display: inline-block; margin: 0 0 14px; font-weight: 800; font-size: 15px; letter-spacing: .02em; color: var(--accent); }
   h1 { margin: 0; font-size: clamp(28px, 5.4vw, 44px); line-height: 1.25; letter-spacing: -.01em; }
   .lead { margin: 14px 0 0; max-width: 40em; color: var(--mute); font-size: 18px; }
-  main { display: grid; gap: 28px; padding: 28px 0 48px; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 28px 16px 48px; }
   h2 { margin: 0 0 12px; font-size: 20px; }
   .join { padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); }
   .join p { margin: 0 0 14px; color: var(--mute); }
@@ -57,15 +57,141 @@
   .how p { margin: 0; color: var(--mute); font-size: 15px; }
   .how code { display: block; margin: 8px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--paper); font: 14px/1.5 var(--mono); color: var(--ink); word-break: break-all; }
   .copy { min-height: 44px; margin-top: 8px; padding: 0 16px; font-size: 15px; }
+  /* ── 히어로 ── */
+  .hero { --night: #121418; --night-2: #1C1F25; --on: #F4F1EA; --on-2: #A9ADB5; --hl: #FF8A4C;
+    position: relative; overflow: hidden; background: var(--night); color: var(--on);
+    background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size: 32px 32px; }
+  .hero-in { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 28px 40px; align-items: center; width: min(1180px, 100%); padding: 56px 16px 40px; }
+  .hero .tag { margin: 0 0 10px; color: var(--hl); font-weight: 800; font-size: 15px; letter-spacing: .02em; }
+  .hero .tag span { color: var(--on-2); font-weight: 600; }
+  .hero h1 { margin: 0; white-space: nowrap; font-size: clamp(44px, 6.4vw, 88px); line-height: 1; letter-spacing: -.035em; font-weight: 900; }
+  .hero h1 .ln { display: inline-block; overflow: hidden; padding: .04em .02em .1em; }
+  .hero h1 .ch { display: inline-block; }
+  .hero h1 .ch:nth-child(-n+5) { color: var(--hl); }
+  .hero .def { margin: 16px 0 0; font-size: clamp(20px, 2.6vw, 26px); font-weight: 700; line-height: 1.4; }
+  .hero .origin { margin: 10px 0 0; max-width: 34em; color: var(--on-2); font-size: 16px; }
+  .hero .origin b { color: var(--on); }
+  .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 26px 0 0; }
+  .btn { display: inline-flex; align-items: center; min-height: 52px; padding: 0 20px; border: 1.5px solid rgba(255,255,255,.28); border-radius: 12px; color: var(--on); font-weight: 700; text-decoration: none; transition: border-color .15s, background .15s; }
+  .btn:hover { border-color: var(--on); background: rgba(255,255,255,.06); }
+  .btn.primary { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #D04712; }
+  .code-link { flex-basis: 100%; color: var(--on-2); font-size: 15px; }
+  .code-link:hover { color: var(--on); }
+  .xg { margin: 0; }
+  .xg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+  .xg-chip { min-height: 36px; padding: 0 14px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: transparent; color: var(--on-2); font-size: 14px; font-weight: 700; }
+  .xg-chip[aria-pressed="true"] { border-color: var(--hl); background: rgba(232,84,26,.16); color: var(--on); }
+  .xg-board { position: relative; padding: 14px 14px 12px; border: 1px solid rgba(255,255,255,.14); border-radius: 20px; background: var(--night-2); box-shadow: 0 30px 80px -30px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06); }
+  #xg-svg { display: block; width: 100%; height: auto; aspect-ratio: 480 / 300; cursor: pointer; }
+  .xg figcaption { margin: 10px 2px 0; color: var(--on-2); font-size: 15px; font-weight: 700; }
+  .xg-ctrl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: center; margin: 8px 4px 0; }
+  .xg-ctrl label { color: var(--on-2); font-size: 14px; font-weight: 700; }
+  .xg-ctrl input { width: 100%; height: 32px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+  .xg-ctrl output { grid-column: 1 / -1; min-height: 1.5em; font: 700 16px/1.5 var(--font); font-variant-numeric: tabular-nums; }
+  #xg-hand { position: absolute; left: 0; top: 0; opacity: 0; pointer-events: none; will-change: transform; filter: drop-shadow(0 4px 8px rgba(0,0,0,.5)); }
+  #xg-hand svg { display: block; margin: -4px 0 0 -6px; }
+  .xg-ppt { position: absolute; inset: 14px 14px auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; aspect-ratio: 480 / 300; align-items: center; }
+  .xg-ppt[hidden] { display: none; }
+  .xg-frame { padding: 8px; border-radius: 8px; background: #FBFAF7; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+  .xg-frame small { display: block; margin: 0 0 4px; color: #62666D; font-size: 12px; font-weight: 700; }
+  .xg-frame svg { display: block; width: 100%; height: auto; }
+  .xg-frame .xg-box { fill: #fff; stroke: #C9C2B5; }
+  .xg-frame .xg-dot { fill: #2563EB; }
+  /* 익스플로라그램 그림 */
+  .xg-box { fill: rgba(255,255,255,.03); stroke: rgba(255,255,255,.35); stroke-width: 1.5; }
+  .xg-grid { stroke: rgba(255,255,255,.12); stroke-dasharray: 4 5; }
+  .xg-cell { fill: transparent; transition: fill .3s; }
+  .xg-cell.on { fill: rgba(37,99,235,.24); }
+  .xg-dot { fill: #6EA0FF; }
+  .xg-axis { stroke: rgba(255,255,255,.5); stroke-width: 1.5; }
+  .xg-t { fill: var(--on-2); font: 700 13px var(--font); }
+  .xg-demand { stroke: #6EA0FF; stroke-width: 3; }
+  .xg-supply { stroke: #FF8A4C; stroke-width: 3; }
+  .xg-t-d { fill: #6EA0FF; } .xg-t-s { fill: #FF8A4C; }
+  .xg-eq { fill: var(--on); }
+  .xg-price { stroke: rgba(255,255,255,.35); stroke-dasharray: 5 5; }
+  .xg-gap { stroke: #FF8A4C; stroke-width: 8; stroke-linecap: round; opacity: .55; }
+  .xg-gap.short { stroke: #6EA0FF; }
+  .xg-gap-t { fill: var(--on); font-size: 14px; }
+  .xg-pt-d { fill: #6EA0FF; stroke: var(--night-2); stroke-width: 2; }
+  .xg-pt-s { fill: #FF8A4C; stroke: var(--night-2); stroke-width: 2; }
+  .xg-cone { fill: rgba(255,214,102,.14); }
+  .xg-screen { fill: #E9E4DA; }
+  .xg-shadow { fill: #23262C; }
+  .xg-obj { fill: #FF8A4C; }
+  .xg-torch rect { fill: #9AA0AA; }
+  .xg-bulb { fill: #FFD666; }
+  .feats { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 0; padding: 0; list-style: none; }
+  .feats li { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border: 1px solid rgba(255,255,255,.12); border-radius: 14px; background: rgba(255,255,255,.03); }
+  .feats b { font-size: 17px; }
+  .feats b::before { content: ''; display: inline-block; width: 8px; height: 8px; margin: 0 8px 2px 0; border-radius: 50%; background: var(--hl); }
+  .feats span { color: var(--on-2); font-size: 15px; }
+  .lite { position: absolute; right: 16px; top: 16px; min-height: 32px; padding: 0 12px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: transparent; color: var(--on-2); font-size: 13px; font-weight: 700; }
+  .lite[aria-pressed="true"] { border-color: var(--on-2); color: var(--on); }
+  .hero[data-mode="still"] .lite { display: none; }
+  .amb { position: absolute; inset: 0; pointer-events: none; }
+  .amb i { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--hl); opacity: .35; }
+  .amb i:nth-child(3n) { width: 16px; height: 16px; border-radius: 3px; background: transparent; border: 2px solid #6EA0FF; }
+  .amb i:nth-child(3n+1) { background: #6EA0FF; }
+  .amb i:nth-child(1) { left: 6%; top: 18%; } .amb i:nth-child(2) { left: 42%; top: 8%; } .amb i:nth-child(3) { left: 88%; top: 14%; }
+  .amb i:nth-child(4) { left: 12%; top: 78%; } .amb i:nth-child(5) { left: 52%; top: 90%; } .amb i:nth-child(6) { left: 94%; top: 70%; }
+  .amb i:nth-child(7) { left: 30%; top: 52%; } .amb i:nth-child(8) { left: 70%; top: 4%; } .amb i:nth-child(9) { left: 3%; top: 46%; } .amb i:nth-child(10) { left: 60%; top: 62%; }
+  .hero .btn:focus-visible, .xg-chip:focus-visible, .lite:focus-visible { outline: 3px solid #6EA0FF; outline-offset: 2px; }
+  @media (max-width: 900px) { .hero-in { grid-template-columns: 1fr; padding-top: 64px; } .hero h1 { font-size: clamp(40px, 14vw, 96px); } .feats { grid-template-columns: 1fr; } }
+  @media (max-width: 480px) { .btn { flex: 1 1 100%; justify-content: center; } .xg-board { padding: 10px; } }
   @media (max-width: 640px) { .ba .pair { grid-template-columns: 1fr; } .ba .to { transform: rotate(90deg); justify-self: center; } }
-  @media (max-width: 480px) { .field { flex-direction: column; } button { width: 100%; } }
+  @media (max-width: 480px) { .field { flex-direction: column; } button { width: 100%; } .xg-chip, .lite { width: auto; } }
 </style>
 </head>
 <body>
-<header class="wrap">
-  <p class="mark">수업 HTML</p>
-  <h1>수업 PPT 말고, 만지는 수업 HTML</h1>
-  <p class="lead">전자칠판에서는 펜을 든 채로 넘기고, 학생은 자기 웨일북에서 같은 도해를 직접 움직입니다. 학생이 맞춘 값은 선생님 화면에 모입니다.</p>
+<header class="hero" data-mode="still" aria-labelledby="hero-h">
+  <div class="amb" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="hero-in wrap">
+    <div class="hero-text">
+      <p class="tag">PPT를 학생이 만지는 수업으로 · <span>옛 이름 class-html</span></p>
+      <h1 id="hero-h" aria-label="Exploragram"><span class="ln" aria-hidden="true"><span class="ch">E</span><span class="ch">x</span><span class="ch">p</span><span class="ch">l</span><span class="ch">o</span><span class="ch">r</span><span class="ch">a</span><span class="ch">g</span><span class="ch">r</span><span class="ch">a</span><span class="ch">m</span></span></h1>
+      <p class="def">학생이 직접 움직이며 원리를 찾아내는 수업 그림</p>
+      <p class="origin"><b>explore + diagram.</b> 익스플로라토리움(Exploratorium)이 과학관을 만지게 했듯, 칠판 위 그림을 학생이 만지게 합니다.</p>
+      <div class="cta">
+        <a class="btn primary" href="lessons/sci-diffusion.html">Exploragram 만져보기</a>
+        <a class="btn" href="live-demo.html">실시간 수업 체험</a>
+        <a class="btn" href="#how-h">내 PPT로 만들기</a>
+        <a class="code-link" href="#join-h">수업 코드 받았나요? →</a>
+      </div>
+    </div>
+
+    <figure class="xg">
+      <div class="xg-chips" role="group" aria-label="예시 고르기">
+        <button type="button" class="xg-chip" aria-pressed="true">과학 · 확산</button>
+        <button type="button" class="xg-chip" aria-pressed="false">사회 · 수요와 공급</button>
+        <button type="button" class="xg-chip" aria-pressed="false">초등 · 그림자</button>
+      </div>
+      <div class="xg-board">
+        <svg id="xg-svg" viewBox="0 0 480 300" role="img" aria-labelledby="xg-cap"><title>누르면 이 수업을 엽니다</title></svg>
+        <div class="xg-ppt" hidden aria-hidden="true">
+          <div class="xg-frame"><small>처음</small><svg viewBox="100 10 280 280"></svg></div>
+          <div class="xg-frame"><small>1분 뒤</small><svg viewBox="100 10 280 280"></svg></div>
+          <div class="xg-frame"><small>5분 뒤</small><svg viewBox="100 10 280 280"></svg></div>
+        </div>
+        <div class="xg-ctrl">
+          <label for="xg-range" id="xg-range-label">시간</label>
+          <input id="xg-range" type="range" min="0" max="1000" value="150">
+          <output id="xg-out" for="xg-range"></output>
+        </div>
+        <div id="xg-hand" aria-hidden="true"><svg class="xg-hand-i" width="34" height="40" viewBox="0 0 34 40"><path d="M6 2c2 0 3.5 1.5 3.5 3.5V18l1.6-.5c1.9-.6 3.4.3 3.9 1.6 1.8-.8 3.6 0 4.1 1.5 1.8-.6 3.6.4 4 2 2-.2 3.4 1.2 3.4 3.2v4.4C26.5 36.6 22.6 39 17.6 39h-2.2c-3.6 0-6.4-1.6-8.4-4.6L1.6 26c-1.1-1.7-.6-3.6.9-4.4 1.4-.8 3-.3 4 .9V5.5C2.5 3.5 4 2 6 2Z" fill="#fff" stroke="#1F2328" stroke-width="2" stroke-linejoin="round"/></svg></div>
+      </div>
+      <figcaption id="xg-cap">과학 · 잉크는 어떻게 퍼질까?</figcaption>
+    </figure>
+
+    <ul class="feats">
+      <li><b>전자칠판 판서</b><span>펜을 든 채로 넘기고, 막대와 단추도 그대로 누릅니다.</span></li>
+      <li><b>실시간 상호작용</b><span>학생이 맞춘 값이 선생님 화면에 막대로 모입니다.</span></li>
+      <li><b>학생 디벗에서 코드 하나로</b><span>코드 6자리면 참여합니다. 이름은 받지 않습니다.</span></li>
+    </ul>
+    <button type="button" id="xg-lite" class="lite" aria-pressed="false">가볍게 보기</button>
+  </div>
 </header>
 
 <main class="wrap">
@@ -86,7 +212,7 @@
         <div class="pair">
           <div><small>원래 PPT</small><img src="img/sci-before.png" width="1280" height="720" loading="lazy" alt="실습 PPT: 잉크 입자 그림 세 장(처음, 1분 뒤, 5분 뒤)"></div>
           <span class="to" aria-hidden="true">→</span>
-          <div><small>수업 HTML</small><img src="img/sci-after.png" width="1280" height="720" loading="lazy" alt="수업 HTML: 시간 막대를 2분에 두자 잉크 입자가 9칸 중 6칸으로 퍼진 입자 상자"></div>
+          <div><small>Exploragram</small><img src="img/sci-after.png" width="1280" height="720" loading="lazy" alt="Exploragram: 시간 막대를 2분에 두자 잉크 입자가 9칸 중 6칸으로 퍼진 입자 상자"></div>
         </div>
         <figcaption><b>과학 · 확산</b> — 정지 그림 세 장이 시간 막대가 됩니다. 막대를 밀면 입자가 움직이고, 잉크가 있는 칸 수가 함께 바뀝니다.</figcaption>
       </figure>
@@ -94,7 +220,7 @@
         <div class="pair">
           <div><small>원래 PPT</small><img src="img/soc-before.png" width="1280" height="720" loading="lazy" alt="실습 PPT: 수요 곡선과 공급 곡선, 균형점 E"></div>
           <span class="to" aria-hidden="true">→</span>
-          <div><small>수업 HTML</small><img src="img/soc-after.png" width="1280" height="720" loading="lazy" alt="수업 HTML: 가격을 3,500원에 두자 초과 공급 200인분과 가격 하락 화살표가 나타난 그래프"></div>
+          <div><small>Exploragram</small><img src="img/soc-after.png" width="1280" height="720" loading="lazy" alt="Exploragram: 가격을 3,500원에 두자 초과 공급 200인분과 가격 하락 화살표가 나타난 그래프"></div>
         </div>
         <figcaption><b>사회 · 수요와 공급</b> — 가격 막대를 3,500원에 두면 초과 공급이 보이고, 「시장에 맡기기」를 누르면 가격이 균형으로 내려갑니다.</figcaption>
       </figure>
@@ -109,7 +235,7 @@
       <li><a href="lessons/soc-supply-demand.html"><small>사회</small><b>떡볶이 값은 누가 정할까?</b><span>수요와 공급 · 표를 그래프로, 시장 가격의 결정</span></a></li>
       <li><a href="lessons/elem-shadow.html"><small>초등 과학</small><b>그림자는 어떻게 생길까?</b><span>빛과 그림자 · 손전등 거리와 그림자 크기, 물체와 그림자 진하기</span></a></li>
       <li><a href="lessons/mid-linear.html"><small>중학 수학</small><b>일차함수의 그래프</b><span>기울기와 y절편 · 슬라이더로 움직이는 직선, 배터리 충전 문제</span></a></li>
-      <li><a href="lessons/eth-dohae.html"><small>윤리</small><b>윤리 만지는 도해</b><span>이성과 정서의 저울, 조상 마을 시뮬레이터 등 활동 다섯</span></a></li>
+      <li><a href="lessons/eth-exploragram.html"><small>윤리</small><b>윤리 익스플로라그램</b><span>이성과 정서의 저울, 조상 마을 시뮬레이터 등 활동 다섯</span></a></li>
     </ul>
     <p class="note">수업을 연 뒤 도구 막대의 「실시간」을 누르면 코드와 QR이 나옵니다.</p>
   </section>
@@ -118,9 +244,9 @@
     <h2 id="how-h">선생님: 내 PPT로 만들기</h2>
     <ol class="how">
       <li><b>AI에게 PPT와 한 줄을 줍니다</b><p>ChatGPT·Gemini·Claude 어느 것이든 됩니다. 수업 PPT를 올리고 아래 글을 붙여 넣으세요.</p>
-        <code id="prompt">https://github.com/N-lifescience/class-html 지침대로 이 PPT를 수업 HTML로 바꿔줘</code>
+        <code id="prompt">https://github.com/N-lifescience/exploragram 지침대로 이 PPT를 수업 HTML로 바꿔줘</code>
         <button type="button" class="copy" data-copy="prompt">글 복사</button>
-        <p style="margin-top:8px">주소를 못 읽는 AI라면 <a href="https://raw.githubusercontent.com/N-lifescience/class-html/main/guide/class-html-guide.md">합본 지침 파일</a>을 받아 PPT와 함께 올립니다.</p></li>
+        <p style="margin-top:8px">주소를 못 읽는 AI라면 <a href="https://raw.githubusercontent.com/N-lifescience/exploragram/main/guide/class-html-guide.md">합본 지침 파일</a>을 받아 PPT와 함께 올립니다.</p></li>
       <li><b>AI의 질문에 답합니다</b><p>교과·차시, 학생이 헷갈리는 지점, 꼭 만지게 하고 싶은 장면을 묻습니다. 설계표를 보여 주면 확인합니다.</p></li>
       <li><b>받은 파일을 열어 수업합니다</b><p>더블클릭해 크롬에서 엽니다. 툴바에서 펜을 고른 채로 ◀ ▶로 넘기고, 단추와 슬라이더도 그대로 누릅니다. 판서는 장마다, 반마다 남습니다.</p></li>
       <li><b>고칠 곳은 바로 고칩니다</b><p>툴바 「편집」에서 글·상자·그림을 골라 고치고 「HTML 저장」으로 받습니다. AI에게 다시 부탁하지 않아도 됩니다.</p></li>
@@ -132,10 +258,11 @@
 
 <footer class="wrap">
   저장 안 함 · 이름 안 받음 — 학생 값은 수업 중 선생님 화면에만 있다가 창을 닫으면 사라집니다.
-  · <a href="https://github.com/N-lifescience/class-html">GitHub</a> (MIT)
+  · <a href="https://github.com/N-lifescience/exploragram">GitHub</a> (MIT)
 </footer>
 
 <script src="live-config.js"></script>
+<script src="hero.js"></script>
 <script>
 // 코드로 교사 상태를 한 번 들은 뒤, 사이트의 예시 수업이면 그 수업으로 보낸다(학생 역할로).
 (function () {

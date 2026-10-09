@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, '_site');
 const examples = join(root, 'skills/class-html/references/examples');
-const CDN_ENGINE = /https:\/\/cdn\.jsdelivr\.net\/gh\/N-lifescience\/class-html@1\/engine\//g;
+const CDN_ENGINE = /https:\/\/cdn\.jsdelivr\.net\/gh\/N-lifescience\/exploragram@1\/engine\//g;
 
 rmSync(out, { recursive: true, force: true });
 cpSync(join(root, 'site'), out, { recursive: true });

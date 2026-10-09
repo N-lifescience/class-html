@@ -1,4 +1,4 @@
-// 지침 문서(components.md, dohae.md)의 HTML 예시가 실제 엔진에서 점검 오류 없이 열리는지 본다.
+// 지침 문서(components.md, exploragram.md)의 HTML 예시가 실제 엔진에서 점검 오류 없이 열리는지 본다.
 // 예시를 장마다 하나씩 모아 임시 덱을 만들고 tools/shots.mjs로 점검한다: node tests/run-docs.mjs
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -15,19 +15,19 @@ for (const [i, b] of blocks(join(ref, 'components.md')).entries()) {
   if (i === 0 || b.includes('ClassHTML.onShow')) continue;   // 문서 뼈대, 스크립트 예시는 뺀다
   slides.push(`<section class="slide" id="c${i}"><h2>부품 예시 ${i}</h2>${b.replaceAll('data:image/jpeg;base64,…', fake).replaceAll('…', '')}</section>`);
 }
-for (const f of ['dohae.md']) {
+for (const f of ['exploragram.md']) {
   for (const [i, b] of blocks(join(ref, f)).entries()) {
     const body = b.replaceAll('data:image/jpeg;base64,…', fake).replaceAll('points="…"', 'points="0,0 10,0 10,10"').replaceAll('…', '');
     slides.push(body.includes('<section') ? body : `<section class="slide" id="${f.replace('.md', '')}-${i}"><h2>${f}</h2>${body}</section>`);
   }
 }
-// dohae.md의 css 블록(도해 예시가 쓰는 모양)을 덱에 넣는다
-const dohaeCss = [...readFileSync(join(ref, 'dohae.md'), 'utf8').matchAll(/```css([^`]*)```/g)].map((m) => m[1]).join('');
+// exploragram.md의 css 블록(익스플로라그램 예시가 쓰는 모양)을 덱에 넣는다
+const exploragramCss = [...readFileSync(join(ref, 'exploragram.md'), 'utf8').matchAll(/```css([^`]*)```/g)].map((m) => m[1]).join('');
 const dir = mkdtempSync(join(tmpdir(), 'class-html-docs-'));
 const deck = join(dir, 'docs.html');
 writeFileSync(deck, `<!doctype html><html lang="ko" data-deck="docs-check"><head><meta charset="utf-8"><title>지침 예시 점검</title>
 <link rel="stylesheet" href="${join(root, 'engine/class-html.css')}"><script defer src="${join(root, 'engine/class-html.js')}"></script>
-<style>${dohaeCss}</style></head>
+<style>${exploragramCss}</style></head>
 <body data-theme="ppt">${slides.join('\n')}</body></html>`);
 let code = 0;
 try {

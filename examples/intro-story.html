@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>class-html 교직원 연수</title>
+<title>Exploragram 교직원 연수</title>
 <link rel="stylesheet" href="../engine/class-html.css">
 <script defer src="../engine/class-html.js"></script>
 <style>
@@ -198,11 +198,11 @@ body[data-theme="story"] .box { padding: 18px 24px; border-radius: 20px; backgro
 body[data-theme="story"] .box h3 { margin: 0 0 8px; }
 body[data-theme="story"] .box p:last-child, body[data-theme="story"] .box ol:last-child { margin-bottom: 0; }
 
-/* ── 레퍼런스에서 가져온 만지는 도해(원래 색 그대로) ── */
+/* ── 레퍼런스에서 가져온 익스플로라그램(원래 색 그대로) ── */
 .ref-link { margin-left: auto; }
-.dohae-head { display: flex; align-items: baseline; gap: 18px; }
-.dohae-head h2 { flex: 1; }
-.dohae-head .pill { flex: none; }
+.exploragram-head { display: flex; align-items: baseline; gap: 18px; }
+.exploragram-head h2 { flex: 1; }
+.exploragram-head .pill { flex: none; }
 
 /* A 확산(sci-diffusion 「잉크가 퍼지는 모습을 입자로」) */
 #try-sci { --teal: #0F766E; --yellow: #FBBF24; --gray: #6B7078; --ink: #222222; --ink-dot: #E0464E; --water-dot: #9DC8F5; }
@@ -257,7 +257,7 @@ section.slide#try-soc button.dh-b:disabled { opacity: .45; cursor: default; }
 #try-soc .mk-bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; transition: width .2s; }
 #try-soc .mk-calc { margin: 8px 0 10px; padding: 6px 14px; border-radius: 12px; background: var(--soft); font-size: 22px; line-height: 1.4; color: var(--ink); min-height: 66px; white-space: pre-line; }
 
-/* C 이성과 정서의 저울(eth-dohae 「활동 ①」) */
+/* C 이성과 정서의 저울(eth-exploragram 「활동 ①」) */
 #try-eth { --accent: #006DBB; --ms-reason: #006DBB; --ms-emo: #C8325F; --ms-ink: #3F3F3F; --ms-muted: #5F6B7A; --ms-line: #D3DCE6; }
 #try-eth .ms-wrap, #try-eth .ms-wrap * { box-sizing: border-box; }
 #try-eth .ms-act { display: grid; grid-template-columns: 1fr 420px; gap: 28px; }
@@ -291,7 +291,7 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
 <!-- 0. 표지 -->
 <section class="slide" id="cover" data-title="표지">
   <p class="kicker">2026. 10. 13. · 교직원 연수</p>
-  <h1 class="cover-title">class-html은 어떻게 탄생했고,<br>어떻게 성장하고 있을까요?</h1>
+  <h1 class="cover-title">Exploragram은 어떻게 탄생했고,<br>어떻게 성장하고 있을까요?</h1>
   <p class="lead">수업 PPT를 학생이 직접 만지는 수업 HTML로 바꾸는 이야기와 실습이에요.</p>
   <div class="panel">
     <p class="panel-head"><span>오늘 90분</span><span>설명 40 · 실습 45 · 마무리 5</span></p>
@@ -307,7 +307,7 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
   <p class="byline">N-LIFESCIENCE · GITHUB.COM/N-LIFESCIENCE/CLASS-HTML</p>
 </section>
 
-<section class="slide" id="numbers" data-sec="숫자로 보기" data-title="숫자로 보는 class-html">
+<section class="slide" id="numbers" data-sec="숫자로 보기" data-title="숫자로 보는 Exploragram">
   <p class="kicker">지금까지 한눈에</p>
   <h2>일주일 동안 쌓인 것</h2>
   <div class="stats" data-stagger>
@@ -360,7 +360,7 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
     <div class="feats">
       <div class="feat c-blue" data-at="1"><small class="note">모든 수업에서 똑같이</small><b>엔진</b><p>펜을 든 채로 넘기기, 칠판, 반별 판서 저장, 인쇄, 넘친 글자 자동 점검을 맡아요.</p></div>
       <div class="feat c-green" data-at="2"><small class="note">속성만 쓰면 작동</small><b>부품</b><p>단계 막대, 분류 카드, 보기마다 이유가 나오는 문제, 계산 상자, 그래프, 입자 상자 등 12종이에요.</p></div>
-      <div class="feat" data-at="3"><small class="note">AI가 읽는 파일 하나</small><b>지침</b><p>먼저 묻고, 설계표를 보여 주고, 개념마다 학생이 만지는 도해를 하나씩 넣게 해요.</p></div>
+      <div class="feat" data-at="3"><small class="note">AI가 읽는 파일 하나</small><b>지침</b><p>먼저 묻고, 설계표를 보여 주고, 개념마다 학생이 익스플로라그램을 하나씩 넣게 해요.</p></div>
     </div>
   </div>
 </section>
@@ -387,7 +387,7 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
 </section>
 
 <section class="slide" id="try-sci" data-sec="02 · 직접 만져 보기" data-title="체험 1: 과학 확산">
-  <div class="dohae-head"><h2>과학 · 잉크가 퍼지는 모습을 입자로</h2><a class="pill" href="https://n-lifescience.github.io/class-html/lessons/sci-diffusion.html#ink-model" target="_blank" rel="noopener">전체 수업 열기</a></div>
+  <div class="exploragram-head"><h2>과학 · 잉크가 퍼지는 모습을 입자로</h2><a class="pill" href="https://n-lifescience.github.io/exploragram/lessons/sci-diffusion.html#ink-model" target="_blank" rel="noopener">전체 수업 열기</a></div>
   <div class="dx">
     <div class="dx-ctrl">
       <p class="dx-lab">잉크를 떨어뜨린 뒤 <b id="ik-t-out">시작</b></p>
@@ -424,7 +424,7 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
 </section>
 
 <section class="slide" id="try-soc" data-sec="02 · 직접 만져 보기" data-title="체험 2: 사회 시장 가격">
-  <div class="dohae-head"><h2>사회 · 떡볶이 값은 왜 3,000원일까?</h2><a class="pill" href="https://n-lifescience.github.io/class-html/lessons/soc-supply-demand.html#market" target="_blank" rel="noopener">전체 수업 열기</a></div>
+  <div class="exploragram-head"><h2>사회 · 떡볶이 값은 왜 3,000원일까?</h2><a class="pill" href="https://n-lifescience.github.io/exploragram/lessons/soc-supply-demand.html#market" target="_blank" rel="noopener">전체 수업 열기</a></div>
   <div class="dh">
     <div>
       <p class="dh-lab">가격 <b id="mk-k-out">시작</b></p>
@@ -446,7 +446,7 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
 </section>
 
 <section class="slide" id="try-eth" data-sec="02 · 직접 만져 보기" data-title="체험 3: 윤리 이성과 정서">
-  <div class="dohae-head"><h2>윤리 · 이성과 정서, 무엇이 판단을 움직일까</h2><a class="pill" href="https://n-lifescience.github.io/class-html/lessons/eth-dohae.html#scale" target="_blank" rel="noopener">전체 수업 열기</a></div>
+  <div class="exploragram-head"><h2>윤리 · 이성과 정서, 무엇이 판단을 움직일까</h2><a class="pill" href="https://n-lifescience.github.io/exploragram/lessons/eth-exploragram.html#scale" target="_blank" rel="noopener">전체 수업 열기</a></div>
   <div class="ms-wrap">
     <div class="ms-act">
       <div class="ms-ctrl">
@@ -590,7 +590,7 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
     <ol class="steps" style="--n:5">
       <li data-at="1"><i>1</i><small>올리기</small><b>PPT + 저장소 주소</b><p>내 AI에 PPT를 올리고 한 줄을 붙여요.</p></li>
       <li data-at="2"><i>2</i><small>인터뷰</small><b>AI가 먼저 물어요</b><p>교과·차시, 수업 장면, 헷갈리는 곳, 넣을 활동, 지킬 것.</p></li>
-      <li data-at="3"><i>3</i><small>설계표</small><b>개념마다 도해 하나</b><p>채팅에서만 확인해요. 학생 화면에는 안 들어가요.</p></li>
+      <li data-at="3"><i>3</i><small>설계표</small><b>개념마다 익스플로라그램 하나</b><p>채팅에서만 확인해요. 학생 화면에는 안 들어가요.</p></li>
       <li data-at="4"><i>4</i><small>파일</small><b>HTML 한 파일</b><p>판서·저장·점검은 엔진이 맡아요.</p></li>
       <li data-at="5"><i>5</i><small>점검</small><b>D 키로 확인</b><p>넘친 글자를 찾고, 편집이나 AI 부탁으로 고쳐요.</p></li>
     </ol>
@@ -630,18 +630,18 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
     </ul></div>
     <div style="display:flex;flex-direction:column;gap:16px">
       <p style="margin:0;font-size:24px;font-weight:700">AI에 PPT와 함께 붙여 넣을 한 줄</p>
-      <div class="prompt"><code>https://github.com/N-lifescience/class-html<br>지침대로 이 PPT를 수업 HTML로 바꿔줘</code><button class="copy" type="button" data-text="https://github.com/N-lifescience/class-html 지침대로 이 PPT를 수업 HTML로 바꿔줘">복사</button></div>
+      <div class="prompt"><code>https://github.com/N-lifescience/exploragram<br>지침대로 이 PPT를 수업 HTML로 바꿔줘</code><button class="copy" type="button" data-text="https://github.com/N-lifescience/exploragram 지침대로 이 PPT를 수업 HTML로 바꿔줘">복사</button></div>
       <p style="margin:6px 0 0;font-size:22px;font-weight:700">PPT가 없다면 실습 PPT로 해요</p>
       <div style="display:flex;flex-wrap:wrap;gap:12px">
-        <a class="btn ghost" href="https://github.com/N-lifescience/class-html/raw/main/examples/practice/%EC%8B%A4%EC%8A%B5_%EA%B3%BC%ED%95%99_%ED%99%95%EC%82%B0.pptx" target="_blank" rel="noopener">과학 '확산' 받기 ↓</a>
-        <a class="btn ghost" href="https://github.com/N-lifescience/class-html/raw/main/examples/practice/%EC%8B%A4%EC%8A%B5_%EC%82%AC%ED%9A%8C_%EC%88%98%EC%9A%94%EC%99%80%EA%B3%B5%EA%B8%89.pptx" target="_blank" rel="noopener">사회 '수요와 공급' 받기 ↓</a>
+        <a class="btn ghost" href="https://github.com/N-lifescience/exploragram/raw/main/examples/practice/%EC%8B%A4%EC%8A%B5_%EA%B3%BC%ED%95%99_%ED%99%95%EC%82%B0.pptx" target="_blank" rel="noopener">과학 '확산' 받기 ↓</a>
+        <a class="btn ghost" href="https://github.com/N-lifescience/exploragram/raw/main/examples/practice/%EC%8B%A4%EC%8A%B5_%EC%82%AC%ED%9A%8C_%EC%88%98%EC%9A%94%EC%99%80%EA%B3%B5%EA%B8%89.pptx" target="_blank" rel="noopener">사회 '수요와 공급' 받기 ↓</a>
       </div>
     </div>
   </div>
 </section>
 
 <section class="slide" id="practice1" data-sec="05 · 실습" data-title="실습 1: 내 PPT 바꾸기">
-  <div class="dohae-head"><h2>실습 1 · 내 PPT 바꾸기</h2><div class="timer" data-sec="1500" data-label="실습 1"></div></div>
+  <div class="exploragram-head"><h2>실습 1 · 내 PPT 바꾸기</h2><div class="timer" data-sec="1500" data-label="실습 1"></div></div>
   <div class="switch" data-stops="시작|ChatGPT|Gemini|Claude">
     <ol class="steps" data-only="1" style="--n:4">
       <li><i>1</i><b>새 대화에 PPT를 올려요</b></li>
@@ -663,13 +663,13 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
     </ol>
   </div>
   <div style="display:flex;gap:14px;margin-top:22px">
-    <a class="btn ghost" href="https://raw.githubusercontent.com/N-lifescience/class-html/main/guide/class-html-guide.md" target="_blank" rel="noopener">합본 지침 받기 ↓</a>
+    <a class="btn ghost" href="https://raw.githubusercontent.com/N-lifescience/exploragram/main/guide/class-html-guide.md" target="_blank" rel="noopener">합본 지침 받기 ↓</a>
     <p class="note" style="align-self:center">받은 파일은 더블클릭하면 바로 열려요.</p>
   </div>
 </section>
 
 <section class="slide" id="practice2" data-sec="05 · 실습" data-title="실습 2: 열어서 수업해 보기">
-  <div class="dohae-head"><h2>실습 2 · 열어서 수업하고 고치기</h2><div class="timer" data-sec="1200" data-label="실습 2"></div></div>
+  <div class="exploragram-head"><h2>실습 2 · 열어서 수업하고 고치기</h2><div class="timer" data-sec="1200" data-label="실습 2"></div></div>
   <div class="cols">
     <div class="box">
       <h3>해 볼 것</h3>
@@ -711,7 +711,7 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
       <li data-at="1"><i>1</i><small>10. 2.</small><b>설계와 엔진</b><p>펜을 든 채로 넘기기, 반별 판서 저장.</p></li>
       <li data-at="2"><i>2</i><small>10. 3.</small><b>부품과 지침</b><p>단계 막대, 분류, 계산 상자. AI가 읽을 지침.</p></li>
       <li data-at="3"><i>3</i><small>10. 5.</small><b>v1.0.0 공개</b><p>누구나 주소 한 줄로 쓸 수 있게.</p></li>
-      <li data-at="4"><i>4</i><small>10. 6.</small><b>만지는 도해 · 편집</b><p>v1.1.0. 값을 바꾸면 그림이 바뀌는 수업, 바로 고치기.</p></li>
+      <li data-at="4"><i>4</i><small>10. 6.</small><b>익스플로라그램 · 편집</b><p>v1.1.0. 값을 바꾸면 그림이 바뀌는 수업, 바로 고치기.</p></li>
       <li data-at="5"><i>5</i><small>10. 7.</small><b>전자칠판 판서</b><p>양옆 도구, 손등 지우개. 지금 시험 중이에요.</p></li>
       <li data-at="6" class="next"><i>?</i><small>다음</small><b>공모전 준비 중</b><p>10월 18일 이후에 정식으로 소개해요.</p></li>
     </ol>
@@ -738,10 +738,10 @@ section.slide#try-eth input.ms-range::-moz-range-thumb { width: 28px; height: 28
 <section class="slide" id="closing" data-sec="06 · 성장" data-title="마무리">
   <div class="panel">
     <p class="kicker" style="color:var(--st-orange)">오늘 바꾼 것 하나를 다음 수업에</p>
-    <p class="cta-title">PPT는 보여 주는 도구,<br>수업 HTML은 <em>함께 만지는</em> 도구예요.</p>
+    <p class="cta-title">PPT는 보여 주는 도구,<br>익스플로라그램은 <em>함께 만지는</em> 도구예요.</p>
     <div class="cta-links">
-      <a class="btn" href="https://github.com/N-lifescience/class-html" target="_blank" rel="noopener">저장소 열기 →</a>
-      <a class="btn ghost" href="https://n-lifescience.github.io/class-html/examples/training.html" target="_blank" rel="noopener">이 연수 자료 다시 보기</a>
+      <a class="btn" href="https://github.com/N-lifescience/exploragram" target="_blank" rel="noopener">저장소 열기 →</a>
+      <a class="btn ghost" href="https://n-lifescience.github.io/exploragram/examples/training.html" target="_blank" rel="noopener">이 연수 자료 다시 보기</a>
       <a class="btn ghost" href="https://docs.google.com/forms/d/e/1FAIpQLSe4DfQKW7-8lPddGTpcaFvEHNzqouGJ5jtAxoqpY96aH9vQrg/viewform" target="_blank" rel="noopener">설문</a>
     </div>
     <p class="handle">GITHUB.COM/N-LIFESCIENCE/CLASS-HTML · MIT</p>
@@ -916,7 +916,7 @@ document.addEventListener('DOMContentLoaded', () => {
     draw();
   }
 
-  /* ── C 이성과 정서의 저울: eth-dohae에서 가져옴. 이성 = 더 살리는 사람 수, 정서 = 직접 해치는 정도 × 정서 세기 ── */
+  /* ── C 이성과 정서의 저울: eth-exploragram에서 가져옴. 이성 = 더 살리는 사람 수, 정서 = 직접 해치는 정도 × 정서 세기 ── */
   {
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const num = (v) => String(+v.toFixed(3));

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>떡볶이 값은 누가 정할까? · 수요와 공급</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.css">
-<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/class-html.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/class-html.css">
+<script defer src="https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/class-html.js"></script>
 <style>
 /* theme.json의 css 줄 */
 body[data-theme="ppt"] { --accent: #1D4E89; --tab: #1D4E89; --tab-ink: #FFFFFF; }
@@ -59,7 +59,7 @@ section.slide.cover h1 { color: #fff; margin: 0; font-size: 76px; line-height: 1
 .dir { margin-top: 26px; font-size: 32px; font-weight: 800; color: var(--navy); }
 .dir.sup { color: var(--sup); }
 
-/* 도해 공통 */
+/* 익스플로라그램 공통 */
 .dh { display: grid; gap: 30px; margin-top: 4px; }
 .dh-view { position: relative; }
 #td .dh > :first-child, #market .dh > :first-child { grid-column: 2; grid-row: 1; }   /* 손잡이는 오른쪽 */
@@ -82,7 +82,7 @@ section.slide button.dh-b[aria-pressed="true"] { background: var(--navy); border
 section.slide button.dh-b:disabled { opacity: .45; cursor: default; }
 .c-dem { color: var(--dem); } .c-sup { color: var(--sup); }
 
-/* 도해 ① 표 → 그래프 */
+/* 익스플로라그램 ① 표 → 그래프 */
 #td .dh { grid-template-columns: 1fr 430px; }
 .tg { border-collapse: collapse; width: 100%; margin: 8px 0 8px; font-size: 24px; text-align: center; }
 .tg th, .tg td { text-align: center; height: 41px; padding: 0 6px; border-bottom: 2px solid #fff; }
@@ -91,7 +91,7 @@ section.slide button.dh-b:disabled { opacity: .45; cursor: default; }
 .tg tbody td { background: #F7F9FC; color: var(--ink); }
 .tg tr.now th, .tg tr.now td { background: #FFE8A8; font-weight: 800; }
 
-/* 도해 ② 시장 가격 */
+/* 익스플로라그램 ② 시장 가격 */
 #market .dh { grid-template-columns: 1fr 430px; }
 .mk-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .mk-bar p { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
@@ -100,7 +100,7 @@ section.slide button.dh-b:disabled { opacity: .45; cursor: default; }
 .mk-calc { margin: 8px 0 10px; padding: 6px 14px; border-radius: 12px; background: var(--soft); font-size: 22px; line-height: 1.4; color: var(--ink); min-height: 74px; white-space: pre-line; }
 .mk-take { margin: 12px 0 0; font-size: 25px; line-height: 1.4; }
 
-/* 도해 ③ 수요량의 변화와 수요의 변화 */
+/* 익스플로라그램 ③ 수요량의 변화와 수요의 변화 */
 .sh-btns { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 2px; }
 section.slide .sh-btns button.dh-b { min-height: 80px; font-size: 22px; }
 #shift .dh { grid-template-columns: 520px 1fr; margin-top: 18px; gap: 30px; }
@@ -189,10 +189,10 @@ section.slide .sh-btns button.dh-b { min-height: 80px; font-size: 22px; }
   <p class="dir sup step">가격과 공급량은 같은 방향으로 움직인다.</p>
 </section>
 
-<!-- 6 도해 ①: 표가 곡선이 된다 -->
-<section class="slide" id="td" data-sec="1. 수요와 공급" data-title="도해 ① 표를 그래프로">
+<!-- 6 익스플로라그램 ①: 표가 곡선이 된다 -->
+<section class="slide" id="td" data-sec="1. 수요와 공급" data-title="익스플로라그램 ① 표를 그래프로">
   <h2>가격이 오르면 두 양은 어떻게 움직일까?</h2><span class="badge">자료</span>
-  <div class="dh" data-ai="표를 그래프로 옮기는 도해(수치는 PPT 6쪽 표 그대로)">
+  <div class="dh" data-ai="표를 그래프로 옮기는 익스플로라그램(수치는 PPT 6쪽 표 그대로)">
     <div>
       <p class="dh-note">어느 마을 떡볶이 시장의 하루 거래를<br>나타낸 가상 자료이다(예시).</p>
       <table class="tg" id="td-table">
@@ -217,10 +217,10 @@ section.slide .sh-btns button.dh-b { min-height: 80px; font-size: 22px; }
   </div>
 </section>
 
-<!-- 7 도해 ②: 시장 가격의 결정 -->
-<section class="slide" id="market" data-sec="2. 시장 가격의 결정" data-title="도해 ② 시장 가격의 결정">
+<!-- 7 익스플로라그램 ②: 시장 가격의 결정 -->
+<section class="slide" id="market" data-sec="2. 시장 가격의 결정" data-title="익스플로라그램 ② 시장 가격의 결정">
   <h2>떡볶이 값은 왜 3,000원에 자리 잡을까?</h2><span class="badge">개념</span>
-  <div class="dh" data-ai="시장 가격 결정 도해와 설명 문장">
+  <div class="dh" data-ai="시장 가격 결정 익스플로라그램과 설명 문장">
     <div>
       <p class="dh-lab">가격 <b id="mk-k-out">시작</b></p>
       <input class="dh-range" type="range" autocomplete="off" id="mk-k" min="0" max="21" value="0" aria-label="떡볶이 가격">
@@ -258,8 +258,8 @@ section.slide .sh-btns button.dh-b { min-height: 80px; font-size: 22px; }
   <p class="rule step">초과 수요일 때는 사려는 사람끼리,<br>초과 공급일 때는 팔려는 사람끼리 경쟁해서 가격이 움직인다.</p>
 </section>
 
-<!-- 9 도해 ③: 수요량의 변화와 수요의 변화 -->
-<section class="slide" id="shift" data-sec="3. 수요·공급의 변화" data-title="도해 ③ 수요량이 변했나, 수요가 변했나">
+<!-- 9 익스플로라그램 ③: 수요량의 변화와 수요의 변화 -->
+<section class="slide" id="shift" data-sec="3. 수요·공급의 변화" data-title="익스플로라그램 ③ 수요량이 변했나, 수요가 변했나">
   <h2>수요량이 변한 걸까, 수요가 변한 걸까?</h2><span class="badge">개념</span>
   <div class="sh-btns" id="sh-btns" data-activity>
     <button class="dh-b" type="button" data-v="price" aria-pressed="false">떡볶이 값이<br>3,500원으로 오름</button>
@@ -269,7 +269,7 @@ section.slide .sh-btns button.dh-b { min-height: 80px; font-size: 22px; }
     <button class="dh-b" type="button" data-v="tech" aria-pressed="false">생산 기술이<br>발달함</button>
   </div>
   <div class="dh-view">
-    <div class="dh" data-ai="수요량 변화와 수요 변화를 비교하는 도해">
+    <div class="dh" data-ai="수요량 변화와 수요 변화를 비교하는 익스플로라그램">
       <div>
         <table class="st" id="sh-table">
           <colgroup><col class="h"><col><col><col><col><col></colgroup>

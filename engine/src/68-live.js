@@ -1,4 +1,4 @@
-// 실시간 수업: 학생 기기(웨일북 등)가 교사 화면을 따라가고, 학생이 만진 도해 슬라이더 값이 교사 화면에 분포로 모인다.
+// 실시간 수업: 학생 기기(웨일북 등)가 교사 화면을 따라가고, 학생이 만진 익스플로라그램 슬라이더 값이 교사 화면에 분포로 모인다.
 // 저장 안 함·식별 안 함: 이름·번호·DB 없이 탭 메모리에만 두고, 닫으면 사라진다. 실시간을 켜지 않으면 아무것도 하지 않는다.
 // 채널 둘: 교사 → 학생 'ch-live-<코드>'(학생이 구독), 학생 → 교사 'ch-live-<코드>-in'(교사만 구독, 학생은 구독 없이 보낸다).
 // 그래서 학생 메시지는 다른 학생에게 퍼지지 않는다. 전송은 Supabase Realtime(broadcast) 또는 같은 PC 탭끼리(BroadcastChannel).
@@ -464,7 +464,7 @@ const Live = {
     }, 50);
   },
 
-  // 지금 장의 슬라이더마다 학생 값 분포. 막대를 누르면 그 값을 교사 도해에 넣는다(누가 맞췄는지는 모른다).
+  // 지금 장의 슬라이더마다 학생 값 분포. 막대를 누르면 그 값을 교사 익스플로라그램에 넣는다(누가 맞췄는지는 모른다).
   drawDist() {
     const on = this.distOn && this.role === 'teacher';
     this.dist.hidden = !on;
@@ -491,7 +491,7 @@ const Live = {
     });
     const head = h('div', { class: 'ch-live-dhead' },
       h('b', { text: '학생 값' }),
-      h('span', { text: this.peek ? '학생 값을 칠판에 띄우는 중' : '막대를 누르면 그 값을 칠판 도해에 띄워요' }),
+      h('span', { text: this.peek ? '학생 값을 칠판에 띄우는 중' : '막대를 누르면 그 값을 칠판 익스플로라그램에 띄워요' }),
       this.peek ? h('button', { type: 'button', class: 'ch-live-back', text: '내 값으로', onclick: () => this.unpeek() }) : null,
       h('button', { type: 'button', class: 'ch-live-x', text: '×', 'aria-label': '학생 보기 닫기', onclick: () => this.toggleDist(false) }));
     const empty = h('p', { class: 'ch-live-empty', text: '이 장에는 학생이 움직이는 슬라이더가 없어요' });
@@ -514,7 +514,7 @@ const Live = {
     this.renderDist();
   },
 
-  // 도해 스크립트·계산 상자는 input 이벤트로 다시 그린다
+  // 익스플로라그램 스크립트·계산 상자는 input 이벤트로 다시 그린다
   setRange(input, v) {
     input.value = String(v);
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -526,7 +526,7 @@ const Live = {
   studentHtml() {
     const doc = PptFill.buildDoc();
     doc.documentElement.setAttribute('data-live', 'student');
-    const cdn = 'https://cdn.jsdelivr.net/gh/N-lifescience/class-html@1/engine/';
+    const cdn = 'https://cdn.jsdelivr.net/gh/N-lifescience/exploragram@1/engine/';
     for (const [sel, attr] of [['link[rel~="stylesheet"][href]', 'href'], ['script[src]', 'src']]) {
       for (const el of qsa(sel, doc)) {
         const m = /^(?![a-z]+:|\/\/)(?:[^?#]*\/)?(class-html\.(?:css|js))(?:[?#].*)?$/i.exec(el.getAttribute(attr));

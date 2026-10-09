@@ -197,7 +197,8 @@ section.slide#try-sci input.dx-range::-moz-range-thumb { width: 34px; height: 34
 
 /* B 시장 가격(soc-supply-demand 「시장 가격의 결정」) */
 #try-soc { --navy: #1D4E89; --ink: #222222; --muted: #5F6B7A; --dem: #1D4E89; --sup: #E8590C; --soft: #F1F5FA; --line: #C9D4E2; }
-#try-soc .dh { display: grid; grid-template-columns: 430px 1fr; gap: 30px; }
+#try-soc .dh { display: grid; grid-template-columns: 1fr 430px; gap: 30px; }
+#try-soc .dh > :first-child { grid-column: 2; grid-row: 1; }   /* 손잡이는 오른쪽 */
 #try-soc .dh-view { position: relative; }
 #try-soc .dh-veil { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; text-align: center; border: 3px dashed #B8C4CE; border-radius: 18px; background: #EEF2F5; color: #5C6B78; font-size: 28px; font-weight: 600; line-height: 1.5; }
 #try-soc .dh-veil[hidden] { display: none; }
@@ -220,7 +221,8 @@ section.slide#try-soc button.dh-b:disabled { opacity: .45; cursor: default; }
 /* C 이성과 정서의 저울(eth-dohae 「활동 ①」) */
 #try-eth { --accent: #006DBB; --ms-reason: #006DBB; --ms-emo: #C8325F; --ms-ink: #3F3F3F; --ms-muted: #5F6B7A; --ms-line: #D3DCE6; }
 #try-eth .ms-wrap, #try-eth .ms-wrap * { box-sizing: border-box; }
-#try-eth .ms-act { display: grid; grid-template-columns: 420px 1fr; gap: 28px; }
+#try-eth .ms-act { display: grid; grid-template-columns: 1fr 420px; gap: 28px; }
+#try-eth .ms-act > .ms-ctrl { grid-column: 2; grid-row: 1; }   /* 손잡이는 오른쪽 */
 #try-eth .ms-ctrl { display: flex; flex-direction: column; gap: 4px; }
 #try-eth .ms-view { position: relative; }
 #try-eth .ms-lab { font-size: 24px; font-weight: 600; margin: 4px 0 0; }
@@ -460,7 +462,7 @@ table.wish td:nth-child(3), table.wish td:nth-child(4) { font-weight: 800; color
           </g>
         </svg>
         <p class="ms-verdict" id="ds-verdict"></p>
-        <div class="ms-veil" id="ds-veil"><span>왼쪽에서 상황을 고르면<br>저울이 움직여요</span></div>
+        <div class="ms-veil" id="ds-veil"><span>오른쪽에서 상황을 고르면<br>저울이 움직여요</span></div>
       </div>
     </div>
   </div>
